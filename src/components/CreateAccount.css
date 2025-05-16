@@ -1,0 +1,107 @@
+.create-background {
+  background-color: #2b74e4;
+  min-height: 100vh;
+  padding: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.create-container {
+  width: 100%;
+  max-width: 800px;
+  background-color: #ffffff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.create-container h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #2b74e4;
+}
+
+.create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.create-form .row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.create-form input,
+.create-form select {
+  flex: 1;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+  background-color: #fefefe;
+  transition: border 0.2s;
+}
+
+.create-form input:focus,
+.create-form select:focus {
+  outline: none;
+  border: 1.5px solid #2b74e4;
+}
+
+.create-form select {
+  appearance: none;
+  background: url('data:image/svg+xml;utf8,<svg fill="%232b74e4" height="18" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>') no-repeat right 10px center;
+  background-size: 12px;
+}
+
+/* Submit button */
+.create-form button[type="submit"] {
+  background-color: #f9c74f;
+  color: #333;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.create-form button[type="submit"]:hover {
+  background-color: #f7b633;
+  transform: translateY(-1px);
+}
+
+.create-form button[type="submit"]:active {
+  transform: translateY(0);
+  background-color: #e0a800;
+}
+
+/* BACK button style */
+.create-form button[type="button"] {
+  background-color: #ccc;
+  color: #333;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.create-form button[type="button"]:hover {
+  background-color: #bbb;
+  transform: translateY(-1px);
+}
+
+.create-form button[type="button"]:active {
+  transform: translateY(0);
+  background-color: #aaa;
+
+}
