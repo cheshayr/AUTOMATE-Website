@@ -103,5 +103,9 @@
 .create-form button[type="button"]:active {
   transform: translateY(0);
   background-color: #aaa;
+}
 
+.error-message {
+  color: red;
+  margin-top: 10px;
 }

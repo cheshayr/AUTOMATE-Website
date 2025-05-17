@@ -1,80 +1,24 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import LoginPage from './components/LoginPage';
-import CreateAccount from './components/CreateAccount';
-import AdminDashboard from './components/AdminDashboard';
-import StaffDashboard from './components/StaffDashboard';
-import AppointmentPage from './components/AppointmentPage';
-import EmployeePage from './components/EmployeePage';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+// import LoginPage from './components/LoginPage';
+// import CreateAccount from './components/CreateAccount';
+// import AppointmentPage from './components/AppointmentPage';
+// import EmployeePage from './components/EmployeePage';
+import AuthPage from './features/auth/AuthPage';
+import { AuthProvider } from './context/AuthContext.jsx';
+import Dashboard from './features/dashboard/Dashboard.jsx';
+import AppointmentsPage from './features/appointments/AppointmentsPage.jsx';
 
 function App() {
-  const [showSignup, setShowSignup] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [role, setRole] = useState('');
-  const [user, setUser] = useState({ firstName: '' });
-
-  const handleLoginSuccess = (userRole) => {
-    setRole(userRole);
-    setIsLoggedIn(true);
-    const fullName = localStorage.getItem('fullName') || 'User';
-    const firstName = fullName.split(' ')[0];
-    setUser({ firstName });
-  };
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setRole('');
-    setUser({ firstName: '' });
-  };
-
   return (
     <Router>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            isLoggedIn ? (
-              role === 'Admin' ? (
-                <AdminDashboard user={user} onLogout={handleLogout} />
-              ) : (
-                <StaffDashboard user={user} onLogout={handleLogout} />
-              )
-            ) : showSignup ? (
-              <CreateAccount
-                onBackClick={() => setShowSignup(false)}
-                onAccountCreated={() => setShowSignup(false)}
-              />
-            ) : (
-              <LoginPage
-                onLoginSuccess={handleLoginSuccess}
-                onSignupClick={() => setShowSignup(true)}
-              />
-            )
-          }
-        />
-
-        <Route
-          path="/appointments"
-          element={
-            isLoggedIn && role === 'Staff' ? (
-              <AppointmentPage />
-            ) : (
-              <Navigate to="/" replace />
-            )
-          }
-        />
-
-        <Route
-          path="/employees"
-          element={
-            isLoggedIn && role === 'Admin' ? (
-              <EmployeePage user={user} />
-            ) : (
-              <Navigate to="/" replace />
-            )
-          }
-        />
-      </Routes>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<AuthPage />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/appointments" element={<AppointmentsPage />} />
+        </Routes>
+      </AuthProvider>
     </Router>
   );
 }

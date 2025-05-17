@@ -3,6 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recha
 import { Home, Calendar, Bell, Package, Wrench, Users, FileText, UserCircle, LogOut } from 'lucide-react';
 import './Dashboard.css';
 import { useNavigate } from 'react-router-dom';
+import { useAuthContext } from '../context/AuthContext';
 
 const appointmentStats = [
   { label: 'For Approval', count: 3, color: '#FFC107', icon: '⏰' },
@@ -24,8 +25,11 @@ const salesData = [
   { name: 'May', value: 30000 },
 ];
 
-function AdminDashboard({ user, onLogout }) {
+function AdminDashboard() {
   const navigate = useNavigate();
+  const { user } = useAuthContext();
+
+  if (!user) return <p>Loading or please login...</p>;
 
   return (
     <div className="dashboard-container">
@@ -41,11 +45,13 @@ function AdminDashboard({ user, onLogout }) {
         <button><FileText size={24} /></button>
         <div className="spacer" />
         <button><UserCircle size={24} /></button>
-        <button onClick={onLogout}><LogOut size={24} /></button>
+        {/* <button onClick={onLogout}><LogOut size={24} /></button> */}
+        <button><LogOut size={24} /></button>
       </aside>
 
       <main className="main-content">
-        <h2>Admin Dashboard {user.fullName}</h2>
+        <h2>Admin Dashboard, Welcome {user?.fullName || user?.username || 'User'}</h2>
+        {/* <h2>Admin Dashboard, Welcome {user.fullName}</h2> */}
 
         <div className="appointments-section">
           {appointmentStats.map((item, idx) => (

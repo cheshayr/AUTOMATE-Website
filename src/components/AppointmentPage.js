@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import './Dashboard.css';
+import '../features/dashboard/Dashboard.css'
 import { FiEye } from "react-icons/fi";
 
 const tabs = ["For Approval", "Ongoing Repair", "Completed"];
