@@ -2,32 +2,32 @@ import React, { useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import './Dashboard.css';
 import { useAuthContext } from '../../context/AuthContext';
-import Sidebar from '../../components/sidebar/Sidebar';
 import { useNavigate } from 'react-router-dom';
 import Spinner from '../../components/constants/spinner/Spinner';
+import DashboardLayout from '../DashboardLayout';
 
 const appointmentStats = [
-  { label: 'For Approval', count: 3, color: '#FFC107', icon: '⏰' },
-  { label: 'Ongoing Repair', count: 5, color: '#007BFF', icon: '⚙️' },
-  { label: 'Completed', count: 5, color: '#28A745', icon: '✅' },
+    { label: 'For Approval', count: 3, color: '#FFC107', icon: '⏰' },
+    { label: 'Ongoing Repair', count: 5, color: '#007BFF', icon: '⚙️' },
+    { label: 'Completed', count: 5, color: '#28A745', icon: '✅' },
 ];
 
 const serviceData = [
-  { name: 'Oil Change', count: 25 },
-  { name: 'Underchassis', count: 18 },
-  { name: 'Change Tires', count: 27 },
+    { name: 'Oil Change', count: 25 },
+    { name: 'Underchassis', count: 18 },
+    { name: 'Change Tires', count: 27 },
 ];
 
 const salesData = [
-  { name: 'Jan', value: 50000 },
-  { name: 'Feb', value: 60000 },
-  { name: 'Mar', value: 80000 },
-  { name: 'Apr', value: 70000 },
-  { name: 'May', value: 30000 },
+    { name: 'Jan', value: 50000 },
+    { name: 'Feb', value: 60000 },
+    { name: 'Mar', value: 80000 },
+    { name: 'Apr', value: 70000 },
+    { name: 'May', value: 30000 },
 ];
 
 const Dashboard = () => {
-    const { user, logout } = useAuthContext();
+    const { user } = useAuthContext();
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -45,8 +45,8 @@ const Dashboard = () => {
     const greeting = user.role === 'Admin' ? 'Welcome Admin' : 'Welcome Staff';
 
     return (
+        <DashboardLayout>
         <div className="dashboard-container">
-        <Sidebar onLogout={logout} />
         {/* Main content */}
         <main className="main-content">
             <h2>{greeting}, {user.fullName || user.username}</h2>
@@ -108,6 +108,7 @@ const Dashboard = () => {
             </div>
         </main>
         </div>
+        </DashboardLayout>
     );
 };
 

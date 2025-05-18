@@ -2,10 +2,10 @@ import React, { useState, useEffect } from "react";
 import Tabs from "../../components/appointments/Tabs";
 import AppointmentsTable from "../../components/appointments/AppointmentsTable";
 import './AppointmentsPage.css';
-import Sidebar from "../../components/sidebar/Sidebar";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "../../context/AuthContext";
 import Spinner from "../../components/constants/spinner/Spinner";
+import DashboardLayout from "../DashboardLayout";
 
 const tabs = ["For Approval", "Ongoing Repair", "Completed"];
 
@@ -13,7 +13,7 @@ const AppointmentsPage = () => {
     const [activeTab, setActiveTab] = useState("For Approval");
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
-    const { user, logout } = useAuthContext();
+    const { user } = useAuthContext();
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -42,17 +42,15 @@ const AppointmentsPage = () => {
     const filteredData = data.filter((item) => item.status === activeTab);
 
     return (
-        <>
-        <Sidebar onLogout={logout} />
-        <div className="p-6 bg-[#f5f7ff] min-h-screen">
-        <h1 className="text-2xl font-bold mb-4">Appointments</h1>
-
-        <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
-
-        <AppointmentsTable appointments={filteredData} />
-        </div>
-                 
-        </>
+        <DashboardLayout>
+            <div className="min-h-screen bg-[#f5f7ff] p-6">
+                <div className="bg-white rounded-2xl shadow-md p-6">
+                <h1 className="text-2xl font-bold mb-4 text-gray-800">Appointments</h1>
+                <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+                <AppointmentsTable appointments={filteredData} />
+                </div>
+            </div>
+        </DashboardLayout>
     );
 };
 
