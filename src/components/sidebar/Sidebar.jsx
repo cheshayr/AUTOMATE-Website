@@ -10,7 +10,7 @@ const Sidebar = ({ onLogout }) => {
     { to: '/inventory', icon: <Package size={24} />, label: 'Inventory' },
     { to: '/notifications', icon: <Bell size={24} />, label: 'Notifications' },
     { to: '/services', icon: <Wrench size={24} />, label: 'Services' },
-    { to: '/users', icon: <Users size={24} />, label: 'Users' },
+    { to: '/activities', icon: <Users size={24} />, label: 'Users' },
     { to: '/reports', icon: <FileText size={24} />, label: 'Reports' },
   ];
 

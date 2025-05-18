@@ -45,9 +45,9 @@ const AppointmentsPage = () => {
         <DashboardLayout>
             <div className="min-h-screen bg-[#f5f7ff] p-6">
                 <div className="bg-white rounded-2xl shadow-md p-6">
-                <h1 className="text-2xl font-bold mb-4 text-gray-800">Appointments</h1>
-                <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
-                <AppointmentsTable appointments={filteredData} />
+                    <h1 className="text-2xl font-bold mb-4 text-gray-800">Appointments</h1>
+                    <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+                    <AppointmentsTable appointments={filteredData} />
                 </div>
             </div>
         </DashboardLayout>
