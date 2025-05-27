@@ -7,10 +7,16 @@ import { useAuthContext } from "../../context/AuthContext";
 import Spinner from "../../components/constants/spinner/Spinner";
 import DashboardLayout from "../DashboardLayout";
 
-const tabs = ["For Approval", "Ongoing Repair", "Completed"];
+const tabs = [
+    "Pending Visit", 
+    "Ongoing Repair", 
+    "Billing",
+    "Completed",
+    "Cancelled",
+];
 
 const AppointmentsPage = () => {
-    const [activeTab, setActiveTab] = useState("For Approval");
+    const [activeTab, setActiveTab] = useState("Pending Visit");
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const { user } = useAuthContext();
