@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../DashboardLayout';
 import '../dashboard/Dashboard.css';
+import { useAuthContext } from '../../context/AuthContext';
 
 const LOCAL_STORAGE_KEY = 'stockData';
 
@@ -13,6 +14,8 @@ const StockManagement = () => {
         quantity: '',
         price: ''
     });
+    const { user } = useAuthContext();
+    const isAdmin = user?.role === 'Admin';
 
     // Load from localStorage on mount
     useEffect(() => {
@@ -85,52 +88,56 @@ const StockManagement = () => {
                 <div className='bg-white rounded-2xl shadow-mp p-6'>
                 <h1 className='text-2xl font-bold mb-4 text-gray-800'>Stock Management</h1>
 
-                {/* Add/Edit Form */}
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-4">
-                    <input
-                        type="text"
-                        name="name"
-                        value={newStock.name}
-                        onChange={handleChange}
-                        placeholder="Item name"
-                        className="input"
-                    />
-                    <input
-                        type="text"
-                        name="category"
-                        value={newStock.category}
-                        onChange={handleChange}
-                        placeholder="Category"
-                        className="input"
-                    />
-                    <input
-                        type="number"
-                        name="quantity"
-                        value={newStock.quantity}
-                        onChange={handleChange}
-                        placeholder="Quantity"
-                        className="input"
-                    />
-                    <input
-                        type="number"
-                        name="price"
-                        value={newStock.price}
-                        onChange={handleChange}
-                        placeholder="Price"
-                        className="input"
-                    />
-                </div>
-                <div className="mb-4">
-                    {editingIndex !== null ? (
-                    <button className="btn btn-blue" onClick={handleSave}>
-                        Save Changes
-                    </button>
-                    ) : (
-                    <button className="btn btn-green" onClick={handleAdd}>
-                        Add Item
-                    </button>
-                    )}
-                </div>
+                {/* Add/Edit Form - Only visible to admin */}
+                {isAdmin && (
+                    <>
+                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-4">
+                            <input
+                                type="text"
+                                name="name"
+                                value={newStock.name}
+                                onChange={handleChange}
+                                placeholder="Item name"
+                                className="input"
+                            />
+                            <input
+                                type="text"
+                                name="category"
+                                value={newStock.category}
+                                onChange={handleChange}
+                                placeholder="Category"
+                                className="input"
+                            />
+                            <input
+                                type="number"
+                                name="quantity"
+                                value={newStock.quantity}
+                                onChange={handleChange}
+                                placeholder="Quantity"
+                                className="input"
+                            />
+                            <input
+                                type="number"
+                                name="price"
+                                value={newStock.price}
+                                onChange={handleChange}
+                                placeholder="Price"
+                                className="input"
+                            />
+                        </div>
+                        <div className="mb-4">
+                            {editingIndex !== null ? (
+                            <button className="btn btn-blue" onClick={handleSave}>
+                                Save Changes
+                            </button>
+                            ) : (
+                            <button className="btn btn-green" onClick={handleAdd}>
+                                Add Item
+                            </button>
+                            )}
+                        </div>
+                    </>
+                )}
 
                 {/* Stocks Table */}
                 <div className="table-wrapper">
@@ -142,7 +149,7 @@ const StockManagement = () => {
                         <th className="px-4 py-2">Quantity</th>
                         <th className="px-4 py-2">Status</th>
                         <th className="px-4 py-2">Price</th>
-                        <th className="px-4 py-2">Actions</th>
+                        {isAdmin && <th className="px-4 py-2">Actions</th>}
                         </tr>
                     </thead>
                     <tbody>
@@ -158,19 +165,21 @@ const StockManagement = () => {
                                     </span>
                                 </td>
                                 <td className="px-4 py-2 text-sm">₱{item.price}</td>
-                                <td className="px-4 py-2 text-sm space-x-2">
-                                    <button className="btn btn-yellow" onClick={() => handleEdit(index)}>
-                                    Edit
-                                    </button>
-                                    <button className="btn btn-red" onClick={() => handleDelete(index)}>
-                                    Delete
-                                    </button>
-                                </td>
+                                {isAdmin && (
+                                    <td className="px-4 py-2 text-sm space-x-2">
+                                        <button className="btn btn-yellow" onClick={() => handleEdit(index)}>
+                                        Edit
+                                        </button>
+                                        <button className="btn btn-red" onClick={() => handleDelete(index)}>
+                                        Delete
+                                        </button>
+                                    </td>
+                                )}
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="6" className="text-center text-gray-400 py-6">
+                                <td colSpan={isAdmin ? "6" : "5"} className="text-center text-gray-400 py-6">
                                 No stocks found.
                                 </td>
                             </tr>
