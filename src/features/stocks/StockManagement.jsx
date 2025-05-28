@@ -146,57 +146,34 @@ const StockManagement = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {stocks.map((item, index) => (
-                        <tr key={item.id} className="border-t">
-                            <td className="px-4 py-2">
-                            {editingIndex === index ? (
-                                <input value={item.name} onChange={(e) => handleChange(e, 'name', index)} />
-                            ) : (
-                                item.name
-                            )}
-                            </td>
-                            <td className="px-4 py-2">
-                            {editingIndex === index ? (
-                                <input value={item.category} onChange={(e) => handleChange(e, 'category', index)} />
-                            ) : (
-                                item.category
-                            )}
-                            </td>
-                            <td className="px-4 py-2">
-                            {editingIndex === index ? (
-                                <input type="number" value={item.quantity} onChange={(e) => handleChange(e, 'quantity', index)} />
-                            ) : (
-                                item.quantity
-                            )}
-                            </td>
-                            <td className="px-4 py-2">
-                            <span className={`px-3 py-1 text-xs rounded-full ${item.quantity > 0 ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}`}>
-                                {getStatus(item.quantity)}
-                            </span>
-                            </td>
-                            <td className="px-4 py-2">
-                            {editingIndex === index ? (
-                                <input type="number" value={item.price} onChange={(e) => handleChange(e, 'price', index)} />
-                            ) : (
-                                `₱${item.price}`
-                            )}
-                            </td>
-                            <td className="px-4 py-2 flex gap-2">
-                            {editingIndex === index ? (
-                                <button className="text-blue-600" onClick={handleSave}>Save</button>
-                            ) : (
-                                <button className="text-yellow-600" onClick={() => handleEdit(index)}>Edit</button>
-                            )}
-                            <button className="text-red-600" onClick={() => handleDelete(index)}>Delete</button>
-                            </td>
-                        </tr>
-                        ))}
-                        {stocks.length === 0 && (
-                        <tr>
-                            <td colSpan="6" className="text-center text-gray-400 py-6">
-                            No stocks found.
-                            </td>
-                        </tr>
+                        {stocks.length > 0 ? (
+                            stocks.map((item, index) => (
+                                <tr key={index} className="border-t">
+                                <td className="px-4 py-2 text-sm">{item.name}</td>
+                                <td className="px-4 py-2 text-sm">{item.category}</td>
+                                <td className="px-4 py-2 text-sm">{item.quantity}</td>
+                                <td className="px-4 py-2 text-sm">
+                                    <span className={`px-3 py-1 rounded-full text-xs ${item.quantity > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                    {getStatus(item.quantity)}
+                                    </span>
+                                </td>
+                                <td className="px-4 py-2 text-sm">₱{item.price}</td>
+                                <td className="px-4 py-2 text-sm space-x-2">
+                                    <button className="btn btn-yellow" onClick={() => handleEdit(index)}>
+                                    Edit
+                                    </button>
+                                    <button className="btn btn-red" onClick={() => handleDelete(index)}>
+                                    Delete
+                                    </button>
+                                </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan="6" className="text-center text-gray-400 py-6">
+                                No stocks found.
+                                </td>
+                            </tr>
                         )}
                     </tbody>
                     </table>
