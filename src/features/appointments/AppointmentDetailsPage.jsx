@@ -3,11 +3,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiEdit2, FiX, FiSave, FiUpload, FiImage } from 'react-icons/fi';
 import DashboardLayout from '../DashboardLayout';
 import Spinner from '../../components/constants/spinner/Spinner';
+import { useAuthContext } from '../../context/AuthContext';
 import './AppointmentDetailsPage.css';
 
 const AppointmentDetailsPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { user } = useAuthContext();
+    const isAdmin = user?.role === 'Admin';
     const [appointment, setAppointment] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
@@ -91,35 +94,39 @@ const AppointmentDetailsPage = () => {
 
                     {/* Action Buttons */}
                     <div className="flex justify-end mb-8">
-                        {!isEditing ? (
-                            <button
-                                onClick={() => setIsEditing(true)}
-                                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                            >
-                                <FiEdit2 className="mr-2" />
-                                Edit Details
-                            </button>
-                        ) : (
-                            <div className="space-x-4">
-                                <button
-                                    onClick={() => {
-                                        setIsEditing(false);
-                                        setEditedAppointment(appointment);
-                                    }}
-                                    className="flex items-center px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                                >
-                                    <FiX className="mr-2" />
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleSubmit}
-                                    className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                                >
-                                    <FiSave className="mr-2" />
-                                    Save Changes
-                                </button>
-                            </div>
-                        )}
+                        {isAdmin ? (
+                            <>
+                                {!isEditing ? (
+                                    <button
+                                        onClick={() => setIsEditing(true)}
+                                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                    >
+                                        <FiEdit2 className="mr-2" />
+                                        Edit Details
+                                    </button>
+                                ) : (
+                                    <div className="space-x-4">
+                                        <button
+                                            onClick={() => {
+                                                setIsEditing(false);
+                                                setEditedAppointment(appointment);
+                                            }}
+                                            className="flex items-center px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                                        >
+                                            <FiX className="mr-2" />
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleSubmit}
+                                            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                        >
+                                            <FiSave className="mr-2" />
+                                            Save Changes
+                                        </button>
+                                    </div>
+                                )}
+                            </>
+                        ) : null}
                     </div>
 
                     {/* Details Form */}
