@@ -1,12 +1,16 @@
 import React, { useState } from 'react'
 import './SignupPage.css';
 import { signup } from '../../api/authApi';
+import { useNavigate } from 'react-router-dom';
+import { useAuthContext } from '../../context/AuthContext';
 
-const SignupPage = ({ onLoginClick, onSignupSuccess }) => {
+const SignupPage = () => {
+    const navigate = useNavigate();
+    const { login } = useAuthContext();
     const [formData, setFormData] = useState({
         firstName: '', middleName: '', lastName: '', suffix: '',
         age: '', sex: '', birthdate: '', address: '',
-        username: '', password: '', email: '', position: '', role: ''
+        username: '', password: '', email: '', position: '', role: 'staff'
     });
     const [error, setError] = useState('');
     
@@ -15,26 +19,26 @@ const SignupPage = ({ onLoginClick, onSignupSuccess }) => {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
     
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        handleSignup();
-    }
+        setError('');
 
-    const handleSignup = async () => {
+        // Validate all required fields
         for (const [key, value] of Object.entries(formData)) {
-          if (!value) {
-            setError(`Please fill out the "${key}" field.`);
-            return;
-          }
+            if (!value && key !== 'middleName' && key !== 'suffix') {
+                setError(`Please fill out the "${key}" field.`);
+                return;
+            }
         }
-      
+
         try {
-          await signup(formData);
-          setError('');
-          alert('Account created successfully!');
-          onSignupSuccess();
+            await signup(formData);
+            setError('');
+            alert('Account created successfully!');
+            await login(formData.email, formData.password);
+            navigate('/dashboard');
         } catch (err) {
-          setError(err.message);
+            setError(err.message || 'Failed to sign up');
         }
     };
 
@@ -66,10 +70,10 @@ const SignupPage = ({ onLoginClick, onSignupSuccess }) => {
                             onChange={handleChange}
                         />
                         <select name="suffix" value={formData.suffix} onChange={handleChange}>
-                        <option value="">Select Suffix</option>
-                        <option value="Jr.">Jr.</option>
-                        <option value="Sr.">Sr.</option>
-                        <option value="III">III</option>
+                            <option value="">Select Suffix</option>
+                            <option value="Jr.">Jr.</option>
+                            <option value="Sr.">Sr.</option>
+                            <option value="III">III</option>
                         </select>
                     </div>
 
@@ -82,10 +86,10 @@ const SignupPage = ({ onLoginClick, onSignupSuccess }) => {
                             onChange={handleChange}
                         />
                         <select name="sex" value={formData.sex} onChange={handleChange}>
-                        <option value="">Select Sex</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Non-Binary">Non-Binary</option>
+                            <option value="">Select Sex</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Non-Binary">Non-Binary</option>
                         </select>
                         <input
                             type="date"
@@ -135,15 +139,8 @@ const SignupPage = ({ onLoginClick, onSignupSuccess }) => {
                         onChange={handleChange}
                     />
 
-                    <select name="role" value={formData.role} onChange={handleChange}>
-                        <option value="">Select Role</option>
-                        <option value="Admin">Admin</option>
-                        <option value="Supervisor">Supervisor</option>
-                        <option value="Office Staff">Office Staff</option>
-                    </select>
-
                     <div className="row" style={{ justifyContent: 'flex-end', gap: '10px' }}>
-                        <button type="button" onClick={onLoginClick} style={{ backgroundColor: '#ccc' }}>
+                        <button type="button" onClick={() => navigate('/login')} style={{ backgroundColor: '#ccc' }}>
                             Back
                         </button>
                         <button type="submit">Create</button>
