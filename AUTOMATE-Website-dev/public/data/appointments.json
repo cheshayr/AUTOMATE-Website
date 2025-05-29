@@ -1,0 +1,38 @@
+[
+    {
+      "id": "A001",
+      "client": "John Doe",
+      "contact": "09171234567",
+      "status": "For Approval",
+      "mechanics": ["Mike", "Anna"]
+    },
+    {
+      "id": "A002",
+      "client": "Jane Smith",
+      "contact": "09981234567",
+      "status": "Ongoing Repair",
+      "mechanics": ["Tom"]
+    },
+    {
+      "id": "A003",
+      "client": "Carlos Mendoza",
+      "contact": "09281234567",
+      "status": "Completed",
+      "mechanics": ["Anna", "Luis"]
+    },
+    {
+      "id": "A004",
+      "client": "Maria Garcia",
+      "contact": "09381234567",
+      "status": "Ongoing Repair",
+      "mechanics": ["Mike"]
+    },
+    {
+      "id": "A005",
+      "client": "Steven Lee",
+      "contact": "09481234567",
+      "status": "For Approval",
+      "mechanics": ["Tom", "Luis"]
+    }
+]
+  

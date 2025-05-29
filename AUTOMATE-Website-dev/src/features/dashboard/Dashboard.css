@@ -1,0 +1,106 @@
+.dashboard-container {
+  display: flex;
+  height: 100vh;
+  font-family: Arial, sans-serif;
+}
+
+.spacer {
+  flex-grow: 1;
+}
+
+.main-content {
+  flex: 1;
+  padding: 20px;
+  background-color: #f5f7ff;
+}
+
+.appointments-section {
+  display: flex;
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.card {
+  flex: 1;
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.icon {
+  font-size: 2rem;
+}
+
+.info h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.info p {
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.charts-section {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.chart-box {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  flex: 1;
+  min-width: 350px; /* Increased the min-width */
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chart-header a {
+  font-size: 0.9rem;
+  color: #007bff;
+  text-decoration: none;
+}
+
+.sales-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  margin-top: 10px;
+}
+
+.sales-chart {
+  flex: 2;
+}
+
+.sales-totals {
+  flex: 1;
+  background-color: #f0f4ff;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.sales-totals p {
+  margin: 0 0 10px 0;
+  font-size: 1rem;
+}
+
+.wide-box {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.sales-totals p {
+  margin: 0 0 10px 0;
+  font-size: 1rem;
+}

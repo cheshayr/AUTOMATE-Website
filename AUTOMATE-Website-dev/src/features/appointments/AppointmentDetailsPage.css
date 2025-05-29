@@ -1,0 +1,169 @@
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    background-color: white;
+    transition: all 0.2s ease;
+}
+
+.form-input:disabled {
+    background-color: #f9fafb;
+    cursor: not-allowed;
+    color: #6b7280;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Status Badge Styles */
+.status-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    text-transform: capitalize;
+}
+
+.status-badge.pending-visit {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.status-badge.ongoing-repair {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.status-badge.billing {
+    background-color: #f3e8ff;
+    color: #6b21a8;
+}
+
+.status-badge.completed {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.status-badge.cancelled {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+/* Button Hover Effects */
+button {
+    transition: all 0.2s ease;
+}
+
+button:hover {
+    transform: translateY(-1px);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+/* Form Layout */
+.form-group input[type="text"],
+.form-group select {
+    font-size: 0.875rem;
+}
+
+/* Mechanics Tags */
+.mechanics-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: #eff6ff;
+    color: #1e40af;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.mechanics-tag:hover {
+    background-color: #dbeafe;
+}
+
+/* Image Upload Styles */
+.image-upload-container {
+    width: 100%;
+    aspect-ratio: 1;
+    border: 2px dashed #d1d5db;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    max-width: 150px;
+    margin: 0 auto;
+}
+
+.image-upload-container:hover {
+    border-color: #3b82f6;
+    background-color: #f8fafc;
+}
+
+.image-upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 0.75rem;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.image-upload-label:hover {
+    color: #3b82f6;
+}
+
+.image-preview-container {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    max-width: 150px;
+    margin: 0 auto;
+}
+
+.image-preview-placeholder {
+    width: 100%;
+    height: 100%;
+    background-color: #f3f4f6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+}
+
+/* Image Preview Styles */
+.image-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 0.5rem;
+}
+
+/* Image Upload Hover Effect */
+.image-upload-container:hover .image-upload-label {
+    transform: scale(1.02);
+} 
