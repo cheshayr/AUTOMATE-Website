@@ -17,12 +17,12 @@ mongoose.connect('mongodb://localhost:27017/auto-repair', {
 .then(() => console.log('✅ Connected to MongoDB'))
 .catch((err) => console.error('❌ MongoDB connection error:', err));
 
-// ================== USER SCHEMA ==================
+// User schema
 const userSchema = new mongoose.Schema({
   firstName: { type: String, required: true },
   middleName: { type: String },
   lastName: { type: String, required: true },
-  suffix: { type: String },
+  prefix: { type: String },
   age: { type: Number, required: true },
   sex: { type: String, required: true },
   birthdate: { type: Date, required: true },
@@ -36,37 +36,41 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-// ================== STOCK SCHEMA ==================
-const stockSchema = new mongoose.Schema({
-  ID: String,
-  customerName: String,
-  contactNo: String,
-  status: String,
-  mechanic: String
+// Signup route
+app.post('/api/signup', async (req, res) => {
+  try {
+    const { username, email } = req.body;
+
+    // Check if username or email already exists
+    const existingUser = await User.findOne({
+      $or: [{ username }, { email }]
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ error: 'Username or email already in use' });
+    }
+
+    const newUser = new User(req.body);
+    await newUser.save();
+    res.status(201).json({ message: 'User created successfully' });
+  } catch (err) {
+    console.error('❌ Signup error:', err);
+    res.status(500).json({ error: 'Server error during signup' });
+  }
 });
 
-const Stock = mongoose.model('Stock', stockSchema);
-
-// ================== ROUTES ================== //
-
-// --- User Login Route ---
+// User login
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
 
   try {
     const user = await User.findOne({ username });
 
-    if (!user) {
+    if (!user || user.password !== password) {
       return res.status(401).json({ message: 'Invalid username or password' });
     }
 
-    // Simple password match (for demo purposes only — use bcrypt in production)
-    if (user.password !== password) {
-      return res.status(401).json({ message: 'Invalid username or password' });
-    }
-
-    // Generate dummy token (replace with JWT if needed later)
-    const token = 'dummy-token';
+    const token = 'dummy-token'; // Placeholder for JWT token
 
     res.status(200).json({
       user: {
@@ -83,8 +87,16 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+// Stock schema and routes
+const stockSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  category: { type: String, required: true },
+  quantity: { type: Number, required: true },
+  price: { type: Number, required: true }
+});
 
-// --- Stock Routes ---
+const Stock = mongoose.model('Stock', stockSchema);
+
 app.get('/api/stocks', async (req, res) => {
   try {
     const stocks = await Stock.find();
@@ -122,9 +134,91 @@ app.delete('/api/stocks/:id', async (req, res) => {
   }
 });
 
+// Appointment schema and routes
+const appointmentSchema = new mongoose.Schema({
+  client: String,
+  contact: String,
+  vehicle: String,
+  plateNumber: String,
+  status: {
+    type: String,
+    enum: ['Pending Visit', 'Ongoing Repair', 'Billing', 'Completed', 'Cancelled'],
+    default: 'Pending Visit',
+  },
+  trackingStep: {
+    type: Number,
+    default: 0,
+  },
+  mechanics: [String],
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+const Appointment = mongoose.model('Appointment', appointmentSchema);
+
+app.get('/api/appointments', async (req, res) => {
+  try {
+    const appointments = await Appointment.find();
+    res.json(appointments);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching appointments' });
+  }
+});
+
+// Existing get appointment by id route
+app.get('/api/appointments/:id', async (req, res) => {
+  try {
+    const appointment = await Appointment.findById(req.params.id);
+    if (!appointment) return res.status(404).json({ message: 'Appointment not found' });
+    res.json(appointment);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching appointment' });
+  }
+});
+
+// Mobile tracking API route
+app.get('/api/mobile/appointments/:id', async (req, res) => {
+  try {
+    const appointment = await Appointment.findById(req.params.id);
+
+    if (!appointment) {
+      return res.status(404).json({ message: 'Appointment not found' });
+    }
+
+    // Return only the fields needed for TrackingProgress screen
+    res.json({
+      trackingStep: appointment.trackingStep,
+      plateNumber: appointment.plateNumber,
+      vehicle: appointment.vehicle,
+    });
+  } catch (error) {
+    console.error('Error fetching appointment:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.patch('/api/appointments/:id', async (req, res) => {
+  try {
+    const { status, trackingStep } = req.body;
+    const appointment = await Appointment.findByIdAndUpdate(
+      req.params.id,
+      { status, trackingStep },
+      { new: true }
+    );
+    if (!appointment) return res.status(404).json({ message: 'Appointment not found' });
+    res.json(appointment);
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating appointment' });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Website backend running on http://localhost:${PORT}`);
 });
+
+
 
 

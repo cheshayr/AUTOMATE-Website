@@ -24,22 +24,21 @@ const AppointmentDetailsPage = () => {
     const [selectedImage, setSelectedImage] = useState(null);
 
     useEffect(() => {
-        fetch("/data/appointments.json")
-            .then((res) => res.json())
-            .then((data) => {
-                const foundAppointment = data.find(app => app.id === id);
-                if (foundAppointment) {
-                    setAppointment(foundAppointment);
-                    setEditedAppointment(foundAppointment);
-                } else {
-                    navigate('/appointments');
-                }
-            })
-            .catch((error) => {
-                console.error("Error loading appointment:", error);
-            })
-            .finally(() => setLoading(false));
-    }, [id, navigate]);
+    fetch(`http://192.168.1.5:5000/api/appointments/${id}`)
+        .then((res) => {
+            if (!res.ok) throw new Error("Failed to fetch appointment");
+            return res.json();
+        })
+        .then((data) => {
+            setAppointment(data);
+            setEditedAppointment(data);
+        })
+        .catch((error) => {
+            console.error("Error loading appointment:", error);
+            navigate('/appointments');
+        })
+        .finally(() => setLoading(false));
+}, [id, navigate]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -176,6 +175,91 @@ const AppointmentDetailsPage = () => {
                                 />
                             </div>
 
+                            <div className="form-group">
+    <label className="block text-sm font-medium text-gray-700 mb-2">Contact Method</label>
+    <input
+        type="text"
+        name="contactMethod"
+        value={isEditing ? editedAppointment.contactMethod || '' : appointment.contactMethod || ''}
+        onChange={handleInputChange}
+        disabled={!isEditing}
+        className="form-input"
+    />
+</div>
+
+<div className="form-group">
+    <label className="block text-sm font-medium text-gray-700 mb-2">Car Make</label>
+    <input
+        type="text"
+        name="carMake"
+        value={isEditing ? editedAppointment.carMake || '' : appointment.carMake || ''}
+        onChange={handleInputChange}
+        disabled={!isEditing}
+        className="form-input"
+    />
+</div>
+
+<div className="form-group">
+    <label className="block text-sm font-medium text-gray-700 mb-2">Car Model</label>
+    <input
+        type="text"
+        name="carModel"
+        value={isEditing ? editedAppointment.carModel || '' : appointment.carModel || ''}
+        onChange={handleInputChange}
+        disabled={!isEditing}
+        className="form-input"
+    />
+</div>
+
+<div className="form-group">
+    <label className="block text-sm font-medium text-gray-700 mb-2">Car Year</label>
+    <input
+        type="text"
+        name="carYear"
+        value={isEditing ? editedAppointment.carYear || '' : appointment.carYear || ''}
+        onChange={handleInputChange}
+        disabled={!isEditing}
+        className="form-input"
+    />
+</div>
+
+<div className="form-group col-span-2">
+    <label className="block text-sm font-medium text-gray-700 mb-2">Selected Services</label>
+    <textarea
+        name="selectedServices"
+        value={isEditing ? editedAppointment.selectedServices || '' : appointment.selectedServices || ''}
+        onChange={handleInputChange}
+        disabled={!isEditing}
+        className="form-input"
+        rows={2}
+    />
+</div>
+
+<div className="form-group">
+    <label className="block text-sm font-medium text-gray-700 mb-2">Booking Date</label>
+    <input
+        type="date"
+        name="bookingDate"
+        value={isEditing ? editedAppointment.bookingDate?.substring(0, 10) || '' : appointment.bookingDate?.substring(0, 10) || ''}
+        onChange={handleInputChange}
+        disabled={!isEditing}
+        className="form-input"
+    />
+</div>
+
+<div className="form-group">
+    <label className="block text-sm font-medium text-gray-700 mb-2">Booking Time</label>
+    <input
+        type="time"
+        name="bookingTime"
+        value={isEditing ? editedAppointment.bookingTime || '' : appointment.bookingTime || ''}
+        onChange={handleInputChange}
+        disabled={!isEditing}
+        className="form-input"
+    />
+</div>
+
+
                             <div className="form-group col-span-2">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Assigned Mechanics</label>
                                 <div className="mt-2 flex flex-wrap gap-2">
@@ -194,7 +278,7 @@ const AppointmentDetailsPage = () => {
 
                     {/* Image Upload Section */}
                     <div className="border-t pt-8">
-                        <h2 className="text-lg font-semibold text-gray-800 mb-4">Vehicle Images</h2>
+                        <h2 className="text-lg font-semibold text-gray-800 mb-4">Receipt</h2>
                         <div className="grid grid-cols-4 gap-4 max-w-2xl">
                             <div className="image-upload-container">
                                 <input

@@ -80,11 +80,11 @@ const SignupPage = () => {
               value={formData.lastName}
               onChange={handleChange}
             />
-            <select name="suffix" value={formData.suffix} onChange={handleChange}>
+            <select name="prefix" value={formData.prefix} onChange={handleChange}>
               <option value="">Select Prefix</option>
-              <option value="Jr.">Mr.</option>
-              <option value="Sr.">Ms.</option>
-              <option value="III">Mrs.</option>
+              <option value="Mr.">Mr.</option>
+              <option value="Ms.">Ms.</option>
+              <option value="Mrs.">Mrs.</option>
             </select>
           </div>
 
