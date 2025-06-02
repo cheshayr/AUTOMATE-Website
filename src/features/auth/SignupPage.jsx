@@ -40,7 +40,7 @@ const SignupPage = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to sign up');
+        throw new Error(data.error || JSON.stringify(data) || 'Failed to sign up');
       }
 
       alert('Account created successfully!');

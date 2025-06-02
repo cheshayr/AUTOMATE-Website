@@ -17,7 +17,6 @@ const StockManagement = () => {
     const { user } = useAuthContext();
     const isAdmin = user?.role === 'Admin';
 
-    // Fetch stocks from backend
     useEffect(() => {
         fetchStocks();
     }, []);
@@ -164,3 +163,4 @@ const StockManagement = () => {
 };
 
 export default StockManagement;
+

@@ -16,3 +16,8 @@
     border: 1px solid #ccc;
     border-radius: 8px;
 }
+
+.sidebar {
+    background-color: #004ea8;
+    color: white;
+}

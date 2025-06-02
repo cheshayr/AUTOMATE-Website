@@ -1,29 +1,30 @@
 export const login = async ({ username, password }) => {
-    const accounts = JSON.parse(localStorage.getItem('accounts')) || [];
-    const user = accounts.find(acc => acc.username === username && acc.password === password);
-    if (!user) throw new Error('Invalid credentials');
-    return {
-        user: {
-            username: user.username,
-            role: user.role,
-            fullName: user.fullName || 'User'
-        },
-        token: 'mock-token', // Simulate a token
-    };
-};
-  
-export const signup = async (userData) => {
-    const accounts = JSON.parse(localStorage.getItem('accounts')) || [];
-    
-    const exists = accounts.find(acc => acc.username === userData.username);
-    if (exists) throw new Error('Username already exists');
-
-    accounts.push({
-        ...userData,
-        fullName: `${userData.firstName} ${userData.lastName}`,
+    const response = await fetch('http://localhost:5000/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
     });
-    localStorage.setItem('accounts', JSON.stringify(accounts));
 
-    return { success: true };
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.message || 'Login failed');
+    }
+
+    return await response.json(); // Will include { user, token }
+};
+
+export const signup = async (userData) => {
+    const response = await fetch('http://localhost:5000/api/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+    });
+
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.message || 'Signup failed');
+    }
+
+    return await response.json(); // optional: { success: true }
 };
   
