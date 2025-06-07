@@ -1,0 +1,36 @@
+.service-config-wrapper {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f3f4f6; /* light gray background */
+}
+
+.service-main {
+  flex: 1;
+  padding: 2rem;
+  margin-left: 80px; /* ✅ adjust based on your sidebar width */
+}
+
+.service-header {
+  margin-bottom: 1.5rem;
+}
+
+.service-header h1 {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.service-card {
+  background-color: #2563eb; /* blue-600 */
+  color: white;
+  padding: 1rem 1.25rem;
+  border-radius: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}

@@ -1,0 +1,43 @@
+.activity-logs-wrapper {
+  display: flex;
+}
+
+.activity-logs-container {
+  padding: 2rem;
+  margin-left: 100px; /* width of sidebar */
+  background-color: #f8fafc;
+  width: 100%;
+  min-height: 100vh;
+}
+
+h2 {
+  margin-bottom: 1.5rem;
+  color: #1e293b;
+}
+
+.activity-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.activity-table-header,
+.activity-table-row {
+  display: grid;
+  grid-template-columns: 1.5fr 3fr 1.5fr 1fr;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+}
+
+.activity-table-header {
+  background-color: #e2e8f0;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.activity-table-row {
+  background-color: #fff;
+  color: #334155;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
