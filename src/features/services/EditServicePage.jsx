@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/sidebar/Sidebar';
-import './ServiceConfigPage.css';
+import './EditServicePage.css';
 
 const EditServicePage = () => {
   const { serviceName } = useParams();

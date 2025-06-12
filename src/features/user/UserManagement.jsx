@@ -1,5 +1,5 @@
-import React from 'react';
-import Sidebar from '../../components/sidebar/Sidebar.jsx';
+import React, { useState, useEffect } from 'react';
+import Sidebar from '../../components/sidebar/Sidebar';
 import './UserManagement.css';
 
 const roles = [

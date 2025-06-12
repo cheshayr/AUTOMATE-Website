@@ -1,5 +1,5 @@
-import React from 'react';
-import AdminLayout from '../layouts/AdminLayout.jsx';
+import React, { useState, useEffect } from 'react';
+import AdminLayout from '../../layouts/AdminLayout';
 import { Pencil } from 'lucide-react';
 import './ServiceConfigPage.css';
 
