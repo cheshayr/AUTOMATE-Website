@@ -1,114 +1,139 @@
-import React, { useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import './Dashboard.css';
-import { useAuthContext } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import Spinner from '../../components/constants/spinner/Spinner';
-import DashboardLayout from '../DashboardLayout';
+import React, { useEffect } from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import "./Dashboard.css";
+import { useAuthContext } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import Spinner from "../../components/constants/spinner/Spinner";
+import DashboardLayout from "../DashboardLayout";
+import { ChartServices } from "@/components/dashboard/ChartServices";
+import { ChartSales } from "@/components/dashboard/ChartSales";
 
 const appointmentStats = [
-    { label: 'Ongoing Repair', count: 5, color: '#007BFF', icon: '⚙️' },
-    { label: 'Completed', count: 5, color: '#28A745', icon: '✅' },
+  { label: "Ongoing Repair", count: 5, color: "#007BFF", icon: "⚙️" },
+  { label: "Completed", count: 5, color: "#28A745", icon: "✅" },
 ];
 
 const serviceData = [
-    { name: 'Oil Change', count: 25 },
-    { name: 'Underchassis', count: 18 },
-    { name: 'Change Tires', count: 27 },
+  { name: "Oil Change", count: 25 },
+  { name: "Underchassis", count: 18 },
+  { name: "Change Tires", count: 27 },
 ];
 
 const salesData = [
-    { name: 'Jan', value: 50000 },
-    { name: 'Feb', value: 60000 },
-    { name: 'Mar', value: 80000 },
-    { name: 'Apr', value: 70000 },
-    { name: 'May', value: 30000 },
+  { name: "Jan", value: 50000 },
+  { name: "Feb", value: 60000 },
+  { name: "Mar", value: 80000 },
+  { name: "Apr", value: 70000 },
+  { name: "May", value: 30000 },
 ];
 
 const Dashboard = () => {
-    const { user } = useAuthContext();
-    const navigate = useNavigate();
+  const { user } = useAuthContext();
+  const navigate = useNavigate();
+  console.log(user);
+  // useEffect(() => {
+  //     if (!user) {
+  //         const timeout = setTimeout(() => {
+  //             navigate('/');
+  //         }, 1500); // 1.5 seconds delay
 
-    useEffect(() => {
-        if (!user) {
-            const timeout = setTimeout(() => {
-                navigate('/');
-            }, 1500); // 1.5 seconds delay
+  //         return () => clearTimeout(timeout); // cleanup
+  //     }
+  // }, [user, navigate]);
 
-            return () => clearTimeout(timeout); // cleanup
-        }
-    }, [user, navigate]);
+  // if (!user) return <Spinner message='Logging out...'/>;
 
-    if (!user) return <Spinner message='Logging out...'/>;
+  const greeting = user?.role === "Admin" ? "Welcome Admin" : "Welcome Staff";
 
-    const greeting = user.role === 'Admin' ? 'Welcome Admin' : 'Welcome Staff';
-
-    return (
-        <DashboardLayout>
-        <div className="dashboard-container">
+  return (
+    <DashboardLayout>
+      <div className="dashboard-container">
         {/* Main content */}
         <main className="main-content">
-            <h2>{greeting}, {user.fullName || user.username}</h2>
+          <h2>
+            {greeting}, {user.name || user.username}
+          </h2>
 
-            {/* Appointment Summary Cards */}
-            <div className="appointments-section">
+          {/* Appointment Summary Cards */}
+          <div className="appointments-section">
             {appointmentStats.map((item, idx) => (
-                <div className="card" key={idx} style={{ backgroundColor: item.color }}>
+              <div
+                className="card"
+                key={idx}
+                style={{ backgroundColor: item.color }}
+              >
                 <div className="icon">{item.icon}</div>
                 <div className="info">
-                    <h4>{item.label}</h4>
-                    <p>{item.count}</p>
+                  <h4>{item.label}</h4>
+                  <p>{item.count}</p>
                 </div>
-                </div>
+              </div>
             ))}
-            </div>
+          </div>
 
-            {/* Charts */}
-            <div className="charts-section">
+          {/* Charts */}
+          <div className="charts-section">
             {/* Services Chart */}
-            <div className="chart-box">
-                <div className="chart-header">
+            <div className="w-96">
+              <ChartServices />
+            </div>
+            <div className="w-96">
+              <ChartSales />
+            </div>
+            {/* <div className="chart-box">
+              <div className="chart-header">
                 <h4>Service</h4>
                 <a href="#">See more</a>
-                </div>
-                <ResponsiveContainer width="100%" height={150}>
+              </div>
+              <ResponsiveContainer width="100%" height={150}>
                 <BarChart data={serviceData} layout="vertical">
-                    <XAxis type="number" />
-                    <YAxis dataKey="name" type="category" />
-                    <Tooltip />
-                    <Bar dataKey="count" fill="#007BFF" />
+                  <XAxis type="number" />
+                  <YAxis dataKey="name" type="category" />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#007BFF" />
                 </BarChart>
-                </ResponsiveContainer>
-            </div>
+              </ResponsiveContainer>
+            </div> */}
 
             {/* Sales Chart */}
-            <div className="chart-box wide-box">
-                <div className="chart-header">
+            {/* <div className="chart-box wide-box">
+              <div className="chart-header">
                 <h4>Sales Overview</h4>
                 <a href="#">See more</a>
-                </div>
-                <div className="sales-content">
+              </div>
+              <div className="sales-content">
                 <div className="sales-chart">
-                    <ResponsiveContainer width="100%" height={150}>
+                  <ResponsiveContainer width="100%" height={150}>
                     <BarChart data={salesData}>
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Bar dataKey="value" fill="#0056b3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="value" fill="#0056b3" />
                     </BarChart>
-                    </ResponsiveContainer>
+                  </ResponsiveContainer>
                 </div>
                 <div className="sales-totals">
-                    <p>Total Sales: <strong>₱227,977</strong></p>
-                    <p>Total Profit: <strong>₱68,393.10</strong></p>
+                  <p>
+                    Total Sales: <strong>₱227,977</strong>
+                  </p>
+                  <p>
+                    Total Profit: <strong>₱68,393.10</strong>
+                  </p>
                 </div>
-                </div>
-            </div>
-            </div>
+              </div>
+            </div> */}
+          </div>
         </main>
-        </div>
-        </DashboardLayout>
-    );
+      </div>
+    </DashboardLayout>
+  );
 };
 
 export default Dashboard;

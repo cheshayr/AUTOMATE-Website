@@ -14,30 +14,35 @@ import Services from "./features/services/ServiceConfigPage.jsx";
 import ActivityLogs from "./activity/ActivityLogs.jsx";
 import UserManagement from "./features/user/UserManagement.jsx";
 import EditServicePage from "./features/services/EditServicePage.jsx";
+import LoginPage from "./pages/auth/Login.jsx";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 function App() {
   return (
     <Router>
-      <AuthProvider>
-        <Routes>
-          <Route path="/" element={<AuthPage />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/appointments" element={<AppointmentsPage />} />
-          <Route
-            path="/appointments/:id"
-            element={<AppointmentDetailsPage />}
-          />
-          <Route path="/inventory" element={<StockManagement />} />
-          <Route path="/user" element={<UserManagement />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/activities" element={<ActivityLogs />} />
-          <Route path="/services" element={<Services />} />
-          <Route
-            path="/services/edit/:serviceName"
-            element={<EditServicePage />}
-          />
-        </Routes>
-      </AuthProvider>
+      <QueryClientProvider client={new QueryClient()}>
+        <AuthProvider>
+          <Routes>
+            {/* <Route path="/" element={<AuthPage />} /> */}
+            <Route path="/" element={<LoginPage />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/appointments" element={<AppointmentsPage />} />
+            <Route
+              path="/appointments/:id"
+              element={<AppointmentDetailsPage />}
+            />
+            <Route path="/inventory" element={<StockManagement />} />
+            <Route path="/user" element={<UserManagement />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/activities" element={<ActivityLogs />} />
+            <Route path="/services" element={<Services />} />
+            <Route
+              path="/services/edit/:serviceName"
+              element={<EditServicePage />}
+            />
+          </Routes>
+        </AuthProvider>
+      </QueryClientProvider>
     </Router>
   );
 }

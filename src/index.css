@@ -1,4 +1,8 @@
-body {
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+/* body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -10,4 +14,141 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+} */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --radius: 0.625rem;
+
+  /* Primary Colors */
+  --primary: oklch(29.2885% 0.0468 257.417); /* Dark Blue: #1A428A */
+  --primary-foreground: oklch(0.984 0.003 247.858); /* White: #FFFFFF (for text on primary background) */
+
+  /* Secondary Color (can be a muted version of primary or a neutral) */
+  --secondary: oklch(94.8% 0.0000 0); /* Light Gray: #F0F0F0 */
+  --secondary-foreground: oklch(0.2125 0.0000 0); /* Dark Gray: #333333 */
+
+  /* Accent Color (Golden Yellow as primary accent) */
+  --accent: oklch(78.17% 0.0768 78.412); /* Golden Yellow/Orange: #FFB300 */
+  --accent-foreground: oklch(0.129 0.042 264.695); /* Dark Gray: #333333 (for text on accent background) */
+
+  /* Backgrounds & Neutrals */
+  --background: oklch(97.58% 0.0000 296.813); /* Off-White Background: #F8F8F8 */
+  --foreground: oklch(0.2125 0.0000 0); /* Dark Gray: #333333 (general foreground text) */
+  --card: oklch(92.6977% 0.0000 0); /* Subtle Gray for Cards/Sections: #EAEAEA */
+  --card-foreground: oklch(0.2125 0.0000 0); /* Dark Gray: #333333 (text on cards) */
+  --muted: oklch(94.8% 0.0000 0); /* Light Gray: #F0F0F0 (for less prominent elements) */
+  --muted-foreground: oklch(51% 0.0000 0); /* Medium Gray: #666666 (for muted text) */
+
+  /* Borders & Inputs */
+  --border: oklch(92.6977% 0.0000 0); /* Subtle Gray for Borders: #EAEAEA */
+  --input: oklch(92.6977% 0.0000 0); /* Subtle Gray for Inputs: #EAEAEA */
+  --ring: oklch(29.2885% 0.0468 257.417); /* Dark Blue: #1A428A (for focus rings) */
+
+  /* Popover (often similar to card) */
+  --popover: oklch(92.6977% 0.0000 0); /* Subtle Gray for Popover: #EAEAEA */
+  --popover-foreground: oklch(0.2125 0.0000 0); /* Dark Gray: #333333 (text on popover) */
+
+  /* Destructive (Red is kept for this purpose) */
+  --destructive: oklch(57.7% 0.245 27.325); /* Red: #D32F2F (for destructive actions) */
+
+  /* Sidebar (assuming it's a distinct section) */
+  --sidebar: oklch(29.2885% 0.0468 257.417); /* Dark Blue: #1A428A */
+  --sidebar-foreground: oklch(0.984 0.003 247.858); /* White: #FFFFFF */
+  --sidebar-primary: oklch(78.17% 0.0768 78.412); /* Golden Yellow/Orange: #FFB300 (for primary elements in sidebar) */
+  --sidebar-primary-foreground: oklch(0.129 0.042 264.695); /* Dark Gray: #333333 */
+  --sidebar-accent: oklch(94.8% 0.0000 0); /* Light Gray: #F0F0F0 (for accent in sidebar) */
+  --sidebar-accent-foreground: oklch(0.2125 0.0000 0); /* Dark Gray: #333333 */
+  --sidebar-border: oklch(92.6977% 0.0000 0); /* Subtle Gray for Sidebar Border: #EAEAEA */
+  --sidebar-ring: oklch(78.17% 0.0768 78.412); /* Golden Yellow/Orange: #FFB300 */
+
+  /* Chart Colors (using the defined palette) */
+  --chart-1: oklch(29.2885% 0.0468 257.417); /* Dark Blue */
+  --chart-2: oklch(78.17% 0.0768 78.412); /* Golden Yellow/Orange */
+  --chart-3: oklch(57.7% 0.245 27.325); /* Red */
+  --chart-4: oklch(51% 0.0000 0); /* Medium Gray */
+  --chart-5: oklch(92.6977% 0.0000 0); /* Subtle Gray */
+}
+
+.dark {
+  /* Dark Mode Adjustments */
+  --background: oklch(0.129 0.042 264.695); /* Dark Gray (for dark mode background) */
+  --foreground: oklch(0.984 0.003 247.858); /* White (for dark mode foreground text) */
+  --card: oklch(0.208 0.042 265.755); /* Slightly lighter dark blue for cards in dark mode */
+  --card-foreground: oklch(0.984 0.003 247.858); /* White */
+  --popover: oklch(0.208 0.042 265.755); /* Slightly lighter dark blue for popover in dark mode */
+  --popover-foreground: oklch(0.984 0.003 247.858); /* White */
+  --primary: oklch(0.929 0.013 255.508); /* Lighter blue for primary in dark mode */
+  --primary-foreground: oklch(0.208 0.042 265.755); /* Darker blue for text on primary in dark mode */
+  --secondary: oklch(0.279 0.041 260.031); /* Darker muted for secondary in dark mode */
+  --secondary-foreground: oklch(0.984 0.003 247.858); /* White */
+  --accent: oklch(0.769 0.188 70.08); /* Golden yellow for accent in dark mode */
+  --accent-foreground: oklch(0.208 0.042 265.755); /* Dark blue for text on accent in dark mode */
+  --destructive: oklch(0.704 0.191 22.216); /* Red for destructive in dark mode */
+  --border: oklch(0.129 0.042 264.695 / 0.5); /* Slightly transparent background color for border in dark mode */
+  --input: oklch(0.129 0.042 264.695 / 0.7); /* Slightly transparent background color for input in dark mode */
+  --ring: oklch(0.551 0.027 264.364); /* A mid-tone blue for ring in dark mode */
+
+  /* Sidebar in Dark Mode */
+  --sidebar: oklch(0.208 0.042 265.755); /* Darker blue for sidebar in dark mode */
+  --sidebar-foreground: oklch(0.984 0.003 247.858); /* White */
+  --sidebar-primary: oklch(0.769 0.188 70.08); /* Golden yellow for primary in dark sidebar */
+  --sidebar-primary-foreground: oklch(0.208 0.042 265.755); /* Dark blue */
+  --sidebar-accent: oklch(0.279 0.041 260.031); /* Muted gray for accent in dark sidebar */
+  --sidebar-accent-foreground: oklch(0.984 0.003 247.858); /* White */
+  --sidebar-border: oklch(0.129 0.042 264.695 / 0.5); /* Transparent background for border in dark sidebar */
+  --sidebar-ring: oklch(0.551 0.027 264.364); /* Mid-tone blue for ring in dark sidebar */
+
+  /* Chart Colors in Dark Mode (updated to reflect golden yellow as a primary accent) */
+  --chart-1: oklch(0.488 0.243 264.376); /* Brighter blue for dark mode chart */
+  --chart-2: oklch(0.769 0.188 70.08); /* Golden yellow for dark mode chart */
+  --chart-3: oklch(0.704 0.191 22.216); /* Red for dark mode chart */
+  --chart-4: oklch(0.627 0.265 303.9); /* Purplish-blue for dark mode chart */
+  --chart-5: oklch(0.645 0.246 16.439); /* Orange-red for dark mode chart */
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }
