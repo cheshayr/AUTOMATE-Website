@@ -9,57 +9,60 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus } from 'lucide-react';
+import { MinusCircle, Plus, PlusCircle, Trash2 } from 'lucide-react';
 
-export function AddServiceModal() {
+function DeleteItemModal({ itemName }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     // Handle form submission logic here
     alert('Form submitted');
   };
+
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button>
-          <Plus /> Add Service
+        <Button
+          variant="outline"
+          className="text-red-600 hover:text-red-700"
+          size="icon"
+        >
+          <Trash2 size={18} />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add Service</DialogTitle>
-          {/* <DialogDescription>
-              Make changes to your profile here. Click save when you&apos;re
-              done.
-            </DialogDescription> */}
+          <DialogTitle>Deduct Current Stock</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
+        <div>
           <div className="grid gap-4 mb-4">
-            <div className="grid gap-3">
-              <Label htmlFor="name">Service Name</Label>
-              <Input id="name" name="name" placeholder="Service name" />
-            </div>
-            <div className="grid gap-3">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                name="description"
-                placeholder="Service description"
-              />
-            </div>
+            <p>
+              This will permanently delete "{itemName}". This action cannot be
+              undone.
+            </p>
           </div>
           <DialogFooter>
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>
             </DialogClose>
-            <Button type="submit">Save changes</Button>
+            <Button type="submit">Delete</Button>
           </DialogFooter>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
 }
 
-export default AddServiceModal;
+export default DeleteItemModal;

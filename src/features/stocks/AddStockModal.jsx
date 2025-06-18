@@ -9,44 +9,52 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus } from 'lucide-react';
+import { Plus, PlusCircle } from 'lucide-react';
 
-export function AddServiceModal() {
+function AddStockModal() {
   const handleSubmit = (e) => {
     e.preventDefault();
     // Handle form submission logic here
     alert('Form submitted');
   };
+
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button>
-          <Plus /> Add Service
+        <Button
+          variant="outline"
+          className="text-green-600 hover:text-green-700"
+          size="icon"
+        >
+          <PlusCircle size={18} />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add Service</DialogTitle>
-          {/* <DialogDescription>
-              Make changes to your profile here. Click save when you&apos;re
-              done.
-            </DialogDescription> */}
+          <DialogTitle>Add New Stock</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 mb-4">
             <div className="grid gap-3">
-              <Label htmlFor="name">Service Name</Label>
-              <Input id="name" name="name" placeholder="Service name" />
-            </div>
-            <div className="grid gap-3">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                name="description"
-                placeholder="Service description"
+              <Label htmlFor="category">Add Stock</Label>
+              <Input
+                type="number"
+                id="category"
+                category="category"
+                placeholder="Stock"
               />
             </div>
           </div>
@@ -54,7 +62,7 @@ export function AddServiceModal() {
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>
             </DialogClose>
-            <Button type="submit">Save changes</Button>
+            <Button type="submit">Save</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -62,4 +70,4 @@ export function AddServiceModal() {
   );
 }
 
-export default AddServiceModal;
+export default AddStockModal;
