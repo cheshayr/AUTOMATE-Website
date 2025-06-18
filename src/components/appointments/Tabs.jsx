@@ -1,20 +1,20 @@
 import React from "react";
-import '../../features/appointments/AppointmentsPage.css';
+import "../../pages/admin/appointments/AppointmentsPage.css";
 
 const Tabs = ({ tabs, activeTab, onTabChange }) => {
-    return (
-        <div className="tabs-container">
-        {tabs.map((tab) => (
-            <button
-                key={tab}
-                className={`tab-button ${activeTab === tab ? "active" : ""}`}
-                onClick={() => onTabChange(tab)}
-            >
-            {tab}
-            </button>
-        ))}
-        </div>
-    );
+  return (
+    <div className="tabs-container">
+      {tabs.map((tab) => (
+        <button
+          key={tab}
+          className={`tab-button ${activeTab === tab ? "active" : ""}`}
+          onClick={() => onTabChange(tab)}
+        >
+          {tab}
+        </button>
+      ))}
+    </div>
+  );
 };
 
 export default Tabs;

@@ -7,8 +7,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import AuthPage from "./features/auth/AuthPage.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import Dashboard from "./features/dashboard/Dashboard.jsx";
-import AppointmentsPage from "./features/appointments/AppointmentsPage.jsx";
-import AppointmentDetailsPage from "./features/appointments/AppointmentDetailsPage.jsx";
+import AppointmentsPage from "./pages/admin/appointments/AppointmentsPage.jsx";
+import AppointmentDetailsPage from "./pages/admin/appointments/AppointmentDetailsPage.jsx";
 import StockManagement from "./features/stocks/StockManagement.jsx";
 import Services from "./pages/admin/services/ServiceConfigPage.jsx";
 import ActivityLogs from "./activity/ActivityLogs.jsx";
@@ -16,6 +16,7 @@ import UserManagement from "./features/user/UserManagement.jsx";
 import EditServicePage from "./pages/admin/services/EditServicePage.jsx";
 import LoginPage from "./pages/auth/Login.jsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useAlert } from "./hooks/useAlert.jsx";
 
 function App() {
   return (

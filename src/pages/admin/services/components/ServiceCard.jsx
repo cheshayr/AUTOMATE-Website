@@ -10,8 +10,9 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAlert } from "@/hooks/useAlert";
 
-export function ServiceCard({ data }) {
+export function ServiceCard({ data, handleEdit, handleDelete }) {
   return (
     <Card className="w-full max-w-sm">
       <CardHeader className="flex-1 flex flex-col ">
@@ -26,10 +27,15 @@ export function ServiceCard({ data }) {
           type="submit"
           variant="outline"
           className="flex-1 cursor-pointer"
+          onClick={handleEdit}
         >
           Edit
         </Button>
-        <Button variant="destructive" className="flex-1 cursor-pointer">
+        <Button
+          variant="destructive"
+          className="flex-1 cursor-pointer"
+          onClick={handleDelete}
+        >
           Delete
         </Button>
       </CardFooter>
