@@ -4,9 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 export const useServicesQuery = () => {
   const queryClient = useQueryClient();
   const fetchServices = async () => {
-    const response = await authenticatedApi.get("/services", {
-      withCredentials: true,
-    });
+    const response = await authenticatedApi.get("/services");
     if (response.status !== 200) {
       throw new Error("Failed to fetch services");
     }

@@ -33,7 +33,7 @@ const ServiceConfigPage = () => {
       <div className="service-grid">
         {data?.map((service, idx) => (
           <div key={idx} className="service-card">
-            <span>{service}</span>
+            <span>{service.name}</span>
             <button>
               <Pencil size={18} />
             </button>

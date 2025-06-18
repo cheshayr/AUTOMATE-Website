@@ -1,7 +1,12 @@
 import axios from "axios";
 
 const authenticatedApi = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || BASE_API_URL,
+  baseURL: import.meta.env.VITE_API_URL,
+  headers: {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  },
+  withCredentials: true, // This allows cookies to be sent with requests
 });
 
 // authenticatedApi.interceptors.request.use(
