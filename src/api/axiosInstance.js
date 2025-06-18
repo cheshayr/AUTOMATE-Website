@@ -6,7 +6,7 @@ const authenticatedApi = axios.create({
     "Content-Type": "application/json",
     Accept: "application/json",
   },
-  withCredentials: true, // This allows cookies to be sent with requests
+  withCredentials: true,
 });
 
 // authenticatedApi.interceptors.request.use(

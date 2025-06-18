@@ -1,14 +1,14 @@
 // EditServicePage.jsx
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import Sidebar from '../../components/sidebar/Sidebar';
-import './EditServicePage.css';
+import React, { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import Sidebar from "../../../components/sidebar/Sidebar";
+import "./EditServicePage.css";
 
 const EditServicePage = () => {
   const { serviceName } = useParams();
   const decodedServiceName = decodeURIComponent(serviceName);
   const [title, setTitle] = useState(decodedServiceName);
-  const [description, setDescription] = useState('');
+  const [description, setDescription] = useState("");
   const [image, setImage] = useState(null);
   const navigate = useNavigate();
 
@@ -19,20 +19,20 @@ const EditServicePage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Saving:', { title, description, image });
-    navigate('/services');
+    console.log("Saving:", { title, description, image });
+    navigate("/services");
   };
 
   return (
     <div className="service-config-wrapper">
-      <Sidebar role="admin" onLogout={() => console.log('Logout')} />
+      <Sidebar role="admin" onLogout={() => console.log("Logout")} />
       <main className="service-main">
         <div className="service-header">
           <h1>Edit Service</h1>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ maxWidth: '500px' }}>
-          <div style={{ marginBottom: '1rem' }}>
+        <form onSubmit={handleSubmit} style={{ maxWidth: "500px" }}>
+          <div style={{ marginBottom: "1rem" }}>
             <label>Service Title</label>
             <input
               type="text"
@@ -43,7 +43,7 @@ const EditServicePage = () => {
             />
           </div>
 
-          <div style={{ marginBottom: '1rem' }}>
+          <div style={{ marginBottom: "1rem" }}>
             <label>Description</label>
             <textarea
               value={description}
@@ -53,12 +53,14 @@ const EditServicePage = () => {
             />
           </div>
 
-          <div style={{ marginBottom: '1rem' }}>
+          <div style={{ marginBottom: "1rem" }}>
             <label>Upload Image</label>
             <input type="file" accept="image/*" onChange={handleImageChange} />
           </div>
 
-          <button type="submit" className="save-btn">Save Changes</button>
+          <button type="submit" className="save-btn">
+            Save Changes
+          </button>
         </form>
       </main>
     </div>

@@ -10,10 +10,10 @@ import Dashboard from "./features/dashboard/Dashboard.jsx";
 import AppointmentsPage from "./features/appointments/AppointmentsPage.jsx";
 import AppointmentDetailsPage from "./features/appointments/AppointmentDetailsPage.jsx";
 import StockManagement from "./features/stocks/StockManagement.jsx";
-import Services from "./features/services/ServiceConfigPage.jsx";
+import Services from "./pages/admin/services/ServiceConfigPage.jsx";
 import ActivityLogs from "./activity/ActivityLogs.jsx";
 import UserManagement from "./features/user/UserManagement.jsx";
-import EditServicePage from "./features/services/EditServicePage.jsx";
+import EditServicePage from "./pages/admin/services/EditServicePage.jsx";
 import LoginPage from "./pages/auth/Login.jsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
