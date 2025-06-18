@@ -1,13 +1,9 @@
 import React, { useState, useEffect } from "react";
-import Tabs from "../../../components/appointments/Tabs";
-import AppointmentsTable from "../../../components/appointments/AppointmentsTable";
 import "./AppointmentsPage.css";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "../../../context/AuthContext";
-import Spinner from "../../../components/constants/spinner/Spinner";
 import DashboardLayout from "../../../features/DashboardLayout";
 
-import { useServicesQuery } from "@/hooks/useServices.query";
 import {
   Card,
   CardAction,
@@ -17,7 +13,21 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, Plus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import AppointmentsDataTable from "./components/DataTable";
+import { useAppointments } from "@/hooks/useAppointments.query";
+import DataTable from "./components/DataTable";
+import AppointmentForm from "./components/AppointmentForm";
+import { Dialog } from "@/components/ui/dialog";
 
 const tabs = [
   "Pending Visit",
@@ -27,36 +37,160 @@ const tabs = [
   "Cancelled",
 ];
 
+// --- 1. DEFINE TABLE COLUMNS ---
+
 const AppointmentsPage = () => {
-  const [activeTab, setActiveTab] = useState("Pending Visit");
-  const [data, setData] = useState([]);
+  const { data } = useAppointments();
+  const appointments = data?.appointments || [];
+
+  const [staffList, setStaffList] = useState([]);
+  const [vehicleList, setVehicleList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuthContext();
-  const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingAppointment, setEditingAppointment] = useState(null); // null for new, object for edit
 
-  useEffect(() => {
-    fetch("http://YOUR_BACKEND_IP:5000/api/appointments")
-      .then((res) => res.json())
-      .then((jsonData) => {
-        setData(jsonData);
-      })
-      .catch((error) => {
-        console.error("Error loading appointments:", error);
-      })
-      .finally(() => setLoading(false));
+  const handleOpenModal = (appointment = null) => {
+    console.log(appointment);
+    setEditingAppointment(appointment);
+    setIsModalOpen(true);
+  };
 
-    if (!user) {
-      const timeout = setTimeout(() => {
-        navigate("/");
-      }, 1500);
-      return () => clearTimeout(timeout);
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingAppointment(null);
+  };
+
+  const handleSaveAppointment = (formData) => {
+    if (editingAppointment) {
+      // Logic to PATCH/update an existing appointment
+      console.log("Updating appointment:", editingAppointment._id, formData);
+    } else {
+      // Logic to POST/create a new appointment
+      console.log("Creating new appointment:", formData);
     }
-  }, [user, navigate]);
+    // For demo, we just close the modal. In real app, you'd refetch data.
+    handleCloseModal();
+  };
 
-  if (!user) return <Spinner message="Logging out..." />;
-  if (loading) return <Spinner message="Fetching Appointments" />;
+  const handleDeleteAppointment = (appointmentId) => {
+    console.log("Deleting appointment:", appointmentId);
+    // Add API call and refetch logic here
+  };
 
-  const filteredData = data.filter((item) => item.status === activeTab);
+  const columns = [
+    {
+      accessorKey: "name",
+      header: "Customer",
+      cell: ({ row }) => (
+        <div className="capitalize font-medium">{row.original.name}</div>
+      ),
+    },
+    {
+      accessorKey: "vehicle",
+      header: "Vehicle",
+      cell: ({ row }) => (
+        <div>
+          <div className="font-medium">{`${row.original.vehicle.brand} ${row.original.vehicle.model}`}</div>
+          <div className="text-muted-foreground text-xs">
+            {row.original.vehicle.licensePlate}
+          </div>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "scheduledTime",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Scheduled Time
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => (
+        <div className="pl-4">
+          {new Date(row.getValue("scheduledTime")).toLocaleString()}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => (
+        <Badge variant={row.getValue("status")}>{row.getValue("status")}</Badge>
+      ),
+    },
+    {
+      accessorKey: "assignedStaff.name",
+      header: "Assigned Staff",
+      cell: ({ row }) => (
+        <div>
+          {row.original.assignedStaff?.name || (
+            <span className="text-sm italic text-muted-foreground">
+              Unassigned
+            </span>
+          )}
+        </div>
+      ),
+    },
+    {
+      id: "actions",
+      enableHiding: false,
+      cell: ({ row }) => {
+        const appointment = row.original;
+
+        const handleDelete = () => {
+          // In a real app, you would open a confirmation modal here
+          // instead of using window.confirm
+          console.log(`Deletion requested for appointment: ${appointment._id}`);
+          // Example: showModal({ type: 'delete', id: appointment._id });
+        };
+
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem
+                onSelect={async () => {
+                  await navigator.clipboard.writeText(appointment._id);
+                  alert(
+                    `Appointment ID ${appointment._id} copied to clipboard!`
+                  );
+                }}
+              >
+                Copy Appointment ID
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onSelect={handleOpenModal.bind(null, appointment)}
+              >
+                View / Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={handleOpenModal.bind(null, appointment)}
+              >
+                View Invoice
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-red-600 focus:text-red-700 focus:bg-red-50"
+                onSelect={handleDelete}
+              >
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
 
   return (
     <DashboardLayout>
@@ -68,7 +202,7 @@ const AppointmentsPage = () => {
             existing appointments as needed.
           </CardDescription>
           <CardAction>
-            <Button onClick={() => {}}>
+            <Button onClick={handleOpenModal}>
               <Plus />
               Create Appointment
             </Button>
@@ -85,7 +219,19 @@ const AppointmentsPage = () => {
                 />
               ))}
             </div> */}
+          <DataTable columns={columns} data={appointments} />
         </CardContent>
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          {isModalOpen && (
+            <AppointmentForm
+              appointment={editingAppointment}
+              onSave={handleSaveAppointment}
+              onCancel={handleCloseModal}
+              staffList={staffList}
+              vehicleList={vehicleList}
+            />
+          )}
+        </Dialog>
       </Card>
       {/* <div className="bg-[#f5f7ff] min-h-screen p-6">
         <h1 className="text-4xl font-bold mb-8">Appointments</h1>
