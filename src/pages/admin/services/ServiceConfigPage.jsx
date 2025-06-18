@@ -11,12 +11,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import AddServiceModal from "./components/AddServiceModal";
 
 const ServiceConfigPage = () => {
   const { data, error, isLoading } = useServicesQuery();
   const role = "admin";
   const handleLogout = () => console.log("Logging out...");
   console.log(data);
+
   return (
     <DashboardLayout>
       <Card className="w-full bg-transparent shadow-none border-0">
@@ -27,13 +29,13 @@ const ServiceConfigPage = () => {
             as needed.
           </CardDescription>
           <CardAction>
-            <Button>Add Service</Button>
+            <AddServiceModal />
           </CardAction>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {data?.map((service, idx) => (
-              <ServiceCard data={service} />
+              <ServiceCard key={service._id} data={service} />
             ))}
           </div>
         </CardContent>
