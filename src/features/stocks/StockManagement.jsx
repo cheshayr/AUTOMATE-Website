@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from "react";
-import DashboardLayout from "../DashboardLayout";
-import "../../pages/dashboard/Dashboard.css";
-import { useAuthContext } from "../../context/AuthContext";
+import React, { useEffect, useState } from 'react';
+import DashboardLayout from '../DashboardLayout';
+import '../../pages/dashboard/Dashboard.css';
+import { useAuthContext } from '../../context/AuthContext';
 
-const API_URL = "http://localhost:5000/api/stocks";
-import React, { useEffect, useState } from "react";
-import DashboardLayout from "../DashboardLayout";
-import "../dashboard/Dashboard.css";
-import { useAuthContext } from "../../context/AuthContext";
-import LoadingSpinner from "@/components/LoadingSpinner";
+const API_URL = 'http://localhost:5000/api/stocks';
+import React, { useEffect, useState } from 'react';
+import DashboardLayout from '../DashboardLayout';
+import '../dashboard/Dashboard.css';
+import { useAuthContext } from '../../context/AuthContext';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import {
   Card,
   CardAction,
@@ -16,7 +16,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -26,7 +26,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
 import {
   Select,
   SelectContent,
@@ -35,8 +35,8 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import AddItemModal from "./AddItemModal";
+} from '@/components/ui/select';
+import AddItemModal from './AddItemModal';
 import {
   Eye,
   Loader2,
@@ -44,21 +44,21 @@ import {
   MinusCircle,
   PlusCircle,
   Trash2,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import AddCategoryModal from "./AddCategoryModal";
-import AddStockModal from "./AddStockModal";
-import DeductStockModal from "./DeductStockModal";
-import DeleteItemModal from "./DeleteItemModal";
-import { Label } from "recharts";
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import AddCategoryModal from './AddCategoryModal';
+import AddStockModal from './AddStockModal';
+import DeductStockModal from './DeductStockModal';
+import DeleteItemModal from './DeleteItemModal';
+import { Label } from 'recharts';
 import {
   useFetchInventory,
   useFetchItemCategories,
-} from "@/hooks/useInventoryQuery";
-import { useAddCategory } from "@/hooks/useInventoryMutation";
+} from '@/hooks/useInventoryQuery';
+import { useAddCategory } from '@/hooks/useInventoryMutation';
 
 const StockManagement = () => {
-  const [itemCategory, setItemCategory] = useState("All");
+  const [itemCategory, setItemCategory] = useState('All');
 
   const {
     data: inventoryData,
@@ -73,6 +73,8 @@ const StockManagement = () => {
   } = useFetchItemCategories();
 
   const { mutate: addCategoryMutation } = useAddCategory();
+
+  console.log('test');
 
   return (
     <DashboardLayout>
@@ -120,7 +122,7 @@ const StockManagement = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[250px]">Item Name</TableHead>
-                <TableHead>Category</TableHead> <TableHead>Stock</TableHead>{" "}
+                <TableHead>Category</TableHead> <TableHead>Stock</TableHead>{' '}
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Price</TableHead>
                 <TableHead className="text-center">Actions</TableHead>
@@ -140,8 +142,8 @@ const StockManagement = () => {
                       {item.itemName}
                     </TableCell>
                     <TableCell>{item.category}</TableCell>
-                    <TableCell>{item.stock}</TableCell>{" "}
-                    <TableCell>{item.status}</TableCell>{" "}
+                    <TableCell>{item.stock}</TableCell>{' '}
+                    <TableCell>{item.status}</TableCell>{' '}
                     <TableCell className="text-right">{item.price}</TableCell>
                     <TableCell className="flex items-center justify-center space-x-3 p-3">
                       <DeductStockModal />
