@@ -38,7 +38,7 @@ function AddItemModal({ isAdd = true, item = {} }) {
     <Dialog>
       <DialogTrigger asChild>
         {isAdd ? (
-          <Button>
+          <Button className="min-w-40">
             <Plus /> Add Item
           </Button>
         ) : (

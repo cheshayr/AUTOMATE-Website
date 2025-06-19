@@ -45,64 +45,28 @@ import AddStockModal from './AddStockModal';
 import DeductStockModal from './DeductStockModal';
 import DeleteItemModal from './DeleteItemModal';
 import { Label } from 'recharts';
-import { useInventoryQuery } from '@/hooks/useInventoryQuery';
-
-const API_URL = 'http://localhost:5000/api/stocks';
-
-const products = [
-  {
-    id: 'PROD001',
-    itemName: 'Ergonomic Office Chair',
-    category: 'Furniture',
-    stock: 85,
-    price: '350.00',
-    status: 'In Stock',
-    lowStockThreshold: 10, // <-- Added
-  },
-  {
-    id: 'PROD002',
-    itemName: 'Standing Desk',
-    category: 'Furniture',
-    stock: 40,
-    price: '499.00',
-    status: 'In Stock',
-    lowStockThreshold: 10, // <-- Added
-  },
-  {
-    id: 'PROD003',
-    itemName: 'Noise-Cancelling Headphones',
-    category: 'Electronics',
-    stock: 0,
-    price: '299.99',
-    status: 'Out of Stock',
-    lowStockThreshold: 10, // <-- Added
-  },
-  {
-    id: 'PROD004',
-    itemName: 'Curved Ultrawide Monitor',
-    category: 'Monitors',
-    stock: 22,
-    price: '899.50',
-    status: 'In Stock',
-    lowStockThreshold: 10, // <-- Added
-  },
-  {
-    id: 'PROD005',
-    itemName: 'Wireless Keyboard & Mouse Combo',
-    category: 'Accessories',
-    stock: 7,
-    price: '99.00',
-    status: 'Low Stock',
-    lowStockThreshold: 10, // <-- Added
-  },
-];
+import {
+  useFetchInventory,
+  useFetchItemCategories,
+} from '@/hooks/useInventoryQuery';
+import { useAddCategory } from '@/hooks/useInventoryMutation';
 
 const StockManagement = () => {
+  const [itemCategory, setItemCategory] = useState('All');
+
   const {
     data: inventoryData,
     isPending: inventoryDataPending,
     error: inventoryDataError,
-  } = useInventoryQuery();
+  } = useFetchInventory();
+
+  const {
+    data: itemCategoriesData,
+    isPending: itemCategoriesDataPending,
+    error: itemCategoriesDataError,
+  } = useFetchItemCategories();
+
+  const { mutate: addCategoryMutation } = useAddCategory();
 
   return (
     <DashboardLayout>
@@ -115,14 +79,13 @@ const StockManagement = () => {
             Manage inventory, track all the stocks and parts.
           </CardDescription>
           <CardAction className="flex space-x-4">
-            <div className="grid gap-3">
+            <div className="grid gap-3 min-w-40">
               <Label htmlFor="category">Item Category</Label>
               <Select
-                // disabled={!isAdd}
                 id="category"
                 name="category"
-                value="All"
-                // value={itemDetails.category}
+                value={itemCategory}
+                onValueChange={(newValue) => setItemCategory(newValue)}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue />
@@ -130,10 +93,14 @@ const StockManagement = () => {
                 <SelectContent>
                   <SelectGroup>
                     <SelectItem value="All">All</SelectItem>
-                    <SelectItem value="Furniture">Furniture</SelectItem>
-                    <SelectItem value="Electronics">Electronics</SelectItem>
-                    <SelectItem value="Monitors">Monitors</SelectItem>
-                    <SelectItem value="Accessories">Accessories</SelectItem>
+                    {itemCategoriesData?.data?.map((category) => (
+                      <SelectItem
+                        key={category.id}
+                        value={category.categoryName}
+                      >
+                        {category.categoryName}
+                      </SelectItem>
+                    ))}
                   </SelectGroup>
                 </SelectContent>
               </Select>

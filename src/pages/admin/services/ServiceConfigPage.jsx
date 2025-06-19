@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
-import DashboardLayout from "../../../features/DashboardLayout";
-import { useServicesQuery } from "@/hooks/useServices.query";
-import { ServiceCard } from "./components/ServiceCard";
+import React, { useState, useEffect } from 'react';
+import DashboardLayout from '../../../features/DashboardLayout';
+import { useServicesQuery } from '@/hooks/useServices.query';
+import { ServiceCard } from './components/ServiceCard';
 import {
   Card,
   CardAction,
@@ -9,12 +9,12 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import AddServiceModal from "./components/AddServiceModal";
-import { useAlert } from "@/hooks/useAlert";
-import { useDeleteService } from "@/hooks/useServices.mutation";
-import { Plus } from "lucide-react";
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import AddServiceModal from './components/AddServiceModal';
+import { useAlert } from '@/hooks/useAlert';
+import { useDeleteService } from '@/hooks/useServices.mutation';
+import { Plus } from 'lucide-react';
 
 const ServiceConfigPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -37,14 +37,14 @@ const ServiceConfigPage = () => {
 
   const handleDelete = (id) => {
     showConfirm({
-      title: "Delete Item",
-      description: "Are you sure you want to delete this item permanently?",
-      actionLabel: "Yes, Delete It",
+      title: 'Delete Item',
+      description: 'Are you sure you want to delete this item permanently?',
+      actionLabel: 'Yes, Delete It',
       onConfirm: () => {
         mutate(id);
       },
       onCancel: () => {
-        console.log("Deletion cancelled.");
+        console.log('Deletion cancelled.');
       },
     });
   };

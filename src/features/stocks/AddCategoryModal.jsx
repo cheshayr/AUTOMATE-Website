@@ -34,7 +34,7 @@ function AddCategoryModal() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button>
+        <Button className="min-w-40">
           <Plus /> Add Category
         </Button>
       </DialogTrigger>
