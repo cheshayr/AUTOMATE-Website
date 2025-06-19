@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import DashboardLayout from "../../../features/DashboardLayout";
+import DashboardLayout from "../../features/DashboardLayout";
 import { useServicesQuery } from "@/hooks/useServices.query";
 import { ServiceCard } from "./components/ServiceCard";
 import {

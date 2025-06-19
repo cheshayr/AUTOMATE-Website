@@ -1,7 +1,7 @@
 // EditServicePage.jsx
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Sidebar from "../../../components/sidebar/Sidebar";
+import Sidebar from "../../components/sidebar/Sidebar";
 import "./EditServicePage.css";
 
 const EditServicePage = () => {

@@ -1,5 +1,5 @@
 import React from "react";
-import "../../pages/admin/appointments/AppointmentsPage.css";
+import "../../pages/appointments/AppointmentsPage.css";
 
 const Tabs = ({ tabs, activeTab, onTabChange }) => {
   return (

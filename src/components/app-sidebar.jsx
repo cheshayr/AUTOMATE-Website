@@ -8,6 +8,7 @@ import {
   Frame,
   Home,
   LifeBuoy,
+  LogOut,
   Map,
   Package,
   PieChart,
@@ -26,6 +27,8 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -192,7 +195,21 @@ export function AppSidebar({ ...props }) {
         <NavProjects
           projects={user.role === "admin" ? data.admin : data.staff}
         />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        {/* <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
+        <SidebarGroup className="mt-auto">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild size="sm">
+                  <a href={"#"} onClick={logout}>
+                    <LogOut className="size-4" />
+                    <span>Logout</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} logout={logout} />

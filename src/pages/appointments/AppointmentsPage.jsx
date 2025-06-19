@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import "./AppointmentsPage.css";
 import { useNavigate } from "react-router-dom";
-import { useAuthContext } from "../../../context/AuthContext";
-import DashboardLayout from "../../../features/DashboardLayout";
+import { useAuthContext } from "../../context/AuthContext";
+import DashboardLayout from "../../features/DashboardLayout";
 
 import {
   Card,

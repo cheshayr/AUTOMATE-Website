@@ -8,9 +8,9 @@ import {
   FiUpload,
   FiImage,
 } from "react-icons/fi";
-import DashboardLayout from "../../../features/DashboardLayout";
-import Spinner from "../../../components/constants/spinner/Spinner";
-import { useAuthContext } from "../../../context/AuthContext";
+import DashboardLayout from "../../features/DashboardLayout";
+import Spinner from "../../components/constants/spinner/Spinner";
+import { useAuthContext } from "../../context/AuthContext";
 import "./AppointmentDetailsPage.css";
 
 const AppointmentDetailsPage = () => {

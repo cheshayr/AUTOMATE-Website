@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import '../features/dashboard/Dashboard.css'
+import "../pages/dashboard/Dashboard.css";
 import { FiEye } from "react-icons/fi";
 
 const tabs = ["For Approval", "Ongoing Repair", "Completed"];
@@ -13,9 +13,7 @@ const AppointmentPage = ({ data }) => {
     <div className="p-6 bg-[#f5f7ff] min-h-screen">
       <h1 className="text-2xl font-bold mb-4">Appointments</h1>
 
-      {
-        
-      }
+      {}
       <div className="flex space-x-2 mb-6">
         {tabs.map((tab) => (
           <button
@@ -32,9 +30,7 @@ const AppointmentPage = ({ data }) => {
         ))}
       </div>
 
-      {
-
-      }
+      {}
       <div className="bg-white rounded-lg shadow-md overflow-x-auto">
         <table className="w-full text-left table-auto">
           <thead className="bg-gray-100">
@@ -93,5 +89,3 @@ const AppointmentPage = ({ data }) => {
 };
 
 export default AppointmentPage;
-
-
