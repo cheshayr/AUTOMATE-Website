@@ -28,6 +28,8 @@ import {
   ShieldX,
   ShieldCheck,
 } from 'lucide-react';
+import AddUserModal from './AddUserModal';
+import AddItemModal from '../stocks/AddItemModal';
 
 // --- Mock Data (Replace with API call) ---
 const usersData = [
@@ -39,7 +41,7 @@ const usersData = [
     isVerified: true,
     isActive: true,
     role: 'Admin',
-    position: 'IT Manager',
+    position: 'Office Staff',
   },
   {
     id: 'USR002',
@@ -49,7 +51,7 @@ const usersData = [
     isVerified: false,
     isActive: true,
     role: 'User',
-    position: 'Sales Representative',
+    position: 'Mechanic',
   },
   {
     id: 'USR003',
@@ -59,7 +61,7 @@ const usersData = [
     isVerified: true,
     isActive: false,
     role: 'User',
-    position: 'Marketing Head',
+    position: 'Driver',
   },
   {
     id: 'USR004',
@@ -69,7 +71,7 @@ const usersData = [
     isVerified: true,
     isActive: true,
     role: 'Editor',
-    position: 'Content Writer',
+    position: 'Guard',
   },
   {
     id: 'USR005',
@@ -79,7 +81,7 @@ const usersData = [
     isVerified: false,
     isActive: false,
     role: 'User',
-    position: 'Graphic Designer',
+    position: 'Helper',
   },
 ];
 
@@ -145,9 +147,7 @@ const UserManagement = () => {
               />
             </div>
             {/* Replace with your Add User Modal Trigger */}
-            <Button>
-              <UserPlus className="mr-2 h-4 w-4" /> Add User
-            </Button>
+            <AddUserModal />
           </CardAction>
         </CardHeader>
         <CardContent>
@@ -187,9 +187,8 @@ const UserManagement = () => {
                   <TableCell>{user.position}</TableCell>
                   <TableCell className="flex items-center justify-center space-x-2 p-3">
                     {/* Replace with your Edit User Modal Trigger */}
-                    <Button variant="outline" size="icon">
-                      <Edit size={18} />
-                    </Button>
+
+                    <AddUserModal isAdd={false} user={user} />
                     {user.isActive ? (
                       <Button
                         variant="outline"

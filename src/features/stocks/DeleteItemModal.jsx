@@ -44,7 +44,7 @@ function DeleteItemModal({ itemName }) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Deduct Current Stock</DialogTitle>
+          <DialogTitle>Delete Item</DialogTitle>
         </DialogHeader>
         <div>
           <div className="grid gap-4 mb-4">

@@ -53,7 +53,7 @@ function AddItemModal({ isAdd = true, item = {} }) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add Item</DialogTitle>
+          <DialogTitle>{isAdd ? 'Add Item' : 'Item Details'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 mb-4">
@@ -142,7 +142,11 @@ function AddItemModal({ isAdd = true, item = {} }) {
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>
             </DialogClose>
-            <Button type="submit">Save</Button>
+            {isAdd ? (
+              <Button type="submit">Save</Button>
+            ) : (
+              <Button type="submit">Update</Button>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>
