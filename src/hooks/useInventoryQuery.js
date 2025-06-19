@@ -1,10 +1,10 @@
 import authenticatedApi from '@/api/axiosInstance';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-export const useFetchInventory = () => {
+export const useFetchInventory = ({ filter }) => {
   const queryClient = useQueryClient();
-  const fetchInventory = async () => {
-    const response = await authenticatedApi.get('/inventory');
+  const fetchInventory = async (filter) => {
+    const response = await authenticatedApi.get(`/inventory?filter=${filter}`);
     if (response.status !== 200) {
       throw new Error('Failed to fetch inventory');
     }
@@ -12,8 +12,8 @@ export const useFetchInventory = () => {
   };
 
   return useQuery({
-    queryKey: ['inventory'],
-    queryFn: () => fetchInventory(),
+    queryKey: ['inventory', filter],
+    queryFn: ({ queryKey: [_key, filterValue] }) => fetchInventory(filterValue),
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 5, // 5 minutes
     cacheTime: 1000 * 60 * 10, // 10 minutes

@@ -24,18 +24,54 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Eye, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useAddItem, useUpdateItem } from '@/hooks/useInventoryMutation';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
-function AddItemModal({ isAdd = true, item = {} }) {
+function AddItemModal({ isAdd = true, item = {}, itemCategories }) {
   const [itemDetails, setItemDetails] = useState(item);
+  const [isOpen, setIsOpen] = useState(false);
 
-  const handleSubmit = (e) => {
+  const {
+    mutateAsync: addItemMutation,
+    isPending: addItemMutationPending,
+    isError: addItemMutationError,
+    isSuccess: addItemMutationSuccess,
+    reset: resetAddItemMutation,
+  } = useAddItem();
+
+  const {
+    mutateAsync: updateItemMutation,
+    isPending: updateItemMutationPending,
+    isError: updateItemMutationError,
+    isSuccess: updateItemMutationSuccess,
+    reset: resetUpdateItemMutation,
+  } = useUpdateItem();
+
+  useEffect(() => {
+    if (addItemMutationSuccess || updateItemMutationSuccess) {
+      setIsOpen(false);
+    }
+
+    isAdd && setItemDetails({});
+
+    resetAddItemMutation();
+    resetUpdateItemMutation();
+  }, [addItemMutationSuccess, updateItemMutationSuccess, isOpen]);
+
+  const handleSave = async (e) => {
     e.preventDefault();
-    // Handle form submission logic here
-    alert('Form submitted');
+
+    await addItemMutation(itemDetails);
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+
+    await updateItemMutation(itemDetails);
   };
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         {isAdd ? (
           <Button className="min-w-40">
@@ -55,13 +91,13 @@ function AddItemModal({ isAdd = true, item = {} }) {
         <DialogHeader>
           <DialogTitle>{isAdd ? 'Add Item' : 'Item Details'}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
+        <form>
           <div className="grid gap-4 mb-4">
             <div className="grid gap-3">
               <Label htmlFor="name">Item Name</Label>
               <Input
                 onChange={(e) =>
-                  setItemDetails({ ...item, itemName: e.target.value })
+                  setItemDetails({ ...itemDetails, itemName: e.target.value })
                 }
                 id="name"
                 name="name"
@@ -76,16 +112,24 @@ function AddItemModal({ isAdd = true, item = {} }) {
                 id="category"
                 name="category"
                 value={itemDetails.category}
+                onValueChange={(newValue) =>
+                  setItemDetails({ ...itemDetails, category: newValue })
+                }
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    <SelectItem value="Furniture">Furniture</SelectItem>
-                    <SelectItem value="Electronics">Electronics</SelectItem>
-                    <SelectItem value="Monitors">Monitors</SelectItem>
-                    <SelectItem value="Accessories">Accessories</SelectItem>
+                    <SelectItem value="All">All</SelectItem>
+                    {itemCategories?.map((category) => (
+                      <SelectItem
+                        key={category.id}
+                        value={category.categoryName}
+                      >
+                        {category.categoryName}
+                      </SelectItem>
+                    ))}
                   </SelectGroup>
                 </SelectContent>
               </Select>
@@ -97,7 +141,7 @@ function AddItemModal({ isAdd = true, item = {} }) {
                   value={itemDetails.stock}
                   onChange={(e) =>
                     setItemDetails({
-                      ...item,
+                      ...itemDetails,
                       stock: e.target.value,
                     })
                   }
@@ -113,7 +157,7 @@ function AddItemModal({ isAdd = true, item = {} }) {
                   value={itemDetails.price}
                   onChange={(e) =>
                     setItemDetails({
-                      ...item,
+                      ...itemDetails,
                       price: e.target.value,
                     })
                   }
@@ -129,7 +173,10 @@ function AddItemModal({ isAdd = true, item = {} }) {
               <Input
                 value={itemDetails.lowStockThreshold}
                 onChange={(e) =>
-                  setItemDetails({ ...item, lowStockThreshold: e.target.value })
+                  setItemDetails({
+                    ...itemDetails,
+                    lowStockThreshold: e.target.value,
+                  })
                 }
                 type="number"
                 id="lowStockThreshold"
@@ -143,9 +190,27 @@ function AddItemModal({ isAdd = true, item = {} }) {
               <Button variant="outline">Cancel</Button>
             </DialogClose>
             {isAdd ? (
-              <Button type="submit">Save</Button>
+              <Button onClick={handleSave}>
+                {addItemMutationPending ? (
+                  <span className="flex items-center gap-2">
+                    <LoadingSpinner />
+                    Saving
+                  </span>
+                ) : (
+                  'Save'
+                )}
+              </Button>
             ) : (
-              <Button type="submit">Update</Button>
+              <Button onClick={handleUpdate}>
+                {updateItemMutationPending ? (
+                  <span className="flex items-center gap-2">
+                    <LoadingSpinner />
+                    Updating
+                  </span>
+                ) : (
+                  'Update'
+                )}
+              </Button>
             )}
           </DialogFooter>
         </form>

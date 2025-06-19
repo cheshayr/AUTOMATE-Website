@@ -23,16 +23,38 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus } from 'lucide-react';
+import { useAddCategory } from '@/hooks/useInventoryMutation';
+import { useEffect, useState } from 'react';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 function AddCategoryModal() {
-  const handleSubmit = (e) => {
+  const [category, setCategory] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+
+  const {
+    mutateAsync: addCategoryMutation,
+    isPending: addCategoryMutationPending,
+    isError: addCategoryMutationError,
+    isSuccess: addCategoryMutationSuccess,
+    reset: resetAddCategoryMutation,
+  } = useAddCategory();
+
+  useEffect(() => {
+    if (isOpen && addCategoryMutationSuccess) {
+      setIsOpen(false); // <--- This is the programmatic close
+      setCategory(''); // Clear input for next time modal opens
+      resetAddCategoryMutation(); // Reset mutation status for a clean slate
+    }
+  }, [addCategoryMutationSuccess, isOpen]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission logic here
-    alert('Form submitted');
+
+    await addCategoryMutation({ categoryName: category });
   };
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button className="min-w-40">
           <Plus /> Add Category
@@ -50,6 +72,8 @@ function AddCategoryModal() {
                 id="category"
                 category="category"
                 placeholder="Item Category"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
               />
             </div>
           </div>
@@ -57,7 +81,16 @@ function AddCategoryModal() {
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>
             </DialogClose>
-            <Button type="submit">Save</Button>
+            <Button type="submit">
+              {addCategoryMutationPending ? (
+                <span className="flex items-center gap-1">
+                  <LoadingSpinner />
+                  Saving
+                </span>
+              ) : (
+                'Save'
+              )}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

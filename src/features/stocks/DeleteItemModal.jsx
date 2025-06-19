@@ -23,16 +23,37 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { MinusCircle, Plus, PlusCircle, Trash2 } from 'lucide-react';
+import { useDeleteItem } from '@/hooks/useInventoryMutation';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import { useEffect, useState } from 'react';
 
-function DeleteItemModal({ itemName }) {
-  const handleSubmit = (e) => {
+function DeleteItemModal({ itemName, id }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const {
+    mutateAsync: deleteStockMutation,
+    isPending: deleteStockMutationPending,
+    isError: deleteStockMutationError,
+    isSuccess: deleteStockMutationSuccess,
+    reset: resetDeleteStockMutation,
+  } = useDeleteItem();
+
+  useEffect(() => {
+    if (deleteStockMutationSuccess) {
+      setIsOpen(false);
+    }
+
+    resetDeleteStockMutation();
+  }, [deleteStockMutationSuccess, isOpen]);
+
+  const handleDelete = async (e) => {
     e.preventDefault();
-    // Handle form submission logic here
-    alert('Form submitted');
+
+    await deleteStockMutation({ id });
   };
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button
           variant="outline"
@@ -57,7 +78,16 @@ function DeleteItemModal({ itemName }) {
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>
             </DialogClose>
-            <Button type="submit">Delete</Button>
+            <Button onClick={handleDelete}>
+              {deleteStockMutationPending ? (
+                <span className="flex items-center gap-1">
+                  <LoadingSpinner />
+                  Deleting
+                </span>
+              ) : (
+                'Delete'
+              )}
+            </Button>
           </DialogFooter>
         </div>
       </DialogContent>

@@ -1,13 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../DashboardLayout';
-import '../../pages/dashboard/Dashboard.css';
-import { useAuthContext } from '../../context/AuthContext';
 
-const API_URL = 'http://localhost:5000/api/stocks';
-import React, { useEffect, useState } from 'react';
-import DashboardLayout from '../DashboardLayout';
-import '../dashboard/Dashboard.css';
-import { useAuthContext } from '../../context/AuthContext';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import {
   Card,
@@ -55,7 +48,6 @@ import {
   useFetchInventory,
   useFetchItemCategories,
 } from '@/hooks/useInventoryQuery';
-import { useAddCategory } from '@/hooks/useInventoryMutation';
 
 const StockManagement = () => {
   const [itemCategory, setItemCategory] = useState('All');
@@ -64,17 +56,13 @@ const StockManagement = () => {
     data: inventoryData,
     isPending: inventoryDataPending,
     error: inventoryDataError,
-  } = useFetchInventory();
+  } = useFetchInventory({ filter: itemCategory });
 
   const {
     data: itemCategoriesData,
     isPending: itemCategoriesDataPending,
     error: itemCategoriesDataError,
   } = useFetchItemCategories();
-
-  const { mutate: addCategoryMutation } = useAddCategory();
-
-  console.log('test');
 
   return (
     <DashboardLayout>
@@ -114,7 +102,7 @@ const StockManagement = () => {
               </Select>
             </div>
             <AddCategoryModal />
-            <AddItemModal />
+            <AddItemModal itemCategories={itemCategoriesData?.data} />
           </CardAction>
         </CardHeader>
         <CardContent>
@@ -137,7 +125,7 @@ const StockManagement = () => {
                 </TableCell>
               ) : (
                 inventoryData?.data?.map((item) => (
-                  <TableRow key={item.id}>
+                  <TableRow key={item._id}>
                     <TableCell className="font-medium">
                       {item.itemName}
                     </TableCell>
@@ -146,13 +134,17 @@ const StockManagement = () => {
                     <TableCell>{item.status}</TableCell>{' '}
                     <TableCell className="text-right">{item.price}</TableCell>
                     <TableCell className="flex items-center justify-center space-x-3 p-3">
-                      <DeductStockModal />
+                      <DeductStockModal id={item._id} />
 
-                      <AddStockModal />
+                      <AddStockModal id={item._id} />
 
-                      <AddItemModal isAdd={false} item={item} />
+                      <AddItemModal
+                        isAdd={false}
+                        item={item}
+                        itemCategories={itemCategoriesData?.data}
+                      />
 
-                      <DeleteItemModal itemName={item.itemName} />
+                      <DeleteItemModal itemName={item.itemName} id={item._id} />
                     </TableCell>
                   </TableRow>
                 ))

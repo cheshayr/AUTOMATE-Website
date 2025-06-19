@@ -23,16 +23,39 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { MinusCircle, Plus, PlusCircle } from 'lucide-react';
+import { useDeductStock } from '@/hooks/useInventoryMutation';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import { useEffect, useState } from 'react';
 
-function DeductStockModal() {
-  const handleSubmit = (e) => {
+function DeductStockModal({ id }) {
+  const [stockQty, setStockQty] = useState(null);
+  const [isOpen, setIsOpen] = useState(false);
+
+  const {
+    mutateAsync: deductStockMutation,
+    isPending: deductStockMutationPending,
+    isError: deductStockMutationError,
+    isSuccess: deductStockMutationSuccess,
+    reset: resetDeductStockMutation,
+  } = useDeductStock();
+
+  useEffect(() => {
+    if (deductStockMutationSuccess) {
+      setIsOpen(false);
+      setStockQty(null);
+    }
+
+    resetDeductStockMutation();
+  }, [deductStockMutationSuccess, isOpen]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission logic here
-    alert('Form submitted');
+
+    await deductStockMutation({ id, quantityToDeduct: stockQty });
   };
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button
           variant="outline"
@@ -52,9 +75,10 @@ function DeductStockModal() {
               <Label htmlFor="category">Deduct Stock</Label>
               <Input
                 type="number"
-                id="category"
-                category="category"
+                id="stock"
+                category="stock"
                 placeholder="Stock"
+                onChange={(e) => setStockQty(e.target.value)}
               />
             </div>
           </div>
@@ -62,7 +86,16 @@ function DeductStockModal() {
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>
             </DialogClose>
-            <Button type="submit">Save</Button>
+            <Button type="submit">
+              {deductStockMutationPending ? (
+                <span className="flex items-center gap-1">
+                  <LoadingSpinner />
+                  Deducting
+                </span>
+              ) : (
+                'Deduct'
+              )}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

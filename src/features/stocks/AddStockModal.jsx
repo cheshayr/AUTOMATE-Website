@@ -23,16 +23,39 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, PlusCircle } from 'lucide-react';
+import { useAddStock } from '@/hooks/useInventoryMutation';
+import { useEffect, useState } from 'react';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
-function AddStockModal() {
-  const handleSubmit = (e) => {
+function AddStockModal({ id }) {
+  const [stockQty, setStockQty] = useState(null);
+  const [isOpen, setIsOpen] = useState(false);
+
+  const {
+    mutateAsync: addStockMutation,
+    isPending: addStockMutationPending,
+    isError: addStockMutationError,
+    isSuccess: addStockMutationSuccess,
+    reset: resetAddStockMutation,
+  } = useAddStock();
+
+  useEffect(() => {
+    if (addStockMutationSuccess) {
+      setIsOpen(false);
+      setStockQty(null);
+    }
+
+    resetAddStockMutation();
+  }, [addStockMutationSuccess, isOpen]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission logic here
-    alert('Form submitted');
+
+    await addStockMutation({ id, quantityToAdd: Number(stockQty) });
   };
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button
           variant="outline"
@@ -49,12 +72,14 @@ function AddStockModal() {
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 mb-4">
             <div className="grid gap-3">
-              <Label htmlFor="category">Add Stock</Label>
+              <Label htmlFor="stock ">Add Stock</Label>
               <Input
                 type="number"
-                id="category"
-                category="category"
+                id="stock"
+                category="stock"
                 placeholder="Stock"
+                value={stockQty}
+                onChange={(e) => setStockQty(e.target.value)}
               />
             </div>
           </div>
@@ -62,7 +87,16 @@ function AddStockModal() {
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>
             </DialogClose>
-            <Button type="submit">Save</Button>
+            <Button type="submit">
+              {addStockMutationPending ? (
+                <span className="flex items-center gap-1">
+                  <LoadingSpinner />
+                  Adding
+                </span>
+              ) : (
+                'Add'
+              )}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
