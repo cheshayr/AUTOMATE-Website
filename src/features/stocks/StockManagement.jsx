@@ -1,12 +1,7 @@
 import React, { useEffect, useState } from "react";
-import DashboardLayout from "../DashboardLayout";
-import "../../pages/dashboard/Dashboard.css";
-import { useAuthContext } from "../../context/AuthContext";
 
 const API_URL = "http://localhost:5000/api/stocks";
-import React, { useEffect, useState } from "react";
 import DashboardLayout from "../DashboardLayout";
-import "../dashboard/Dashboard.css";
 import { useAuthContext } from "../../context/AuthContext";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import {
