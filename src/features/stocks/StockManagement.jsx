@@ -69,6 +69,8 @@ const StockManagement = () => {
 
   const { mutate: addCategoryMutation } = useAddCategory();
 
+  console.log("test");
+
   return (
     <DashboardLayout>
       <Card className="w-full bg-transparent shadow-none border-0">
