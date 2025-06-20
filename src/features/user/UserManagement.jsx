@@ -91,39 +91,20 @@ const UserManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Memoized filtering to avoid re-calculating on every render
-  const filteredUsers = useMemo(() => {
-    if (!searchQuery) {
-      return users;
-    }
-    return users.filter(
-      (user) =>
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [users, searchQuery]);
+  // const filteredUsers = useMemo(() => {
+  //   if (!searchQuery) {
+  //     return users;
+  //   }
+  //   return users.filter(
+  //     (user) =>
+  //       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //       user.email.toLowerCase().includes(searchQuery.toLowerCase())
+  //   );
+  // }, [users, searchQuery]);
 
   // Handler for search input changes
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
-  };
-
-  // Placeholder functions for actions
-  const handleDeactivate = (userId) => {
-    setUsers(
-      users.map((user) =>
-        user.id === userId ? { ...user, isActive: false } : user
-      )
-    );
-    console.log(`Deactivating user: ${userId}`);
-  };
-
-  const handleReactivate = (userId) => {
-    setUsers(
-      users.map((user) =>
-        user.id === userId ? { ...user, isActive: true } : user
-      )
-    );
-    console.log(`Reactivating user: ${userId}`);
   };
 
   return (
@@ -147,27 +128,30 @@ const UserManagement = () => {
               />
             </div>
             {/* Replace with your Add User Modal Trigger */}
-            <AddUserModal />
+            <AddUserModal isAdd={true} />
           </CardAction>
         </CardHeader>
         <CardContent>
           <Table>
-            <TableCaption>A list of all users in the system.</TableCaption>
+            {/* <TableCaption>A list of all users in the system.</TableCaption>  */}
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Mobile Number</TableHead>
                 <TableHead className="text-center">Verified</TableHead>
+                <TableHead className="text-center">isActive</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Position</TableHead>
                 <TableHead className="text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredUsers.map((user) => (
+              {usersData?.data?.map((user) => (
                 <TableRow
                   key={user.id}
+                  className={!user.isActive ? "bg-red-50/50" : ""}
+                  key={user._id}
                   className={!user.isActive ? "bg-red-50/50" : ""}
                 >
                   <TableCell className="font-medium">{user.name}</TableCell>
@@ -183,35 +167,33 @@ const UserManagement = () => {
                       <XCircle size={20} className="text-red-500 mx-auto" />
                     )}
                   </TableCell>
+                  <TableCell className="text-center">
+                    {user.isActive ? (
+                      <CheckCircle
+                        size={20}
+                        className="text-green-500 mx-auto"
+                      />
+                    ) : (
+                      <XCircle size={20} className="text-red-500 mx-auto" />
+                    )}
+                  </TableCell>
                   <TableCell>{user.role}</TableCell>
                   <TableCell>{user.position}</TableCell>
                   <TableCell className="flex items-center justify-center space-x-2 p-3">
                     {/* Replace with your Edit User Modal Trigger */}
+                    <AddUserModal user={user} />
 
-                    <AddUserModal isAdd={false} user={user} />
-                    {user.isActive ? (
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="text-red-600 hover:text-red-700"
-                        onClick={() => handleDeactivate(user.id)}
-                      >
-                        <ShieldX size={18} />
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="text-green-600 hover:text-green-700"
-                        onClick={() => handleReactivate(user.id)}
-                      >
-                        <ShieldCheck size={18} />
-                      </Button>
-                    )}
+                    <ManageUserStatus
+                      userName={
+                        user.userName || user.email || user.mobileNumber
+                      }
+                      id={user._id}
+                      isActive={user.isActive}
+                    />
                   </TableCell>
                 </TableRow>
               ))}
-              {filteredUsers.length === 0 && (
+              {usersData?.data?.length === 0 && (
                 <TableRow>
                   <TableCell
                     colSpan={7}

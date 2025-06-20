@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -17,24 +17,55 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useState } from 'react';
-import { Eye, EyeIcon, EyeOffIcon, Plus } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useEffect, useState } from "react";
+import { Eye, EyeIcon, EyeOffIcon, Plus } from "lucide-react";
+import { useAddUser } from "@/hooks/useUsersMutation";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
-function AddUser({ isAdd = true, user = {} }) {
+function AddUser({ isAdd = false, user = {} }) {
   const [userDetails, setUserDetails] = useState(user);
+  const [isOpen, setIsOpen] = useState(false);
 
-  const handleSubmit = (e) => {
+  const {
+    mutateAsync: addUserMutation,
+    isPending: addUserMutationPending,
+    isError: addUserMutationError,
+    isSuccess: addUserMutationSuccess,
+    reset: resetAddUserMutation,
+  } = useAddUser();
+
+  useEffect(() => {
+    if (addUserMutationSuccess) {
+      setIsOpen(false);
+    }
+
+    isAdd &&
+      setUserDetails({
+        name: "",
+        email: "",
+        mobileNumber: "",
+        password: "",
+        role: "staff",
+        position: "Office Staff",
+      });
+
+    resetAddUserMutation();
+  }, [addUserMutationSuccess, isOpen]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission logic here
-    alert('Form submitted');
+
+    console.log(userDetails);
+
+    await addUserMutation(userDetails);
   };
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         {isAdd ? (
           <Button>
@@ -52,7 +83,7 @@ function AddUser({ isAdd = true, user = {} }) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{isAdd ? 'Add User' : 'User Info'}</DialogTitle>
+          <DialogTitle>{isAdd ? "Add User" : "User Info"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 mb-4">
@@ -60,7 +91,7 @@ function AddUser({ isAdd = true, user = {} }) {
               <Label htmlFor="name">Name</Label>
               <Input
                 onChange={(e) =>
-                  setUserDetails({ ...item, name: e.target.value })
+                  setUserDetails({ ...userDetails, name: e.target.value })
                 }
                 id="name"
                 name="name"
@@ -72,7 +103,7 @@ function AddUser({ isAdd = true, user = {} }) {
               <Label htmlFor="email">Email</Label>
               <Input
                 onChange={(e) =>
-                  setUserDetails({ ...item, email: e.target.value })
+                  setUserDetails({ ...userDetails, email: e.target.value })
                 }
                 id="email"
                 name="email"
@@ -84,7 +115,10 @@ function AddUser({ isAdd = true, user = {} }) {
               <Label htmlFor="number">Number</Label>
               <Input
                 onChange={(e) =>
-                  setUserDetails({ ...item, mobileNumber: e.target.value })
+                  setUserDetails({
+                    ...userDetails,
+                    mobileNumber: e.target.value,
+                  })
                 }
                 id="number"
                 name="number"
@@ -94,13 +128,22 @@ function AddUser({ isAdd = true, user = {} }) {
             </div>
             <div className="grid gap-3">
               <Label htmlFor="category">Role</Label>
-              <Select disabled id="role" name="role" value="Staff">
+              <Select
+                disabled
+                id="role"
+                name="role"
+                value={userDetails.role}
+                onValueChange={(newValue) =>
+                  setUserDetails({ ...userDetails, role: newValue })
+                }
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a role" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    <SelectItem value="Staff">Staff</SelectItem>
+                    <SelectItem value="user">User</SelectItem>
+                    <SelectItem value="staff">Staff</SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>
@@ -111,6 +154,10 @@ function AddUser({ isAdd = true, user = {} }) {
                 id="position"
                 name="position"
                 value={userDetails.position}
+                disabled={!isAdd}
+                onValueChange={(newValue) =>
+                  setUserDetails({ ...userDetails, position: newValue })
+                }
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a position" />
@@ -121,8 +168,7 @@ function AddUser({ isAdd = true, user = {} }) {
                     <SelectItem value="Mechanic">Mechanic</SelectItem>
                     <SelectItem value="Helper">Helper</SelectItem>
                     <SelectItem value="Guard">Guard</SelectItem>
-                    <SelectItem value="Helper">Helper</SelectItem>
-                    <SelectItem value="Driverr">Driverr</SelectItem>
+                    <SelectItem value="Driver">Driver</SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>
@@ -131,21 +177,36 @@ function AddUser({ isAdd = true, user = {} }) {
               <div className="grid gap-3">
                 <Label htmlFor="position">Password</Label>
                 <Input
-                  type={'password'}
+                  type={"password"}
                   value={userDetails.passworrd}
                   autocomplete="new-password"
+                  onChange={(e) =>
+                    setUserDetails({
+                      ...userDetails,
+                      password: e.target.value,
+                    })
+                  }
                 />
               </div>
             )}
           </div>
           <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
-            </DialogClose>
-            {isAdd ? (
-              <Button type="submit">Save</Button>
-            ) : (
-              <Button type="submit">Update</Button>
+            {isAdd && (
+              <DialogClose asChild>
+                <Button variant="outline">Cancel</Button>
+              </DialogClose>
+            )}
+            {isAdd && (
+              <Button type="submit">
+                {addUserMutationPending ? (
+                  <span className="flex items-center gap-2">
+                    <LoadingSpinner />
+                    Saving
+                  </span>
+                ) : (
+                  "Save"
+                )}
+              </Button>
             )}
           </DialogFooter>
         </form>

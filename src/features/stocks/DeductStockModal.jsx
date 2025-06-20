@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -17,15 +17,15 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { MinusCircle, Plus, PlusCircle } from 'lucide-react';
-import { useDeductStock } from '@/hooks/useInventoryMutation';
-import LoadingSpinner from '@/components/LoadingSpinner';
-import { useEffect, useState } from 'react';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { MinusCircle, Plus, PlusCircle } from "lucide-react";
+import { useDeductStock } from "@/hooks/useInventoryMutation";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import { useEffect, useState } from "react";
 
 function DeductStockModal({ id }) {
   const [stockQty, setStockQty] = useState(null);
@@ -93,7 +93,7 @@ function DeductStockModal({ id }) {
                   Deducting
                 </span>
               ) : (
-                'Deduct'
+                "Deduct"
               )}
             </Button>
           </DialogFooter>
