@@ -1,20 +1,13 @@
-import React, { useState, useEffect } from "react";
-import "./AppointmentsPage.css";
-import { useNavigate } from "react-router-dom";
-import { useAuthContext } from "../../context/AuthContext";
-import DashboardLayout from "../../features/DashboardLayout";
+import React, { useState, useEffect } from 'react';
+import './AppointmentsPage.css';
+import { useNavigate } from 'react-router-dom';
+import { useAuthContext } from '../../context/AuthContext';
+import DashboardLayout from '../../features/DashboardLayout';
 
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ArrowUpDown, MoreHorizontal, Plus } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ArrowUpDown, MoreHorizontal, Plus } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,20 +15,32 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import AppointmentsDataTable from "./components/DataTable";
-import { useAppointments } from "@/hooks/useAppointments.query";
-import DataTable from "./components/DataTable";
-import AppointmentForm from "./components/AppointmentForm";
-import { Dialog } from "@/components/ui/dialog";
-import { CalendarEvent } from "./components/CalendarEvent";
+} from '@/components/ui/dropdown-menu';
+import AppointmentsDataTable from './components/DataTable';
+import { useAppointments } from '@/hooks/useAppointments.query';
+import DataTable from './components/DataTable';
+import AppointmentForm from './components/AppointmentForm';
+import { Dialog } from '@/components/ui/dialog';
+import { CalendarEvent } from './components/CalendarEvent';
 
-const tabs = [
-  "Pending Visit",
-  "Ongoing Repair",
-  "Billing",
-  "Completed",
-  "Cancelled",
+const tabs = ['Pending Visit', 'Ongoing Repair', 'Billing', 'Completed', 'Cancelled'];
+
+const events = [
+  {
+    title: 'Team Sync Meeting',
+    from: '2025-06-12T09:00:00',
+    to: '2025-06-12T10:00:00',
+  },
+  {
+    title: 'Design Review',
+    from: '2025-06-12T11:30:00',
+    to: '2025-06-12T12:30:00',
+  },
+  {
+    title: 'Client Presentation',
+    from: '2025-06-12T14:00:00',
+    to: '2025-06-12T15:00:00',
+  },
 ];
 
 // --- 1. DEFINE TABLE COLUMNS ---
@@ -44,6 +49,7 @@ const AppointmentsPage = () => {
   const { data } = useAppointments();
   const appointments = data?.appointments || [];
 
+  const [date, setDate] = useState(new Date());
   const [staffList, setStaffList] = useState([]);
   const [vehicleList, setVehicleList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -64,79 +70,62 @@ const AppointmentsPage = () => {
   const handleSaveAppointment = (formData) => {
     if (editingAppointment) {
       // Logic to PATCH/update an existing appointment
-      console.log("Updating appointment:", editingAppointment._id, formData);
+      console.log('Updating appointment:', editingAppointment._id, formData);
     } else {
       // Logic to POST/create a new appointment
-      console.log("Creating new appointment:", formData);
+      console.log('Creating new appointment:', formData);
     }
     // For demo, we just close the modal. In real app, you'd refetch data.
     handleCloseModal();
   };
 
   const handleDeleteAppointment = (appointmentId) => {
-    console.log("Deleting appointment:", appointmentId);
+    console.log('Deleting appointment:', appointmentId);
     // Add API call and refetch logic here
   };
 
   const columns = [
     {
-      accessorKey: "name",
-      header: "Customer",
-      cell: ({ row }) => (
-        <div className="capitalize font-medium">{row.original.name}</div>
-      ),
+      accessorKey: 'name',
+      header: 'Customer',
+      cell: ({ row }) => <div className="capitalize font-medium">{row.original.name}</div>,
     },
     {
-      accessorKey: "vehicle",
-      header: "Vehicle",
+      accessorKey: 'vehicle',
+      header: 'Vehicle',
       cell: ({ row }) => (
         <div>
           <div className="font-medium">{`${row.original.vehicle.brand} ${row.original.vehicle.model}`}</div>
-          <div className="text-muted-foreground text-xs">
-            {row.original.vehicle.licensePlate}
-          </div>
+          <div className="text-muted-foreground text-xs">{row.original.vehicle.licensePlate}</div>
         </div>
       ),
     },
     {
-      accessorKey: "scheduledTime",
+      accessorKey: 'scheduledTime',
       header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
+        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
           Scheduled Time
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }) => (
-        <div className="pl-4">
-          {new Date(row.getValue("scheduledTime")).toLocaleString()}
-        </div>
-      ),
+      cell: ({ row }) => <div className="pl-4">{new Date(row.getValue('scheduledTime')).toLocaleString()}</div>,
     },
     {
-      accessorKey: "status",
-      header: "Status",
-      cell: ({ row }) => (
-        <Badge variant={row.getValue("status")}>{row.getValue("status")}</Badge>
-      ),
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => <Badge variant={row.getValue('status')}>{row.getValue('status')}</Badge>,
     },
     {
-      accessorKey: "assignedStaff.name",
-      header: "Assigned Staff",
+      accessorKey: 'assignedStaff.name',
+      header: 'Assigned Staff',
       cell: ({ row }) => (
         <div>
-          {row.original.assignedStaff?.name || (
-            <span className="text-sm italic text-muted-foreground">
-              Unassigned
-            </span>
-          )}
+          {row.original.assignedStaff?.name || <span className="text-sm italic text-muted-foreground">Unassigned</span>}
         </div>
       ),
     },
     {
-      id: "actions",
+      id: 'actions',
       enableHiding: false,
       cell: ({ row }) => {
         const appointment = row.original;
@@ -161,29 +150,16 @@ const AppointmentsPage = () => {
               <DropdownMenuItem
                 onSelect={async () => {
                   await navigator.clipboard.writeText(appointment._id);
-                  alert(
-                    `Appointment ID ${appointment._id} copied to clipboard!`
-                  );
+                  alert(`Appointment ID ${appointment._id} copied to clipboard!`);
                 }}
               >
                 Copy Appointment ID
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onSelect={handleOpenModal.bind(null, appointment)}
-              >
-                View / Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={handleOpenModal.bind(null, appointment)}
-              >
-                View Invoice
-              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={handleOpenModal.bind(null, appointment)}>View / Edit</DropdownMenuItem>
+              <DropdownMenuItem onSelect={handleOpenModal.bind(null, appointment)}>View Invoice</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-red-600 focus:text-red-700 focus:bg-red-50"
-                onSelect={handleDelete}
-              >
+              <DropdownMenuItem className="text-red-600 focus:text-red-700 focus:bg-red-50" onSelect={handleDelete}>
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -195,20 +171,19 @@ const AppointmentsPage = () => {
 
   return (
     // <DashboardLayout>
-    <>
-      <Card className="w-full bg-transparent shadow-none border-0">
+    <div className="flex items-center justify-between mb-4">
+      <Card className="flex-1 bg-transparent shadow-none border-0">
         <CardHeader>
           <CardTitle className="text-2xl font-semibold">Appointments</CardTitle>
           <CardDescription className="line-clamp-3">
-            Manage your appointments efficiently. You can view, edit, or delete
-            existing appointments as needed.
+            Manage your appointments efficiently. You can view, edit, or delete existing appointments as needed.
           </CardDescription>
-          <CardAction>
+          {/* <CardAction>
             <Button onClick={handleOpenModal}>
               <Plus />
               Create Appointment
             </Button>
-          </CardAction>
+          </CardAction> */}
         </CardHeader>
         <CardContent>
           {/* <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -222,11 +197,9 @@ const AppointmentsPage = () => {
               ))}
             </div> */}
           <div className="flex gap-4">
-            <div className="flex-1">
-              <DataTable columns={columns} data={appointments} />
-            </div>
+            <DataTable columns={columns} data={appointments} className="flex-1" />
             <div>
-              <CalendarEvent />
+              <CalendarEvent date={date} setDate={setDate} data={events} />
             </div>
           </div>
         </CardContent>
@@ -242,12 +215,13 @@ const AppointmentsPage = () => {
           )}
         </Dialog>
       </Card>
+      {/* <Card className={'bg-transparent shadow-none border-0'}></Card> */}
       {/* <div className="bg-[#f5f7ff] min-h-screen p-6">
         <h1 className="text-4xl font-bold mb-8">Appointments</h1>
         <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
         <AppointmentsTable appointments={filteredData} />
       </div> */}
-    </>
+    </div>
 
     // </DashboardLayout>
   );
