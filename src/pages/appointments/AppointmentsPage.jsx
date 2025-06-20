@@ -28,6 +28,7 @@ import { useAppointments } from "@/hooks/useAppointments.query";
 import DataTable from "./components/DataTable";
 import AppointmentForm from "./components/AppointmentForm";
 import { Dialog } from "@/components/ui/dialog";
+import { CalendarEvent } from "./components/CalendarEvent";
 
 const tabs = [
   "Pending Visit",
@@ -220,7 +221,14 @@ const AppointmentsPage = () => {
                 />
               ))}
             </div> */}
-          <DataTable columns={columns} data={appointments} />
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <DataTable columns={columns} data={appointments} />
+            </div>
+            <div>
+              <CalendarEvent />
+            </div>
+          </div>
         </CardContent>
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           {isModalOpen && (
