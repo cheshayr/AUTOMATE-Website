@@ -31,15 +31,19 @@ import DeductStockModal from './DeductStockModal';
 import DeleteItemModal from './DeleteItemModal';
 import { Label } from 'recharts';
 import { useFetchInventory, useFetchItemCategories } from '@/hooks/useInventoryQuery';
+import { useDebounce } from '@uidotdev/usehooks';
+import { Input } from '@/components/ui/input';
 
 const StockManagement = () => {
   const [itemCategory, setItemCategory] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
   const {
     data: inventoryData,
     isPending: inventoryDataPending,
     error: inventoryDataError,
-  } = useFetchInventory({ filter: itemCategory });
+  } = useFetchInventory({ filter: itemCategory, searchQuery: debouncedSearchQuery });
 
   const {
     data: itemCategoriesData,
@@ -57,7 +61,15 @@ const StockManagement = () => {
         </CardHeader>
         <CardContent>
           <div className="flex mb-4 justify-between">
-            <div></div>
+            <div className="w-[50%]">
+              <Input
+                type="text"
+                placeholder="Search by item name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full"
+              />
+            </div>
             <div className="space-x-4 flex">
               <div className="grid gap-3 min-w-36">
                 <Label htmlFor="category">Item Category</Label>
