@@ -30,28 +30,19 @@ import {
 } from "lucide-react";
 import AddUserModal from "./AddUserModal";
 import AddItemModal from "../stocks/AddItemModal";
+import { useFetchUsers } from "@/hooks/useUsersQuery";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import ManageUserStatus from "./MangeUserStatus";
+
+// --- Mock Data (Replace with API call) ---
 
 // --- User Management Component ---
 const UserManagement = () => {
-  const [users, setUsers] = useState(usersData);
-  const [searchQuery, setSearchQuery] = useState("");
-
-  // Memoized filtering to avoid re-calculating on every render
-  // const filteredUsers = useMemo(() => {
-  //   if (!searchQuery) {
-  //     return users;
-  //   }
-  //   return users.filter(
-  //     (user) =>
-  //       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  //       user.email.toLowerCase().includes(searchQuery.toLowerCase())
-  //   );
-  // }, [users, searchQuery]);
-
-  // Handler for search input changes
-  const handleSearchChange = (event) => {
-    setSearchQuery(event.target.value);
-  };
+  const {
+    data: usersData,
+    isPending: usersDataPending,
+    error: usersDataError,
+  } = useFetchUsers();
 
   return (
     <>
@@ -68,8 +59,6 @@ const UserManagement = () => {
               <Input
                 type="text"
                 placeholder="Search by name or email..."
-                value={searchQuery}
-                onChange={handleSearchChange}
                 className="w-full"
               />
             </div>
@@ -79,73 +68,69 @@ const UserManagement = () => {
         </CardHeader>
         <CardContent>
           <Table>
-            {/* <TableCaption>A list of all users in the system.</TableCaption>  */}
+            {/* <TableCaption>A list of all users in the system.</TableCaption> */}
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Mobile Number</TableHead>
                 <TableHead className="text-center">Verified</TableHead>
-                <TableHead className="text-center">isActive</TableHead>
+                <TableHead className="text-center">Status</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Position</TableHead>
                 <TableHead className="text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {usersData?.data?.map((user) => (
-                <TableRow
-                  key={user._id}
-                  className={!user.isActive ? "bg-red-50/50" : ""}
-                >
-                  <TableCell className="font-medium">{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.mobileNumber}</TableCell>
-                  <TableCell className="text-center">
-                    {user.isVerified ? (
-                      <CheckCircle
-                        size={20}
-                        className="text-green-500 mx-auto"
-                      />
-                    ) : (
-                      <XCircle size={20} className="text-red-500 mx-auto" />
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {user.isActive ? (
-                      <CheckCircle
-                        size={20}
-                        className="text-green-500 mx-auto"
-                      />
-                    ) : (
-                      <XCircle size={20} className="text-red-500 mx-auto" />
-                    )}
-                  </TableCell>
-                  <TableCell>{user.role}</TableCell>
-                  <TableCell>{user.position}</TableCell>
-                  <TableCell className="flex items-center justify-center space-x-2 p-3">
-                    {/* Replace with your Edit User Modal Trigger */}
-                    <AddUserModal user={user} />
-
-                    <ManageUserStatus
-                      userName={
-                        user.userName || user.email || user.mobileNumber
-                      }
-                      id={user._id}
-                      isActive={user.isActive}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
-              {usersData?.data?.length === 0 && (
-                <TableRow>
-                  <TableCell
-                    colSpan={7}
-                    className="text-center text-gray-400 py-6"
+              {usersDataPending ? (
+                <TableCell colSpan={6} className="h-96 ">
+                  <div className="flex items-center justify-center w-full h-full ">
+                    <LoadingSpinner />
+                  </div>
+                </TableCell>
+              ) : (
+                usersData?.data?.map((user) => (
+                  <TableRow
+                    key={user._id}
+                    className={!user.isActive ? "bg-red-50/50" : ""}
                   >
-                    No users found.
-                  </TableCell>
-                </TableRow>
+                    <TableCell className="font-medium">{user.name}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.mobileNumber}</TableCell>
+                    <TableCell className="text-center">
+                      {user.isVerified ? (
+                        <CheckCircle
+                          size={20}
+                          className="text-green-500 mx-auto"
+                        />
+                      ) : (
+                        <XCircle size={20} className="text-red-500 mx-auto" />
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {user.isActive ? (
+                        <CheckCircle
+                          size={20}
+                          className="text-green-500 mx-auto"
+                        />
+                      ) : (
+                        <XCircle size={20} className="text-red-500 mx-auto" />
+                      )}
+                    </TableCell>
+                    <TableCell>{user.role}</TableCell>
+                    <TableCell>{user.position}</TableCell>
+                    <TableCell className="flex items-center justify-center space-x-2 p-3">
+                      {/* Replace with your Edit User Modal Trigger */}
+
+                      <AddUserModal user={user} />
+                      <ManageUserStatus
+                        userName={user.name}
+                        id={user._id}
+                        isActive={user.isActive}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))
               )}
             </TableBody>
           </Table>
