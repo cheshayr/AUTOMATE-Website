@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogClose,
@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -17,15 +17,15 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Eye, Plus } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useAddItem, useUpdateItem } from "@/hooks/useInventoryMutation";
-import LoadingSpinner from "@/components/LoadingSpinner";
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Eye, Plus } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useAddItem, useUpdateItem } from '@/hooks/useInventoryMutation';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 function AddItemModal({ isAdd = true, item = {}, itemCategories }) {
   const [itemDetails, setItemDetails] = useState(item);
@@ -74,31 +74,25 @@ function AddItemModal({ isAdd = true, item = {}, itemCategories }) {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         {isAdd ? (
-          <Button className="min-w-40">
+          <Button className="min-w-36">
             <Plus /> Add Item
           </Button>
         ) : (
-          <Button
-            variant="outline"
-            className="text-blue-600 hover:text-blue-700"
-            size="icon"
-          >
+          <Button variant="outline" className="text-blue-600 hover:text-blue-700" size="icon">
             <Eye size={18} />
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{isAdd ? "Add Item" : "Item Details"}</DialogTitle>
+          <DialogTitle>{isAdd ? 'Add Item' : 'Item Details'}</DialogTitle>
         </DialogHeader>
         <form>
           <div className="grid gap-4 mb-4">
             <div className="grid gap-3">
               <Label htmlFor="name">Item Name</Label>
               <Input
-                onChange={(e) =>
-                  setItemDetails({ ...itemDetails, itemName: e.target.value })
-                }
+                onChange={(e) => setItemDetails({ ...itemDetails, itemName: e.target.value })}
                 id="name"
                 name="name"
                 placeholder="Item name"
@@ -112,9 +106,7 @@ function AddItemModal({ isAdd = true, item = {}, itemCategories }) {
                 id="category"
                 name="category"
                 value={itemDetails.category}
-                onValueChange={(newValue) =>
-                  setItemDetails({ ...itemDetails, category: newValue })
-                }
+                onValueChange={(newValue) => setItemDetails({ ...itemDetails, category: newValue })}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a category" />
@@ -123,10 +115,7 @@ function AddItemModal({ isAdd = true, item = {}, itemCategories }) {
                   <SelectGroup>
                     <SelectItem value="All">All</SelectItem>
                     {itemCategories?.map((category) => (
-                      <SelectItem
-                        key={category.id}
-                        value={category.categoryName}
-                      >
+                      <SelectItem key={category.id} value={category.categoryName}>
                         {category.categoryName}
                       </SelectItem>
                     ))}
@@ -198,7 +187,7 @@ function AddItemModal({ isAdd = true, item = {}, itemCategories }) {
                     Saving
                   </span>
                 ) : (
-                  "Save"
+                  'Save'
                 )}
               </Button>
             ) : (
@@ -209,7 +198,7 @@ function AddItemModal({ isAdd = true, item = {}, itemCategories }) {
                     Updating
                   </span>
                 ) : (
-                  "Update"
+                  'Update'
                 )}
               </Button>
             )}

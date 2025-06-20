@@ -1,72 +1,47 @@
-import React, { useState, useMemo } from "react";
-import DashboardLayout from "../DashboardLayout";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardAction,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  UserPlus,
-  Edit,
-  Trash2,
-  CheckCircle,
-  XCircle,
-  ShieldX,
-  ShieldCheck,
-} from "lucide-react";
-import AddUserModal from "./AddUserModal";
-import AddItemModal from "../stocks/AddItemModal";
-import { useFetchUsers } from "@/hooks/useUsersQuery";
-import LoadingSpinner from "@/components/LoadingSpinner";
-import ManageUserStatus from "./MangeUserStatus";
+import React, { useState, useMemo } from 'react';
+import DashboardLayout from '../DashboardLayout';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardAction } from '@/components/ui/card';
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { UserPlus, Edit, Trash2, CheckCircle, XCircle, ShieldX, ShieldCheck } from 'lucide-react';
+import AddUserModal from './AddUserModal';
+import AddItemModal from '../stocks/AddItemModal';
+import { useFetchUsers } from '@/hooks/useUsersQuery';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import ManageUserStatus from './MangeUserStatus';
+import { useDebounce } from '@uidotdev/usehooks';
 
 // --- Mock Data (Replace with API call) ---
 
 // --- User Management Component ---
 const UserManagement = () => {
-  const {
-    data: usersData,
-    isPending: usersDataPending,
-    error: usersDataError,
-  } = useFetchUsers();
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+
+  const { data: usersData, isPending: usersDataPending, error: usersDataError } = useFetchUsers(debouncedSearchQuery);
 
   return (
     <>
       <Card className="w-full bg-transparent shadow-none border-0">
         <CardHeader>
-          <CardTitle className="text-2xl font-semibold">
-            User Management
-          </CardTitle>
-          <CardDescription>
-            View, search, add, and manage user accounts and permissions.
-          </CardDescription>
-          <CardAction className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0 sm:space-x-4 pt-2">
-            <div className="w-full">
+          <CardTitle className="text-2xl font-semibold">User Management</CardTitle>
+          <CardDescription>View, search, add, and manage user accounts and permissions.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex mb-4 justify-between">
+            <div className="w-[50%]">
               <Input
                 type="text"
                 placeholder="Search by name or email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full"
               />
             </div>
-            {/* Replace with your Add User Modal Trigger */}
             <AddUserModal isAdd={true} />
-          </CardAction>
-        </CardHeader>
-        <CardContent>
+          </div>
+          {/* Replace with your Add User Modal Trigger */}
           <Table>
             {/* <TableCaption>A list of all users in the system.</TableCaption> */}
             <TableHeader>
@@ -83,36 +58,27 @@ const UserManagement = () => {
             </TableHeader>
             <TableBody>
               {usersDataPending ? (
-                <TableCell colSpan={6} className="h-96 ">
+                <TableCell colSpan={8} className="h-96 ">
                   <div className="flex items-center justify-center w-full h-full ">
                     <LoadingSpinner />
                   </div>
                 </TableCell>
               ) : (
                 usersData?.data?.map((user) => (
-                  <TableRow
-                    key={user._id}
-                    className={!user.isActive ? "bg-red-50/50" : ""}
-                  >
+                  <TableRow key={user._id} className={!user.isActive ? 'bg-red-50/50' : ''}>
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{user.mobileNumber}</TableCell>
                     <TableCell className="text-center">
                       {user.isVerified ? (
-                        <CheckCircle
-                          size={20}
-                          className="text-green-500 mx-auto"
-                        />
+                        <CheckCircle size={20} className="text-green-500 mx-auto" />
                       ) : (
                         <XCircle size={20} className="text-red-500 mx-auto" />
                       )}
                     </TableCell>
                     <TableCell className="text-center">
                       {user.isActive ? (
-                        <CheckCircle
-                          size={20}
-                          className="text-green-500 mx-auto"
-                        />
+                        <CheckCircle size={20} className="text-green-500 mx-auto" />
                       ) : (
                         <XCircle size={20} className="text-red-500 mx-auto" />
                       )}
@@ -123,11 +89,7 @@ const UserManagement = () => {
                       {/* Replace with your Edit User Modal Trigger */}
 
                       <AddUserModal user={user} />
-                      <ManageUserStatus
-                        userName={user.name}
-                        id={user._id}
-                        isActive={user.isActive}
-                      />
+                      <ManageUserStatus userName={user.name} id={user._id} isActive={user.isActive} />
                     </TableCell>
                   </TableRow>
                 ))

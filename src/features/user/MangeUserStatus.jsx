@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogClose,
@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -17,22 +17,16 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  MinusCircle,
-  Plus,
-  PlusCircle,
-  ShieldCheck,
-  Trash2,
-} from "lucide-react";
-import { useDeleteItem } from "@/hooks/useInventoryMutation";
-import LoadingSpinner from "@/components/LoadingSpinner";
-import { useEffect, useState } from "react";
-import { useActivateUser, useDeactivateUser } from "@/hooks/useUsersMutation";
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { MinusCircle, Plus, PlusCircle, ShieldCheck, Trash2 } from 'lucide-react';
+import { useDeleteItem } from '@/hooks/useInventoryMutation';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import { useEffect, useState } from 'react';
+import { useActivateUser, useDeactivateUser } from '@/hooks/useUsersMutation';
 
 function ManageUserStatus({ userName, id, isActive }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -81,8 +75,7 @@ function ManageUserStatus({ userName, id, isActive }) {
           <Button
             variant="outline"
             size="icon"
-            className="text-red-600 hover:text-red-700"
-
+            className="text-green-600 hover:text-green-700"
             //   onClick={() => handleReactivate(user.id)}
           >
             <ShieldCheck size={18} />
@@ -91,7 +84,7 @@ function ManageUserStatus({ userName, id, isActive }) {
           <Button
             variant="outline"
             size="icon"
-            className="text-green-600 hover:text-green-700"
+            className="text-red-600 hover:text-red-700"
 
             //   onClick={() => handleReactivate(user.id)}
           >
@@ -101,9 +94,7 @@ function ManageUserStatus({ userName, id, isActive }) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>
-            {isActive ? "Deactivate User" : "Activate User"}
-          </DialogTitle>
+          <DialogTitle>{isActive ? 'Deactivate User' : 'Activate User'}</DialogTitle>
         </DialogHeader>
         <div>
           <div className="grid gap-4 mb-4">
@@ -125,7 +116,7 @@ function ManageUserStatus({ userName, id, isActive }) {
                     Deactivating
                   </span>
                 ) : (
-                  "Deactivate"
+                  'Deactivate'
                 )}
               </Button>
             ) : (
@@ -136,7 +127,7 @@ function ManageUserStatus({ userName, id, isActive }) {
                     Activating
                   </span>
                 ) : (
-                  "Activate"
+                  'Activate'
                 )}
               </Button>
             )}
