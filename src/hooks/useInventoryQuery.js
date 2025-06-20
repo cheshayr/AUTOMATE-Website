@@ -13,7 +13,7 @@ export const useFetchInventory = ({ filter, searchQuery }) => {
 
   return useQuery({
     queryKey: ['inventory', filter, searchQuery],
-    queryFn: ({ queryKey: [_key, filterValue, searchQueryValue] }) => fetchInventory(filterValue, searchQuery),
+    queryFn: ({ queryKey: [_key, filterValue, searchQueryValue] }) => fetchInventory(filterValue, searchQueryValue),
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 5, // 5 minutes
     cacheTime: 1000 * 60 * 10, // 10 minutes

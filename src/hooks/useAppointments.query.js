@@ -1,10 +1,10 @@
 import authenticatedApi from '@/api/axiosInstance';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-export const useAppointments = () => {
+export const useAppointments = (filter = null) => {
   const queryClient = useQueryClient();
-  const fetch = async () => {
-    const response = await authenticatedApi.get('/appointments');
+  const fetch = async (filter) => {
+    const response = await authenticatedApi.get(`/appointments?filter=${filter || ''}`);
     if (response.status !== 200) {
       throw new Error('Failed to fetch services');
     }
@@ -12,8 +12,8 @@ export const useAppointments = () => {
   };
 
   return useQuery({
-    queryKey: ['appointments'],
-    queryFn: () => fetch(),
+    queryKey: ['appointments', filter],
+    queryFn: ({ queryKey: [_key, filterValue] }) => fetch(filterValue),
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 5, // 5 minutes
     cacheTime: 1000 * 60 * 10, // 10 minutes

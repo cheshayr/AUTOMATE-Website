@@ -21,6 +21,7 @@ import DashboardLayout from './features/DashboardLayout.jsx';
 import { useAuthContext } from './context/AuthContext.jsx';
 import { Navigate } from 'react-router-dom';
 import AdminAnalytics from './features/analytics/AdminAnalytics.jsx';
+import Feedbacks from './features/Feedbacks.jsx';
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuthContext();
@@ -82,6 +83,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <AdminAnalytics />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/feedbacks"
+              element={
+                <ProtectedRoute>
+                  <Feedbacks />
                 </ProtectedRoute>
               }
             />

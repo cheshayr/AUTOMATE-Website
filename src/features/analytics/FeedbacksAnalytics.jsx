@@ -1,62 +1,72 @@
 'use client';
 
-import * as React from 'react';
+import React, { useMemo, useState } from 'react';
+
 import { Label, Pie, PieChart, Sector } from 'recharts';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartStyle, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useFetchFeedbackAnalytics } from '@/hooks/useAnalytticsQuery';
 
 export const description = 'An interactive pie chart';
 
-const desktopData = [
-  { month: 'january', desktop: 186, fill: 'var(--color-january)' },
-  { month: 'february', desktop: 305, fill: 'var(--color-february)' },
-  { month: 'march', desktop: 237, fill: 'var(--color-march)' },
-  { month: 'april', desktop: 173, fill: 'var(--color-april)' },
-  { month: 'may', desktop: 209, fill: 'var(--color-may)' },
-];
-
 // Removed the `satisfies ChartConfig` operator
 const chartConfig = {
-  visitors: {
-    label: 'Visitors',
-  },
-  desktop: {
-    label: 'Desktop',
-  },
-  mobile: {
-    label: 'Mobile',
-  },
-  january: {
-    label: 'January',
+  star1: {
+    label: '1 Star',
     color: 'var(--chart-1)',
   },
-  february: {
-    label: 'February',
+  star2: {
+    label: '2 Star',
     color: 'var(--chart-2)',
   },
-  march: {
-    label: 'March',
+  star3: {
+    label: '3 Star',
     color: 'var(--chart-3)',
   },
-  april: {
-    label: 'April',
+  star4: {
+    label: '4 Star',
     color: 'var(--chart-4)',
   },
-  may: {
-    label: 'May',
+  star5: {
+    label: '5 Star',
     color: 'var(--chart-5)',
   },
 };
 
 export function FeedbacksAnalytics() {
+  //   const countData = [
+  //     { month: 'star1', count: 186, fill: 'var(--color-star1)' },
+  //     { month: 'star2', count: 305, fill: 'var(--color-star2)' },
+  //     { month: 'star3', count: 237, fill: 'var(--color-star3)' },
+  //     { month: 'star4', count: 173, fill: 'var(--color-star4)' },
+  //     { month: 'star5', count: 209, fill: 'var(--color-star5)' },
+  //   ];
+  const { data, isPending, isSuccess } = useFetchFeedbackAnalytics();
+  console.log(data?.data);
+
+  const countData = data?.data;
+
   const id = 'pie-interactive';
-  const [activeMonth, setActiveMonth] = React.useState(desktopData[0].month);
+  const [activeMonth, setActiveMonth] = useState(null); // 1. Initialize with null
 
-  const activeIndex = React.useMemo(() => desktopData.findIndex((item) => item.month === activeMonth), [activeMonth]);
-  const months = React.useMemo(() => desktopData.map((item) => item.month), []);
+  // 2. Use an effect to set the active month once the data is available
+  React.useEffect(() => {
+    // Check if we have data and if activeMonth hasn't been set yet
+    if (countData && countData.length > 0) {
+      setActiveMonth(countData[0]?.month);
+    }
+  }, [countData]); // 3. This effect runs whenever `countData` changes
 
+  const activeIndex = useMemo(
+    () => countData?.findIndex((item) => item.month === activeMonth),
+    [activeMonth, countData] // Added countData
+  );
+  const months = useMemo(
+    () => countData?.map((item) => item.month),
+    [countData] // Changed from []
+  );
   return (
     <Card data-chart={id} className="flex flex-col h-full shadow-none">
       <ChartStyle id={id} config={chartConfig} />
@@ -70,7 +80,7 @@ export function FeedbacksAnalytics() {
             <SelectValue placeholder="Select month" />
           </SelectTrigger>
           <SelectContent align="end" className="rounded-xl">
-            {months.map((key) => {
+            {months?.map((key) => {
               // Removed type assertion `as keyof typeof chartConfig`
               const config = chartConfig[key];
 
@@ -100,8 +110,8 @@ export function FeedbacksAnalytics() {
           <PieChart>
             <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
             <Pie
-              data={desktopData}
-              dataKey="desktop"
+              data={countData}
+              dataKey="count"
               nameKey="month"
               innerRadius={60}
               strokeWidth={5}
@@ -120,7 +130,7 @@ export function FeedbacksAnalytics() {
                     return (
                       <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
                         <tspan x={viewBox.cx} y={viewBox.cy} className="fill-foreground text-3xl font-bold">
-                          {desktopData[activeIndex].desktop.toLocaleString()}
+                          {countData[activeIndex]?.count?.toLocaleString()}
                         </tspan>
                         <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 24} className="fill-muted-foreground">
                           Feedbacks
