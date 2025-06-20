@@ -6,7 +6,7 @@ import DashboardLayout from '../../features/DashboardLayout';
 
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowUpDown, MoreHorizontal, Plus } from 'lucide-react';
+import { ArrowUpDown, CheckSquare, MoreHorizontal, Plus, Upload } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -22,6 +22,7 @@ import DataTable from './components/DataTable';
 import AppointmentForm from './components/AppointmentForm';
 import { Dialog } from '@/components/ui/dialog';
 import { CalendarEvent } from './components/CalendarEvent';
+import { useAdminUpdateAppointment } from '@/hooks/useAppointments.mutation';
 
 const tabs = ['Pending Visit', 'Ongoing Repair', 'Billing', 'Completed', 'Cancelled'];
 
@@ -51,11 +52,13 @@ const AppointmentsPage = () => {
 
   const [date, setDate] = useState(new Date());
   const [staffList, setStaffList] = useState([]);
-  const [vehicleList, setVehicleList] = useState([]);
+  const [vehicleList, setVehicleList] = useState([data?.appointments?.vehicle]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalInvoiceOpen, setIsModalInvoiceOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState(''); // For invoice modal, if needed
   const [editingAppointment, setEditingAppointment] = useState(null); // null for new, object for edit
-
+  const { mutateAsync: appointmentMutation } = useAdminUpdateAppointment();
   const handleOpenModal = (appointment = null) => {
     console.log(appointment);
     setEditingAppointment(appointment);
@@ -67,10 +70,32 @@ const AppointmentsPage = () => {
     setEditingAppointment(null);
   };
 
-  const handleSaveAppointment = (formData) => {
+  const handleOpenInvoiceModal = (appointmentId) => {
+    console.log('Opening invoice modal for appointment:', appointmentId);
+    setIsModalInvoiceOpen(true);
+    setSelectedAppointment(appointmentId);
+  };
+
+  const handleCloseInvoiceModal = (appointmentId) => {
+    console.log('Closing invoice modal for appointment:', appointmentId);
+    setIsModalInvoiceOpen(false);
+    setSelectedAppointment('');
+  };
+
+  const handleSaveAppointment = async (formData) => {
     if (editingAppointment) {
-      // Logic to PATCH/update an existing appointment
       console.log('Updating appointment:', editingAppointment._id, formData);
+      const scheduledTime = `${formData.scheduledDate}T${formData.scheduledTime}`;
+      const updatedData = {
+        scheduledTime,
+        status: formData.status,
+        notes: {
+          customerNotes: formData.customerNotes,
+          staffNotes: formData.staffNotes,
+        },
+      };
+
+      await appointmentMutation({ id: editingAppointment._id, updatedData });
     } else {
       // Logic to POST/create a new appointment
       console.log('Creating new appointment:', formData);
@@ -84,6 +109,16 @@ const AppointmentsPage = () => {
     // Add API call and refetch logic here
   };
 
+  const handleQuickUpdateStatus = async (appointmentId, newStatus) => {
+    console.info(`Updating status of appointment: ${appointmentId}`);
+    if (!confirm(`Are you sure you want to change the status into ${newStatus}`)) return;
+
+    const updatedData = {
+      status: newStatus,
+    };
+
+    await appointmentMutation({ id: appointmentId, updatedData });
+  };
   const columns = [
     {
       accessorKey: 'name',
@@ -113,57 +148,101 @@ const AppointmentsPage = () => {
     {
       accessorKey: 'status',
       header: 'Status',
-      cell: ({ row }) => <Badge variant={row.getValue('status')}>{row.getValue('status')}</Badge>,
+      cell: ({ row }) => {
+        const bgColorMap = {
+          Completed: 'bg-green-200/50',
+          Booked: 'bg-blue-200/50',
+          'In Progress': 'bg-yellow-200/50',
+          'Vehicle Arrived': 'bg-orange-200/50',
+        };
+        return (
+          <Badge variant={row.getValue('status')} className={bgColorMap[row.getValue('status')]}>
+            {row.getValue('status')}
+          </Badge>
+        );
+      },
     },
+    // {
+    //   accessorKey: 'assignedStaff.name',
+    //   header: 'Assigned Staff',
+    //   cell: ({ row }) => (
+    //     <div>
+    //       {row.original.assignedStaff?.name || <span className="text-sm italic text-muted-foreground">Unassigned</span>}
+    //     </div>
+    //   ),
+    // },
     {
-      accessorKey: 'assignedStaff.name',
-      header: 'Assigned Staff',
-      cell: ({ row }) => (
-        <div>
-          {row.original.assignedStaff?.name || <span className="text-sm italic text-muted-foreground">Unassigned</span>}
-        </div>
-      ),
+      header: 'Quick Actions',
+      enableHiding: false,
+      cell: ({ row }) => {
+        const appointment = row.original;
+        const statusMap = ['Booked', 'Vehicle Arrived', 'Assessment', 'In Progress', 'Completed'];
+        const currentStatusIndex = statusMap.indexOf(row.original.status);
+        const nextStatusIndex = currentStatusIndex > statusMap.length ? statusMap.length : currentStatusIndex + 1;
+        console.log(appointment._id);
+        return (
+          <>
+            {currentStatusIndex !== statusMap.length - 1 ? (
+              <Button
+                variant={'outline'}
+                onClick={handleQuickUpdateStatus.bind(null, appointment._id, statusMap[nextStatusIndex])}
+              >
+                <CheckSquare /> {statusMap[nextStatusIndex]}
+              </Button>
+            ) : (
+              <Button variant={'outline'} onClick={handleOpenInvoiceModal.bind(null, appointment._id)}>
+                <Upload /> Upload Invoice
+              </Button>
+            )}
+          </>
+        );
+      },
     },
     {
       id: 'actions',
       enableHiding: false,
       cell: ({ row }) => {
         const appointment = row.original;
-
+        const statusMap = ['Booked', 'Vehicle Arrived', 'Assessment', 'In Progress', 'Completed'];
+        const currentStatusIndex = statusMap.indexOf(row.original.status);
+        const nextStatusIndex = currentStatusIndex > statusMap.length ? statusMap.length : currentStatusIndex + 1;
         const handleDelete = () => {
           // In a real app, you would open a confirmation modal here
           // instead of using window.confirm
-          console.log(`Deletion requested for appointment: ${appointment._id}`);
+          console.log({ appointment });
+          console.log(`Deletion requested for appointment: ${appointment._id} `);
           // Example: showModal({ type: 'delete', id: appointment._id });
         };
 
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                onSelect={async () => {
-                  await navigator.clipboard.writeText(appointment._id);
-                  alert(`Appointment ID ${appointment._id} copied to clipboard!`);
-                }}
-              >
-                Copy Appointment ID
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={handleOpenModal.bind(null, appointment)}>View / Edit</DropdownMenuItem>
-              <DropdownMenuItem onSelect={handleOpenModal.bind(null, appointment)}>View Invoice</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-600 focus:text-red-700 focus:bg-red-50" onSelect={handleDelete}>
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex justify-between">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem
+                  onSelect={async () => {
+                    await navigator.clipboard.writeText(appointment._id);
+                    alert(`Appointment ID ${appointment._id} copied to clipboard!`);
+                  }}
+                >
+                  Copy Appointment ID
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={handleOpenModal.bind(null, appointment)}>View / Edit</DropdownMenuItem>
+                <DropdownMenuItem onSelect={handleOpenModal.bind(null, appointment)}>View Invoice</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-red-600 focus:text-red-700 focus:bg-red-50" onSelect={handleDelete}>
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         );
       },
     },
@@ -198,13 +277,24 @@ const AppointmentsPage = () => {
             </div> */}
           <div className="flex gap-4">
             <DataTable columns={columns} data={appointments} className="flex-1" />
-            <div>
+            {/* <div>
               <CalendarEvent date={date} setDate={setDate} data={events} />
-            </div>
+            </div> */}
           </div>
         </CardContent>
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           {isModalOpen && (
+            <AppointmentForm
+              appointment={editingAppointment}
+              onSave={handleSaveAppointment}
+              onCancel={handleCloseModal}
+              staffList={staffList}
+              vehicleList={vehicleList}
+            />
+          )}
+        </Dialog>
+        <Dialog open={isModalInvoiceOpen} onOpenChange={setIsModalInvoiceOpen}>
+          {isModalInvoiceOpen && (
             <AppointmentForm
               appointment={editingAppointment}
               onSave={handleSaveAppointment}

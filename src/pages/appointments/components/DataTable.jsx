@@ -10,6 +10,7 @@ import {
 } from '@tanstack/react-table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 function DataTable({ columns, data, ...props }) {
   const [sorting, setSorting] = useState([]);
@@ -32,13 +33,29 @@ function DataTable({ columns, data, ...props }) {
 
   return (
     <div {...props}>
-      <div className="flex items-center py-4">
+      <div className="flex items-center py-4 gap-2">
         <Input
           placeholder="Filter by customer name..."
           value={table.getColumn('name')?.getFilterValue() ?? ''}
           onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
           className="max-w-sm"
         />
+        <Select
+          value={table.getColumn('status')?.getFilterValue() ?? ''}
+          onValueChange={(value) => table.getColumn('status')?.setFilterValue(value === 'All' ? '' : value)}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="All">All</SelectItem>
+            <SelectItem value="Booked">Booked</SelectItem>
+            <SelectItem value="Vehicle Arrived">Vehicle Arrived</SelectItem>
+            <SelectItem value="Assessment">Assessment</SelectItem>
+            <SelectItem value="In Progress">In Progress</SelectItem>
+            <SelectItem value="Completed">Completed</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       <div className="rounded-md border">
         <Table>
