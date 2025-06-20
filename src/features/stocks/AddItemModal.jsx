@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -17,15 +17,15 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Eye, Plus } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useAddItem, useUpdateItem } from '@/hooks/useInventoryMutation';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Eye, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useAddItem, useUpdateItem } from "@/hooks/useInventoryMutation";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 function AddItemModal({ isAdd = true, item = {}, itemCategories }) {
   const [itemDetails, setItemDetails] = useState(item);
@@ -89,7 +89,7 @@ function AddItemModal({ isAdd = true, item = {}, itemCategories }) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{isAdd ? 'Add Item' : 'Item Details'}</DialogTitle>
+          <DialogTitle>{isAdd ? "Add Item" : "Item Details"}</DialogTitle>
         </DialogHeader>
         <form>
           <div className="grid gap-4 mb-4">
@@ -145,6 +145,7 @@ function AddItemModal({ isAdd = true, item = {}, itemCategories }) {
                       stock: e.target.value,
                     })
                   }
+                  disabled={!isAdd}
                   type="number"
                   id="stock"
                   name="stock"
@@ -197,7 +198,7 @@ function AddItemModal({ isAdd = true, item = {}, itemCategories }) {
                     Saving
                   </span>
                 ) : (
-                  'Save'
+                  "Save"
                 )}
               </Button>
             ) : (
@@ -208,7 +209,7 @@ function AddItemModal({ isAdd = true, item = {}, itemCategories }) {
                     Updating
                   </span>
                 ) : (
-                  'Update'
+                  "Update"
                 )}
               </Button>
             )}

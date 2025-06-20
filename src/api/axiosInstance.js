@@ -41,7 +41,7 @@ export const getAxiosErrorMessage = (error) => {
     }
 
     if (data && typeof data.message === "string") {
-      return data.message;
+      return data.error;
     }
     if (data && typeof data.error === "string") {
       return data.error;
