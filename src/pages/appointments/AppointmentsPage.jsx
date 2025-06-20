@@ -193,7 +193,8 @@ const AppointmentsPage = () => {
   ];
 
   return (
-    <DashboardLayout>
+    // <DashboardLayout>
+    <>
       <Card className="w-full bg-transparent shadow-none border-0">
         <CardHeader>
           <CardTitle className="text-2xl font-semibold">Appointments</CardTitle>
@@ -238,7 +239,9 @@ const AppointmentsPage = () => {
         <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
         <AppointmentsTable appointments={filteredData} />
       </div> */}
-    </DashboardLayout>
+    </>
+
+    // </DashboardLayout>
   );
 };
 

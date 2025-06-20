@@ -50,7 +50,7 @@ const ServiceConfigPage = () => {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <AddServiceModal
         isOpen={isModalOpen}
         setIsOpen={setIsModalOpen}
@@ -85,7 +85,7 @@ const ServiceConfigPage = () => {
           </CardContent>
         </Card>
       </AlertDialogProvider>
-    </DashboardLayout>
+    </>
   );
 };
 

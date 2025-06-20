@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
-import DashboardLayout from '../DashboardLayout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import React, { useState, useMemo } from "react";
+import DashboardLayout from "../DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
   CardAction,
-} from '@/components/ui/card';
+} from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -18,7 +18,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   UserPlus,
   Edit,
@@ -27,68 +27,68 @@ import {
   XCircle,
   ShieldX,
   ShieldCheck,
-} from 'lucide-react';
-import AddUserModal from './AddUserModal';
-import AddItemModal from '../stocks/AddItemModal';
+} from "lucide-react";
+import AddUserModal from "./AddUserModal";
+import AddItemModal from "../stocks/AddItemModal";
 
 // --- Mock Data (Replace with API call) ---
 const usersData = [
   {
-    id: 'USR001',
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    mobileNumber: '+1 123 456 7890',
+    id: "USR001",
+    name: "John Doe",
+    email: "john.doe@example.com",
+    mobileNumber: "+1 123 456 7890",
     isVerified: true,
     isActive: true,
-    role: 'Admin',
-    position: 'Office Staff',
+    role: "Admin",
+    position: "Office Staff",
   },
   {
-    id: 'USR002',
-    name: 'Jane Smith',
-    email: 'jane.smith@example.com',
-    mobileNumber: '+1 987 654 3210',
+    id: "USR002",
+    name: "Jane Smith",
+    email: "jane.smith@example.com",
+    mobileNumber: "+1 987 654 3210",
     isVerified: false,
     isActive: true,
-    role: 'User',
-    position: 'Mechanic',
+    role: "User",
+    position: "Mechanic",
   },
   {
-    id: 'USR003',
-    name: 'Michael Johnson',
-    email: 'michael.j@example.com',
-    mobileNumber: '+44 20 7946 0958',
+    id: "USR003",
+    name: "Michael Johnson",
+    email: "michael.j@example.com",
+    mobileNumber: "+44 20 7946 0958",
     isVerified: true,
     isActive: false,
-    role: 'User',
-    position: 'Driver',
+    role: "User",
+    position: "Driver",
   },
   {
-    id: 'USR004',
-    name: 'Emily Davis',
-    email: 'emily.davis@example.com',
-    mobileNumber: '+61 2 9876 5432',
+    id: "USR004",
+    name: "Emily Davis",
+    email: "emily.davis@example.com",
+    mobileNumber: "+61 2 9876 5432",
     isVerified: true,
     isActive: true,
-    role: 'Editor',
-    position: 'Guard',
+    role: "Editor",
+    position: "Guard",
   },
   {
-    id: 'USR005',
-    name: 'David Wilson',
-    email: 'd.wilson@example.com',
-    mobileNumber: '+1 415 555 2671',
+    id: "USR005",
+    name: "David Wilson",
+    email: "d.wilson@example.com",
+    mobileNumber: "+1 415 555 2671",
     isVerified: false,
     isActive: false,
-    role: 'User',
-    position: 'Helper',
+    role: "User",
+    position: "Helper",
   },
 ];
 
 // --- User Management Component ---
 const UserManagement = () => {
   const [users, setUsers] = useState(usersData);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Memoized filtering to avoid re-calculating on every render
   const filteredUsers = useMemo(() => {
@@ -127,7 +127,7 @@ const UserManagement = () => {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <Card className="w-full bg-transparent shadow-none border-0">
         <CardHeader>
           <CardTitle className="text-2xl font-semibold">
@@ -168,7 +168,7 @@ const UserManagement = () => {
               {filteredUsers.map((user) => (
                 <TableRow
                   key={user.id}
-                  className={!user.isActive ? 'bg-red-50/50' : ''}
+                  className={!user.isActive ? "bg-red-50/50" : ""}
                 >
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
@@ -225,7 +225,7 @@ const UserManagement = () => {
           </Table>
         </CardContent>
       </Card>
-    </DashboardLayout>
+    </>
   );
 };
 

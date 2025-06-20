@@ -93,7 +93,7 @@ const Dashboard = () => {
   const greeting = user?.role === "admin" ? "Welcome Admin!" : "Welcome Staff!";
 
   return (
-    <DashboardLayout>
+    <>
       <Card className="w-full bg-transparent shadow-none border-0">
         <CardHeader>
           <CardTitle className="text-2xl font-semibold">{greeting}</CardTitle>
@@ -211,7 +211,7 @@ const Dashboard = () => {
           </div>
         </main>
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 
