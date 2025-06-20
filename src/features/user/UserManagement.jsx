@@ -1,207 +1,98 @@
-import React, { useState, useMemo } from "react";
-import DashboardLayout from "../DashboardLayout";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardAction,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  UserPlus,
-  Edit,
-  Trash2,
-  CheckCircle,
-  XCircle,
-  ShieldX,
-  ShieldCheck,
-} from "lucide-react";
-import AddUserModal from "./AddUserModal";
-import AddItemModal from "../stocks/AddItemModal";
+import React, { useState, useMemo } from 'react';
+import DashboardLayout from '../DashboardLayout';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardAction } from '@/components/ui/card';
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { UserPlus, Edit, Trash2, CheckCircle, XCircle, ShieldX, ShieldCheck } from 'lucide-react';
+import AddUserModal from './AddUserModal';
+import AddItemModal from '../stocks/AddItemModal';
+import { useFetchUsers } from '@/hooks/useUsersQuery';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import ManageUserStatus from './MangeUserStatus';
+import { useDebounce } from '@uidotdev/usehooks';
 
 // --- Mock Data (Replace with API call) ---
-const usersData = [
-  {
-    id: "USR001",
-    name: "John Doe",
-    email: "john.doe@example.com",
-    mobileNumber: "+1 123 456 7890",
-    isVerified: true,
-    isActive: true,
-    role: "Admin",
-    position: "Office Staff",
-  },
-  {
-    id: "USR002",
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    mobileNumber: "+1 987 654 3210",
-    isVerified: false,
-    isActive: true,
-    role: "User",
-    position: "Mechanic",
-  },
-  {
-    id: "USR003",
-    name: "Michael Johnson",
-    email: "michael.j@example.com",
-    mobileNumber: "+44 20 7946 0958",
-    isVerified: true,
-    isActive: false,
-    role: "User",
-    position: "Driver",
-  },
-  {
-    id: "USR004",
-    name: "Emily Davis",
-    email: "emily.davis@example.com",
-    mobileNumber: "+61 2 9876 5432",
-    isVerified: true,
-    isActive: true,
-    role: "Editor",
-    position: "Guard",
-  },
-  {
-    id: "USR005",
-    name: "David Wilson",
-    email: "d.wilson@example.com",
-    mobileNumber: "+1 415 555 2671",
-    isVerified: false,
-    isActive: false,
-    role: "User",
-    position: "Helper",
-  },
-];
 
 // --- User Management Component ---
 const UserManagement = () => {
-  const [users, setUsers] = useState(usersData);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
-  // Memoized filtering to avoid re-calculating on every render
-  // const filteredUsers = useMemo(() => {
-  //   if (!searchQuery) {
-  //     return users;
-  //   }
-  //   return users.filter(
-  //     (user) =>
-  //       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  //       user.email.toLowerCase().includes(searchQuery.toLowerCase())
-  //   );
-  // }, [users, searchQuery]);
-
-  // Handler for search input changes
-  const handleSearchChange = (event) => {
-    setSearchQuery(event.target.value);
-  };
+  const { data: usersData, isPending: usersDataPending, error: usersDataError } = useFetchUsers(debouncedSearchQuery);
 
   return (
     <>
       <Card className="w-full bg-transparent shadow-none border-0">
         <CardHeader>
-          <CardTitle className="text-2xl font-semibold">
-            User Management
-          </CardTitle>
-          <CardDescription>
-            View, search, add, and manage user accounts and permissions.
-          </CardDescription>
-          <CardAction className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0 sm:space-x-4 pt-2">
-            <div className="w-full">
+          <CardTitle className="text-2xl font-semibold">User Management</CardTitle>
+          <CardDescription>View, search, add, and manage user accounts and permissions.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex mb-4 justify-between">
+            <div className="w-[50%]">
               <Input
                 type="text"
                 placeholder="Search by name or email..."
                 value={searchQuery}
-                onChange={handleSearchChange}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full"
               />
             </div>
-            {/* Replace with your Add User Modal Trigger */}
             <AddUserModal isAdd={true} />
-          </CardAction>
-        </CardHeader>
-        <CardContent>
+          </div>
+          {/* Replace with your Add User Modal Trigger */}
           <Table>
-            {/* <TableCaption>A list of all users in the system.</TableCaption>  */}
+            {/* <TableCaption>A list of all users in the system.</TableCaption> */}
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Mobile Number</TableHead>
                 <TableHead className="text-center">Verified</TableHead>
-                <TableHead className="text-center">isActive</TableHead>
+                <TableHead className="text-center">Status</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Position</TableHead>
                 <TableHead className="text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {usersData?.data?.map((user) => (
-                <TableRow
-                  key={user.id}
-                  className={!user.isActive ? "bg-red-50/50" : ""}
-                  key={user._id}
-                  className={!user.isActive ? "bg-red-50/50" : ""}
-                >
-                  <TableCell className="font-medium">{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.mobileNumber}</TableCell>
-                  <TableCell className="text-center">
-                    {user.isVerified ? (
-                      <CheckCircle
-                        size={20}
-                        className="text-green-500 mx-auto"
-                      />
-                    ) : (
-                      <XCircle size={20} className="text-red-500 mx-auto" />
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {user.isActive ? (
-                      <CheckCircle
-                        size={20}
-                        className="text-green-500 mx-auto"
-                      />
-                    ) : (
-                      <XCircle size={20} className="text-red-500 mx-auto" />
-                    )}
-                  </TableCell>
-                  <TableCell>{user.role}</TableCell>
-                  <TableCell>{user.position}</TableCell>
-                  <TableCell className="flex items-center justify-center space-x-2 p-3">
-                    {/* Replace with your Edit User Modal Trigger */}
-                    <AddUserModal user={user} />
+              {usersDataPending ? (
+                <TableCell colSpan={8} className="h-96 ">
+                  <div className="flex items-center justify-center w-full h-full ">
+                    <LoadingSpinner />
+                  </div>
+                </TableCell>
+              ) : (
+                usersData?.data?.map((user) => (
+                  <TableRow key={user._id} className={!user.isActive ? 'bg-red-50/50' : ''}>
+                    <TableCell className="font-medium">{user.name}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.mobileNumber}</TableCell>
+                    <TableCell className="text-center">
+                      {user.isVerified ? (
+                        <CheckCircle size={20} className="text-green-500 mx-auto" />
+                      ) : (
+                        <XCircle size={20} className="text-red-500 mx-auto" />
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {user.isActive ? (
+                        <CheckCircle size={20} className="text-green-500 mx-auto" />
+                      ) : (
+                        <XCircle size={20} className="text-red-500 mx-auto" />
+                      )}
+                    </TableCell>
+                    <TableCell>{user.role}</TableCell>
+                    <TableCell>{user.position}</TableCell>
+                    <TableCell className="flex items-center justify-center space-x-2 p-3">
+                      {/* Replace with your Edit User Modal Trigger */}
 
-                    <ManageUserStatus
-                      userName={
-                        user.userName || user.email || user.mobileNumber
-                      }
-                      id={user._id}
-                      isActive={user.isActive}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
-              {usersData?.data?.length === 0 && (
-                <TableRow>
-                  <TableCell
-                    colSpan={7}
-                    className="text-center text-gray-400 py-6"
-                  >
-                    No users found.
-                  </TableCell>
-                </TableRow>
+                      <AddUserModal user={user} />
+                      <ManageUserStatus userName={user.name} id={user._id} isActive={user.isActive} />
+                    </TableCell>
+                  </TableRow>
+                ))
               )}
             </TableBody>
           </Table>

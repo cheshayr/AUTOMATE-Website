@@ -74,15 +74,11 @@ function AddItemModal({ isAdd = true, item = {}, itemCategories }) {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         {isAdd ? (
-          <Button className="min-w-40">
+          <Button className="min-w-36">
             <Plus /> Add Item
           </Button>
         ) : (
-          <Button
-            variant="outline"
-            className="text-blue-600 hover:text-blue-700"
-            size="icon"
-          >
+          <Button variant="outline" className="text-blue-600 hover:text-blue-700" size="icon">
             <Eye size={18} />
           </Button>
         )}
@@ -96,9 +92,7 @@ function AddItemModal({ isAdd = true, item = {}, itemCategories }) {
             <div className="grid gap-3">
               <Label htmlFor="name">Item Name</Label>
               <Input
-                onChange={(e) =>
-                  setItemDetails({ ...itemDetails, itemName: e.target.value })
-                }
+                onChange={(e) => setItemDetails({ ...itemDetails, itemName: e.target.value })}
                 id="name"
                 name="name"
                 placeholder="Item name"
@@ -112,9 +106,7 @@ function AddItemModal({ isAdd = true, item = {}, itemCategories }) {
                 id="category"
                 name="category"
                 value={itemDetails.category}
-                onValueChange={(newValue) =>
-                  setItemDetails({ ...itemDetails, category: newValue })
-                }
+                onValueChange={(newValue) => setItemDetails({ ...itemDetails, category: newValue })}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a category" />
@@ -123,10 +115,7 @@ function AddItemModal({ isAdd = true, item = {}, itemCategories }) {
                   <SelectGroup>
                     <SelectItem value="All">All</SelectItem>
                     {itemCategories?.map((category) => (
-                      <SelectItem
-                        key={category.id}
-                        value={category.categoryName}
-                      >
+                      <SelectItem key={category.id} value={category.categoryName}>
                         {category.categoryName}
                       </SelectItem>
                     ))}
@@ -145,6 +134,7 @@ function AddItemModal({ isAdd = true, item = {}, itemCategories }) {
                       stock: e.target.value,
                     })
                   }
+                  disabled={!isAdd}
                   type="number"
                   id="stock"
                   name="stock"

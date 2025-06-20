@@ -56,7 +56,7 @@ function AddCategoryModal() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="min-w-40">
+        <Button className="min-w-36">
           <Plus /> Add Category
         </Button>
       </DialogTrigger>
