@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -16,12 +16,38 @@ const AppointmentForm = ({ appointment, onSave, onCancel, staffList = [], vehicl
     scheduledDate: appointment?.scheduledDate ? new Date(appointment.scheduledDate).toISOString().split('T')[0] : '',
     scheduledTime: appointment?.scheduledTime ? new Date(appointment.scheduledTime).toTimeString().slice(0, 5) : '',
     status: appointment?.status || 'Booked',
-    assignedStaff: appointment?.assignedStaff?._id || '',
+    assignedStaff: String(
+      typeof appointment?.assignedStaff === 'object' ? appointment.assignedStaff._id : appointment?.assignedStaff || ''
+    ),
     customerNotes: appointment?.customerNotes || '',
     staffNotes: appointment?.staffNotes || '',
   });
 
   const isEditMode = !!appointment;
+
+  useEffect(() => {
+    if (appointment) {
+      setFormData({
+        name: appointment?.name || '',
+        phone: appointment?.phone || '',
+        email: appointment?.email || '',
+        contactMethod: appointment?.contactMethod || 'Phone',
+        vehicle: appointment?.vehicle || {},
+        scheduledDate: appointment?.scheduledDate
+          ? new Date(appointment.scheduledDate).toISOString().split('T')[0]
+          : '',
+        scheduledTime: appointment?.scheduledTime ? new Date(appointment.scheduledTime).toTimeString().slice(0, 5) : '',
+        status: appointment?.status || 'Booked',
+        assignedStaff: String(
+          typeof appointment?.assignedStaff === 'object'
+            ? appointment.assignedStaff._id
+            : appointment?.assignedStaff || ''
+        ),
+        customerNotes: appointment?.customerNotes || '',
+        staffNotes: appointment?.staffNotes || '',
+      });
+    }
+  }, [appointment]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -140,9 +166,9 @@ const AppointmentForm = ({ appointment, onSave, onCancel, staffList = [], vehicl
                   className="flex h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
                 >
                   <option value="">Unassigned</option>
-                  {staffList.map((staff) => (
-                    <option key={staff._id} value={staff._id}>
-                      {staff.name}
+                  {staffList?.map((staff) => (
+                    <option key={staff._id} value={String(staff._id)}>
+                      {`${staff.name} (${staff.position})`}
                     </option>
                   ))}
                 </select>

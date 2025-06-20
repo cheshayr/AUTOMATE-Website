@@ -23,6 +23,7 @@ import AppointmentForm from './components/AppointmentForm';
 import { Dialog } from '@/components/ui/dialog';
 import { CalendarEvent } from './components/CalendarEvent';
 import { useAdminUpdateAppointment } from '@/hooks/useAppointments.mutation';
+import { useFetchUsers } from '@/hooks/useUsersQuery';
 
 const tabs = ['Pending Visit', 'Ongoing Repair', 'Billing', 'Completed', 'Cancelled'];
 
@@ -48,12 +49,21 @@ const events = [
 
 const AppointmentsPage = () => {
   const { data } = useAppointments();
+  const { data: users } = useFetchUsers('', 'staff');
+  console.log({ users });
   const appointments = data?.appointments || [];
-
+  const staff = users?.data || [];
+  console.log({ staff });
   const [date, setDate] = useState(new Date());
-  const [staffList, setStaffList] = useState([]);
-  const [vehicleList, setVehicleList] = useState([data?.appointments?.vehicle]);
+  const [staffList, setStaffList] = useState([]); // Initialize as empty array
+  const [vehicleList, setVehicleList] = useState([appointments?.vehicle]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (users?.data) {
+      setStaffList(users.data);
+    }
+  }, [users]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalInvoiceOpen, setIsModalInvoiceOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(''); // For invoice modal, if needed
@@ -88,6 +98,7 @@ const AppointmentsPage = () => {
       const scheduledTime = `${formData.scheduledDate}T${formData.scheduledTime}`;
       const updatedData = {
         scheduledTime,
+        assignedStaff: formData.assignedStaff,
         status: formData.status,
         notes: {
           customerNotes: formData.customerNotes,
