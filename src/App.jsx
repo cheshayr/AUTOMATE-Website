@@ -1,25 +1,26 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 // import LoginPage from './components/LoginPage';
 // import CreateAccount from './components/CreateAccount';
 // import AppointmentPage from './components/AppointmentPage';
 // import EmployeePage from './components/EmployeePage';
-import AuthPage from "./features/auth/AuthPage.jsx";
-import { AuthProvider } from "./context/AuthContext.jsx";
-import Dashboard from "./pages/dashboard/Dashboard.jsx";
-import AppointmentsPage from "./pages/appointments/AppointmentsPage.jsx";
-import AppointmentDetailsPage from "./pages/appointments/AppointmentDetailsPage.jsx";
-import StockManagement from "./features/stocks/StockManagement.jsx";
-import Services from "./pages/services/ServiceConfigPage.jsx";
-import ActivityLogs from "./activity/ActivityLogs.jsx";
-import UserManagement from "./features/user/UserManagement.jsx";
-import EditServicePage from "./pages/services/EditServicePage.jsx";
-import LoginPage from "./pages/auth/Login.jsx";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useAlert } from "./hooks/useAlert.jsx";
-import DashboardLayout from "./features/DashboardLayout.jsx";
-import { useAuthContext } from "./context/AuthContext.jsx";
-import { Navigate } from "react-router-dom";
+import AuthPage from './features/auth/AuthPage.jsx';
+import { AuthProvider } from './context/AuthContext.jsx';
+import Dashboard from './pages/dashboard/Dashboard.jsx';
+import AppointmentsPage from './pages/appointments/AppointmentsPage.jsx';
+import AppointmentDetailsPage from './pages/appointments/AppointmentDetailsPage.jsx';
+import StockManagement from './features/stocks/StockManagement.jsx';
+import Services from './pages/services/ServiceConfigPage.jsx';
+import ActivityLogs from './activity/ActivityLogs.jsx';
+import UserManagement from './features/user/UserManagement.jsx';
+import EditServicePage from './pages/services/EditServicePage.jsx';
+import LoginPage from './pages/auth/Login.jsx';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useAlert } from './hooks/useAlert.jsx';
+import DashboardLayout from './features/DashboardLayout.jsx';
+import { useAuthContext } from './context/AuthContext.jsx';
+import { Navigate } from 'react-router-dom';
+import AdminAnalytics from './features/analytics/AdminAnalytics.jsx';
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuthContext();
@@ -73,6 +74,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <UserManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/analytics"
+              element={
+                <ProtectedRoute>
+                  <AdminAnalytics />
                 </ProtectedRoute>
               }
             />
