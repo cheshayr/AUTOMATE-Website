@@ -22,7 +22,7 @@ import DataTable from './components/DataTable';
 import AppointmentForm from './components/AppointmentForm';
 import { Dialog } from '@/components/ui/dialog';
 import { CalendarEvent } from './components/CalendarEvent';
-import { useAdminUpdateAppointment } from '@/hooks/useAppointments.mutation';
+import { useAdminDeleteAppointment, useAdminUpdateAppointment } from '@/hooks/useAppointments.mutation';
 import { useFetchUsers } from '@/hooks/useUsersQuery';
 
 const tabs = ['Pending Visit', 'Ongoing Repair', 'Billing', 'Completed', 'Cancelled'];
@@ -69,6 +69,7 @@ const AppointmentsPage = () => {
   const [selectedAppointment, setSelectedAppointment] = useState(''); // For invoice modal, if needed
   const [editingAppointment, setEditingAppointment] = useState(null); // null for new, object for edit
   const { mutateAsync: appointmentMutation } = useAdminUpdateAppointment();
+  const { mutateAsync: appointmentDeleteMutation } = useAdminDeleteAppointment();
   const handleOpenModal = (appointment = null) => {
     console.log(appointment);
     setEditingAppointment(appointment);
@@ -115,9 +116,10 @@ const AppointmentsPage = () => {
     handleCloseModal();
   };
 
-  const handleDeleteAppointment = (appointmentId) => {
-    console.log('Deleting appointment:', appointmentId);
-    // Add API call and refetch logic here
+  const handleDeleteAppointment = async (appointmentId) => {
+    if (!confirm(`Are you sure you want to delete the appointment?`)) return;
+
+    await appointmentDeleteMutation({ id: appointmentId._id, appointmentId });
   };
 
   const handleQuickUpdateStatus = async (appointmentId, newStatus) => {
@@ -143,6 +145,23 @@ const AppointmentsPage = () => {
         <div>
           <div className="font-medium">{`${row.original.vehicle.brand} ${row.original.vehicle.model}`}</div>
           <div className="text-muted-foreground text-xs">{row.original.vehicle.licensePlate}</div>
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'services',
+      header: 'Services',
+      cell: ({ row }) => (
+        <div>
+          {row.original.services && row.original.services.length > 0 ? (
+            row.original.services.map((service, index) => (
+              <div key={index} className="font-medium">
+                {service.service.name}
+              </div>
+            ))
+          ) : (
+            <div className="text-muted-foreground text-xs">No services listed</div>
+          )}
         </div>
       ),
     },
@@ -248,7 +267,10 @@ const AppointmentsPage = () => {
                 <DropdownMenuItem onSelect={handleOpenModal.bind(null, appointment)}>View / Edit</DropdownMenuItem>
                 <DropdownMenuItem onSelect={handleOpenModal.bind(null, appointment)}>View Invoice</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-red-600 focus:text-red-700 focus:bg-red-50" onSelect={handleDelete}>
+                <DropdownMenuItem
+                  className="text-red-600 focus:text-red-700 focus:bg-red-50"
+                  onSelect={handleDeleteAppointment.bind(null, appointment)}
+                >
                   Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
