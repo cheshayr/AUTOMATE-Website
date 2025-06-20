@@ -13,11 +13,23 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { useLocation } from "react-router-dom";
+import { useAuthContext } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function DashboardLayout({ children }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const pathnames = location.pathname.split("/").filter((x) => x);
+  const { user } = useAuthContext();
+  console.log({ user });
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/");
+    }
+  }, [navigate, pathnames, user]);
 
   return (
     <SidebarProvider>

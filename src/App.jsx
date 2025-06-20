@@ -17,6 +17,17 @@ import EditServicePage from "./pages/services/EditServicePage.jsx";
 import LoginPage from "./pages/auth/Login.jsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAlert } from "./hooks/useAlert.jsx";
+import DashboardLayout from "./features/DashboardLayout.jsx";
+import { useAuthContext } from "./context/AuthContext.jsx";
+import { Navigate } from "react-router-dom";
+
+const ProtectedRoute = ({ children }) => {
+  const { user } = useAuthContext();
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+  return <DashboardLayout>{children}</DashboardLayout>;
+};
 
 function App() {
   return (
@@ -24,22 +35,70 @@ function App() {
       <QueryClientProvider client={new QueryClient()}>
         <AuthProvider>
           <Routes>
-            {/* <Route path="/" element={<AuthPage />} /> */}
             <Route path="/" element={<LoginPage />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/appointments" element={<AppointmentsPage />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/appointments"
+              element={
+                <ProtectedRoute>
+                  <AppointmentsPage />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/appointments/:id"
-              element={<AppointmentDetailsPage />}
+              element={
+                <ProtectedRoute>
+                  <AppointmentDetailsPage />
+                </ProtectedRoute>
+              }
             />
-            <Route path="/inventory" element={<StockManagement />} />
-            <Route path="/user" element={<UserManagement />} />
-            <Route path="/services" element={<Services />} />
-            <Route path="/activities" element={<ActivityLogs />} />
-            <Route path="/services" element={<Services />} />
+            <Route
+              path="/inventory"
+              element={
+                <ProtectedRoute>
+                  <StockManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/user"
+              element={
+                <ProtectedRoute>
+                  <UserManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/services"
+              element={
+                <ProtectedRoute>
+                  <Services />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/activities"
+              element={
+                <ProtectedRoute>
+                  <ActivityLogs />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/services/edit/:serviceName"
-              element={<EditServicePage />}
+              element={
+                <ProtectedRoute>
+                  <EditServicePage />
+                </ProtectedRoute>
+              }
             />
           </Routes>
         </AuthProvider>

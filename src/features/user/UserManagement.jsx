@@ -30,20 +30,65 @@ import {
 } from "lucide-react";
 import AddUserModal from "./AddUserModal";
 import AddItemModal from "../stocks/AddItemModal";
-import { useFetchUsers } from "@/hooks/useUsersQuery";
-import ManageUserStatus from "./MangeUserStatus";
 
 // --- Mock Data (Replace with API call) ---
+const usersData = [
+  {
+    id: "USR001",
+    name: "John Doe",
+    email: "john.doe@example.com",
+    mobileNumber: "+1 123 456 7890",
+    isVerified: true,
+    isActive: true,
+    role: "Admin",
+    position: "Office Staff",
+  },
+  {
+    id: "USR002",
+    name: "Jane Smith",
+    email: "jane.smith@example.com",
+    mobileNumber: "+1 987 654 3210",
+    isVerified: false,
+    isActive: true,
+    role: "User",
+    position: "Mechanic",
+  },
+  {
+    id: "USR003",
+    name: "Michael Johnson",
+    email: "michael.j@example.com",
+    mobileNumber: "+44 20 7946 0958",
+    isVerified: true,
+    isActive: false,
+    role: "User",
+    position: "Driver",
+  },
+  {
+    id: "USR004",
+    name: "Emily Davis",
+    email: "emily.davis@example.com",
+    mobileNumber: "+61 2 9876 5432",
+    isVerified: true,
+    isActive: true,
+    role: "Editor",
+    position: "Guard",
+  },
+  {
+    id: "USR005",
+    name: "David Wilson",
+    email: "d.wilson@example.com",
+    mobileNumber: "+1 415 555 2671",
+    isVerified: false,
+    isActive: false,
+    role: "User",
+    position: "Helper",
+  },
+];
 
 // --- User Management Component ---
 const UserManagement = () => {
+  const [users, setUsers] = useState(usersData);
   const [searchQuery, setSearchQuery] = useState("");
-
-  const {
-    data: usersData,
-    isPending: usersDataPending,
-    error: usersDataError,
-  } = useFetchUsers();
 
   // Memoized filtering to avoid re-calculating on every render
   // const filteredUsers = useMemo(() => {
@@ -63,7 +108,7 @@ const UserManagement = () => {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <Card className="w-full bg-transparent shadow-none border-0">
         <CardHeader>
           <CardTitle className="text-2xl font-semibold">
@@ -104,6 +149,8 @@ const UserManagement = () => {
             <TableBody>
               {usersData?.data?.map((user) => (
                 <TableRow
+                  key={user.id}
+                  className={!user.isActive ? "bg-red-50/50" : ""}
                   key={user._id}
                   className={!user.isActive ? "bg-red-50/50" : ""}
                 >
@@ -160,7 +207,7 @@ const UserManagement = () => {
           </Table>
         </CardContent>
       </Card>
-    </DashboardLayout>
+    </>
   );
 };
 
