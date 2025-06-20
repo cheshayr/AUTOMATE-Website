@@ -24,6 +24,10 @@ import { NavMain } from '@/components/nav-main';
 import { NavProjects } from '@/components/nav-projects';
 import { NavSecondary } from '@/components/nav-secondary';
 import { NavUser } from '@/components/nav-user';
+import { NavMain } from '@/components/nav-main';
+import { NavProjects } from '@/components/nav-projects';
+import { NavSecondary } from '@/components/nav-secondary';
+import { NavUser } from '@/components/nav-user';
 import {
   Sidebar,
   SidebarContent,
@@ -36,9 +40,13 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { useAuthContext } from '@/context/AuthContext';
+import { NavLink } from 'react-router-dom';
 
 const data = {
   user: {
+    name: 'shadcn',
+    email: 'm@example.com',
+    avatar: '/avatars/shadcn.jpg',
     name: 'shadcn',
     email: 'm@example.com',
     avatar: '/avatars/shadcn.jpg',
@@ -47,24 +55,34 @@ const data = {
     {
       title: 'Playground',
       url: '#',
+      title: 'Playground',
+      url: '#',
       icon: SquareTerminal,
       isActive: true,
       items: [
         {
           title: 'History',
           url: '#',
+          title: 'History',
+          url: '#',
         },
         {
+          title: 'Starred',
+          url: '#',
           title: 'Starred',
           url: '#',
         },
         {
           title: 'Settings',
           url: '#',
+          title: 'Settings',
+          url: '#',
         },
       ],
     },
     {
+      title: 'Models',
+      url: '#',
       title: 'Models',
       url: '#',
       icon: Bot,
@@ -177,7 +195,7 @@ export function AppSidebar({ ...props }) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="#">
+              <NavLink to="#">
                 <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                   <img
                     src="/logo.png"
@@ -189,7 +207,7 @@ export function AppSidebar({ ...props }) {
                   <span className="truncate font-medium">Tierodman</span>
                   <span className="truncate text-xs">Auto Center</span>
                 </div>
-              </a>
+              </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -205,7 +223,7 @@ export function AppSidebar({ ...props }) {
                   <a href={'#'} onClick={logout}>
                     <LogOut className="size-4" />
                     <span>Logout</span>
-                  </a>
+                  </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

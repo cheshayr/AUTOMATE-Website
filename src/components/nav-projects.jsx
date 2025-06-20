@@ -1,4 +1,4 @@
-import { Folder, MoreHorizontal, Share, Trash2 } from "lucide-react";
+import { Folder, MoreHorizontal, Share, Trash2 } from 'lucide-react';
 
 import {
   DropdownMenu,
@@ -6,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -15,7 +15,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar";
+} from '@/components/ui/sidebar';
+import { NavLink } from 'react-router-dom';
 
 export function NavProjects({ projects }) {
   const { isMobile } = useSidebar();
@@ -27,10 +28,10 @@ export function NavProjects({ projects }) {
         {projects.map((item) => (
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton asChild>
-              <a href={item.url}>
+              <NavLink to={item.url}>
                 <item.icon />
                 <span>{item.name}</span>
-              </a>
+              </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}

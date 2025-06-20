@@ -1,8 +1,18 @@
 import authenticatedApi from '@/api/axiosInstance';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-export const useFetchUsers = (searchQuery) => {
+export const useFetchUsers = (searchQuery, role) => {
   const queryClient = useQueryClient();
+
+  if (!searchQuery) {
+    searchQuery = '';
+  }
+  if (!role) {
+    role = '';
+  }
+  if (role && role !== 'all') {
+    searchQuery += `&role=${role}`;
+  }
 
   const fetchUsers = async (searchQuery) => {
     const response = await authenticatedApi.get(`/users?searchQuery=${searchQuery}`);
