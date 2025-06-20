@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 /* body {
@@ -62,29 +62,28 @@ code {
   --primary-foreground: oklch(0.984 0.003 247.858); /* White: #FFFFFF (for text on primary background) */
 
   /* Secondary Color (can be a muted version of primary or a neutral) */
-  --secondary: oklch(94.8% 0.0000 0); /* Light Gray: #F0F0F0 */
-  --secondary-foreground: oklch(0.2125 0.0000 0); /* Dark Gray: #333333 */
+  --secondary: oklch(94.8% 0 0); /* Light Gray: #F0F0F0 */
+  --secondary-foreground: oklch(0.2125 0 0); /* Dark Gray: #333333 */
 
   /* Accent Color (Golden Yellow as primary accent) */
   --accent: oklch(78.17% 0.0768 78.412); /* Golden Yellow/Orange: #FFB300 */
   --accent-foreground: oklch(0.129 0.042 264.695); /* Dark Gray: #333333 (for text on accent background) */
 
   /* Backgrounds & Neutrals */
-  --background: oklch(97.58% 0.0000 296.813); /* Off-White Background: #F8F8F8 */
-  --foreground: oklch(0.2125 0.0000 0); /* Dark Gray: #333333 (general foreground text) */
-  --card: oklch(92.6977% 0.0000 0); /* Subtle Gray for Cards/Sections: #EAEAEA */
-  --card-foreground: oklch(0.2125 0.0000 0); /* Dark Gray: #333333 (text on cards) */
-  --muted: oklch(94.8% 0.0000 0); /* Light Gray: #F0F0F0 (for less prominent elements) */
-  --muted-foreground: oklch(51% 0.0000 0); /* Medium Gray: #666666 (for muted text) */
+  --background: oklch(97.58% 0 296.813); /* Off-White Background: #F8F8F8 */
+  --foreground: oklch(0.2125 0 0); /* Dark Gray: #333333 (general foreground text) */
+  --card-foreground: oklch(0.2125 0 0); /* Dark Gray: #333333 (text on cards) */
+  --muted: oklch(94.8% 0 0); /* Light Gray: #F0F0F0 (for less prominent elements) */
+  --muted-foreground: oklch(51% 0 0); /* Medium Gray: #666666 (for muted text) */
 
   /* Borders & Inputs */
-  --border: oklch(92.6977% 0.0000 0); /* Subtle Gray for Borders: #EAEAEA */
-  --input: oklch(92.6977% 0.0000 0); /* Subtle Gray for Inputs: #EAEAEA */
+  --border: oklch(92.6977% 0 0); /* Subtle Gray for Borders: #EAEAEA */
+  --input: oklch(92.6977% 0 0); /* Subtle Gray for Inputs: #EAEAEA */
   --ring: oklch(29.2885% 0.0468 257.417); /* Dark Blue: #1A428A (for focus rings) */
 
   /* Popover (often similar to card) */
-  --popover: oklch(92.6977% 0.0000 0); /* Subtle Gray for Popover: #EAEAEA */
-  --popover-foreground: oklch(0.2125 0.0000 0); /* Dark Gray: #333333 (text on popover) */
+  --popover: oklch(92.6977% 0 0); /* Subtle Gray for Popover: #EAEAEA */
+  --popover-foreground: oklch(0.2125 0 0); /* Dark Gray: #333333 (text on popover) */
 
   /* Destructive (Red is kept for this purpose) */
   --destructive: oklch(57.7% 0.245 27.325); /* Red: #D32F2F (for destructive actions) */
@@ -94,17 +93,17 @@ code {
   --sidebar-foreground: oklch(0.984 0.003 247.858); /* White: #FFFFFF */
   --sidebar-primary: oklch(78.17% 0.0768 78.412); /* Golden Yellow/Orange: #FFB300 (for primary elements in sidebar) */
   --sidebar-primary-foreground: oklch(0.129 0.042 264.695); /* Dark Gray: #333333 */
-  --sidebar-accent: oklch(94.8% 0.0000 0); /* Light Gray: #F0F0F0 (for accent in sidebar) */
-  --sidebar-accent-foreground: oklch(0.2125 0.0000 0); /* Dark Gray: #333333 */
-  --sidebar-border: oklch(92.6977% 0.0000 0); /* Subtle Gray for Sidebar Border: #EAEAEA */
+  --sidebar-accent: oklch(94.8% 0 0); /* Light Gray: #F0F0F0 (for accent in sidebar) */
+  --sidebar-accent-foreground: oklch(0.2125 0 0); /* Dark Gray: #333333 */
+  --sidebar-border: oklch(92.6977% 0 0); /* Subtle Gray for Sidebar Border: #EAEAEA */
   --sidebar-ring: oklch(78.17% 0.0768 78.412); /* Golden Yellow/Orange: #FFB300 */
 
   /* Chart Colors (using the defined palette) */
   --chart-1: oklch(29.2885% 0.0468 257.417); /* Dark Blue */
   --chart-2: oklch(78.17% 0.0768 78.412); /* Golden Yellow/Orange */
   --chart-3: oklch(57.7% 0.245 27.325); /* Red */
-  --chart-4: oklch(51% 0.0000 0); /* Medium Gray */
-  --chart-5: oklch(92.6977% 0.0000 0); /* Subtle Gray */
+  --chart-4: oklch(51% 0 0); /* Medium Gray */
+  --chart-5: oklch(92.6977% 0 0); /* Subtle Gray */
 }
 
 .dark {
