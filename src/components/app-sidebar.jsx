@@ -24,10 +24,6 @@ import { NavMain } from '@/components/nav-main';
 import { NavProjects } from '@/components/nav-projects';
 import { NavSecondary } from '@/components/nav-secondary';
 import { NavUser } from '@/components/nav-user';
-import { NavMain } from '@/components/nav-main';
-import { NavProjects } from '@/components/nav-projects';
-import { NavSecondary } from '@/components/nav-secondary';
-import { NavUser } from '@/components/nav-user';
 import {
   Sidebar,
   SidebarContent,
@@ -41,6 +37,7 @@ import {
 } from '@/components/ui/sidebar';
 import { useAuthContext } from '@/context/AuthContext';
 import { NavLink } from 'react-router-dom';
+import { Nav } from 'react-day-picker';
 
 const data = {
   user: {
@@ -189,6 +186,7 @@ const data = {
 
 export function AppSidebar({ ...props }) {
   const { user, logout } = useAuthContext();
+
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -220,7 +218,8 @@ export function AppSidebar({ ...props }) {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild size="sm">
-                  <a href={'#'} onClick={logout}>
+                  <NavLink>
+                    <a href={'#'} onClick={logout}></a>
                     <LogOut className="size-4" />
                     <span>Logout</span>
                   </NavLink>
