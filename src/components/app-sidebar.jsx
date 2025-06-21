@@ -218,8 +218,7 @@ export function AppSidebar({ ...props }) {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild size="sm">
-                  <NavLink>
-                    <a href={'#'} onClick={logout}></a>
+                  <NavLink href={'#'} onClick={logout}>
                     <LogOut className="size-4" />
                     <span>Logout</span>
                   </NavLink>
