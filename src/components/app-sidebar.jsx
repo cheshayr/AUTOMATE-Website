@@ -24,10 +24,6 @@ import { NavMain } from '@/components/nav-main';
 import { NavProjects } from '@/components/nav-projects';
 import { NavSecondary } from '@/components/nav-secondary';
 import { NavUser } from '@/components/nav-user';
-import { NavMain } from '@/components/nav-main';
-import { NavProjects } from '@/components/nav-projects';
-import { NavSecondary } from '@/components/nav-secondary';
-import { NavUser } from '@/components/nav-user';
 import {
   Sidebar,
   SidebarContent,
@@ -220,7 +216,7 @@ export function AppSidebar({ ...props }) {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild size="sm">
-                  <a href={'#'} onClick={logout}>
+                  <NavLink href={'#'} onClick={logout}>
                     <LogOut className="size-4" />
                     <span>Logout</span>
                   </NavLink>
