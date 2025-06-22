@@ -44,7 +44,6 @@ export function FeedbacksAnalytics() {
   //     { month: 'star5', count: 209, fill: 'var(--color-star5)' },
   //   ];
   const { data, isPending, isSuccess } = useFetchFeedbackAnalytics();
-  console.log(data?.data);
 
   const countData = data?.data;
 
@@ -106,43 +105,49 @@ export function FeedbacksAnalytics() {
         </Select>
       </CardHeader>
       <CardContent className="flex flex-1 justify-center pb-0">
-        <ChartContainer id={id} config={chartConfig} className="mx-auto aspect-square w-full max-w-[300px]">
-          <PieChart>
-            <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-            <Pie
-              data={countData}
-              dataKey="count"
-              nameKey="month"
-              innerRadius={60}
-              strokeWidth={5}
-              activeIndex={activeIndex}
-              // Removed the `: PieSectorDataItem` type annotation
-              activeShape={({ outerRadius = 0, ...props }) => (
-                <g>
-                  <Sector {...props} outerRadius={outerRadius + 10} />
-                  <Sector {...props} outerRadius={outerRadius + 25} innerRadius={outerRadius + 12} />
-                </g>
-              )}
-            >
-              <Label
-                content={({ viewBox }) => {
-                  if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
-                    return (
-                      <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
-                        <tspan x={viewBox.cx} y={viewBox.cy} className="fill-foreground text-3xl font-bold">
-                          {countData[activeIndex]?.count?.toLocaleString()}
-                        </tspan>
-                        <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 24} className="fill-muted-foreground">
-                          Feedbacks
-                        </tspan>
-                      </text>
-                    );
-                  }
-                }}
-              />
-            </Pie>
-          </PieChart>
-        </ChartContainer>
+        {data?.data.filter((el) => el.count > 0).length > 0 ? (
+          <ChartContainer id={id} config={chartConfig} className="mx-auto aspect-square w-full max-w-[300px]">
+            <PieChart>
+              <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+              <Pie
+                data={countData}
+                dataKey="count"
+                nameKey="month"
+                innerRadius={60}
+                strokeWidth={5}
+                activeIndex={activeIndex}
+                // Removed the `: PieSectorDataItem` type annotation
+                activeShape={({ outerRadius = 0, ...props }) => (
+                  <g>
+                    <Sector {...props} outerRadius={outerRadius + 10} />
+                    <Sector {...props} outerRadius={outerRadius + 25} innerRadius={outerRadius + 12} />
+                  </g>
+                )}
+              >
+                <Label
+                  content={({ viewBox }) => {
+                    if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
+                      return (
+                        <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
+                          <tspan x={viewBox.cx} y={viewBox.cy} className="fill-foreground text-3xl font-bold">
+                            {countData[activeIndex]?.count?.toLocaleString()}
+                          </tspan>
+                          <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 24} className="fill-muted-foreground">
+                            Feedbacks
+                          </tspan>
+                        </text>
+                      );
+                    }
+                  }}
+                />
+              </Pie>
+            </PieChart>
+          </ChartContainer>
+        ) : (
+          <div className="min-h-64  flex items-center justify-center">
+            <p>No ratings to show yet.</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

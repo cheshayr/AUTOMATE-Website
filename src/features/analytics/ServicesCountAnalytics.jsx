@@ -220,10 +220,23 @@ export function ServicesCountAnalytics() {
   if (isSuccess && (!chartData || chartData.length === 0)) {
     return (
       <Card className="py-4 sm:py-0 shadow-none h-full flex items-center justify-center">
-        <CardHeader>
-          <CardTitle>Services Insights</CardTitle>
-          <CardDescription>No service data available to display.</CardDescription>
-        </CardHeader>
+        {apiResponse?.data?.length > 0 ? (
+          <CardHeader>
+            <CardTitle>Services Insights</CardTitle>
+            <CardDescription>No service data available to display.</CardDescription>
+          </CardHeader>
+        ) : (
+          <div className=" w-full h-full py-6">
+            <CardHeader>
+              <CardTitle>Services Insights</CardTitle>
+              <CardDescription>Showing lifetime total availed services by customers.</CardDescription>
+            </CardHeader>
+
+            <div className="min-h-64  flex items-center justify-center">
+              <p>No availed serivces to show yet.</p>
+            </div>
+          </div>
+        )}
       </Card>
     );
   }
