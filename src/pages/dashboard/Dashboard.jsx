@@ -1,96 +1,126 @@
-import React, { useEffect } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import "./Dashboard.css";
-import { useAuthContext } from "../../context/AuthContext";
-import { useNavigate } from "react-router-dom";
-import Spinner from "../../components/constants/spinner/Spinner";
-import DashboardLayout from "../../features/DashboardLayout";
-import { ChartServices } from "@/components/dashboard/ChartServices";
-import { ChartSales } from "@/components/dashboard/ChartSales";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Car, Check, Package, Users, Wrench } from "lucide-react";
+import React, { useEffect } from 'react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import './Dashboard.css';
+import { useAuthContext } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import Spinner from '../../components/constants/spinner/Spinner';
+import DashboardLayout from '../../features/DashboardLayout';
+import { ChartServices } from '@/components/dashboard/ChartServices';
+import { ChartSales } from '@/components/dashboard/ChartSales';
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Ban, Calendar, Calendar1, Car, Check, Package, StopCircle, Timer, User, Users, Wrench } from 'lucide-react';
+import SummaryCard from '@/components/SummaryCard';
+import { useGetAppointmentSummary } from '@/hooks/useAppointments.query';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import { useGetDashboardSummary } from '@/hooks/useDashboard.query';
 
 const kpiData = [
   {
     title: "Today's Appointments",
-    value: "12",
+    value: '12',
     icon: Car,
-    color: "text-blue-400",
-    bgColor: "bg-blue-100",
+    color: 'text-blue-400',
+    bgColor: 'bg-blue-100',
   },
   {
-    title: "Ongoing Repairs",
-    value: "5",
+    title: 'Ongoing Repairs',
+    value: '5',
     icon: Wrench,
-    color: "text-orange-400",
-    bgColor: "bg-orange-100",
+    color: 'text-orange-400',
+    bgColor: 'bg-orange-100',
   },
   {
-    title: "Completed Repairs",
-    value: "3",
+    title: 'Completed Repairs',
+    value: '3',
     icon: Check,
-    color: "text-green-400",
-    bgColor: "bg-green-100",
+    color: 'text-green-400',
+    bgColor: 'bg-green-100',
   },
   {
-    title: "Available Staff",
-    value: "8",
+    title: 'Available Staff',
+    value: '8',
     icon: Users,
-    color: "text-red-400",
-    bgColor: "bg-red-100",
+    color: 'text-red-400',
+    bgColor: 'bg-red-100',
   },
 ];
 
 const appointmentStats = [
-  { label: "Ongoing Repair", count: 5, color: "#007BFF", icon: "⚙️" },
-  { label: "Completed", count: 5, color: "#28A745", icon: "✅" },
+  { label: 'Ongoing Repair', count: 5, color: '#007BFF', icon: '⚙️' },
+  { label: 'Completed', count: 5, color: '#28A745', icon: '✅' },
 ];
 
 const serviceData = [
-  { name: "Oil Change", count: 25 },
-  { name: "Underchassis", count: 18 },
-  { name: "Change Tires", count: 27 },
+  { name: 'Oil Change', count: 25 },
+  { name: 'Underchassis', count: 18 },
+  { name: 'Change Tires', count: 27 },
 ];
 
 const salesData = [
-  { name: "Jan", value: 50000 },
-  { name: "Feb", value: 60000 },
-  { name: "Mar", value: 80000 },
-  { name: "Apr", value: 70000 },
-  { name: "May", value: 30000 },
+  { name: 'Jan', value: 50000 },
+  { name: 'Feb', value: 60000 },
+  { name: 'Mar', value: 80000 },
+  { name: 'Apr', value: 70000 },
+  { name: 'May', value: 30000 },
 ];
 
 const Dashboard = () => {
   const { user } = useAuthContext();
-  const navigate = useNavigate();
-  console.log(user);
-  // useEffect(() => {
-  //     if (!user) {
-  //         const timeout = setTimeout(() => {
-  //             navigate('/');
-  //         }, 1500); // 1.5 seconds delay
+  const { data: summaryData, isLoading: summaryIsLoading } = useGetDashboardSummary();
 
-  //         return () => clearTimeout(timeout); // cleanup
-  //     }
-  // }, [user, navigate]);
+  const summary = [
+    {
+      title: 'Total Appointments',
+      value: summaryIsLoading ? <LoadingSpinner /> : summaryData?.summary.total,
+      icon: <Calendar />,
+      bgColor: 'bg-blue-500',
+      url: '/appointments',
+    },
+    {
+      title: "Today's Appointments",
+      value: summaryIsLoading ? <LoadingSpinner /> : summaryData?.summary.today,
+      icon: <Calendar1 />,
+      bgColor: 'bg-orange-500',
+      url: '/appointments',
+    },
+    {
+      title: 'On-going',
+      value: summaryIsLoading ? <LoadingSpinner /> : summaryData?.summary.ongoing,
+      icon: <Timer />,
+      bgColor: 'bg-yellow-500',
+      url: '/appointments',
+    },
+    {
+      title: 'Completed',
+      value: summaryIsLoading ? <LoadingSpinner /> : summaryData?.summary.completed,
+      icon: <Check />,
+      bgColor: 'bg-green-500',
+      url: '/appointments',
+    },
+    {
+      title: 'Canceled',
+      value: summaryIsLoading ? <LoadingSpinner /> : summaryData?.summary.canceled,
+      icon: <Ban />,
+      bgColor: 'bg-red-500',
+      url: '/appointments',
+    },
+    {
+      title: 'Staff',
+      value: summaryIsLoading ? <LoadingSpinner /> : summaryData?.summary.staff,
+      icon: <User />,
+      bgColor: 'bg-blue-500',
+      url: '/user',
+    },
+    {
+      title: 'Customer',
+      value: summaryIsLoading ? <LoadingSpinner /> : summaryData?.summary.customer,
+      icon: <User />,
+      bgColor: 'bg-blue-500',
+      url: '/user',
+    },
+  ];
 
-  // if (!user) return <Spinner message='Logging out...'/>;
-
-  const greeting = user?.role === "admin" ? "Welcome Admin!" : "Welcome Staff!";
+  const greeting = user?.role === 'admin' ? 'Welcome Admin!' : 'Welcome Staff!';
 
   return (
     <>
@@ -105,22 +135,10 @@ const Dashboard = () => {
             </Button>
           </CardAction> */}
         </CardHeader>
-        <CardContent className={"flex flex-col gap-4"}>
+        <CardContent className={'flex flex-col gap-4'}>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {kpiData.map((item) => (
-              <Card key={item.title} className={`gap-2 ${item.bgColor}`}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    {item.title}
-                  </CardTitle>
-                  <item.icon
-                    className={`h-4 w-4 text-muted-foreground ${item.color}`}
-                  />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{item.value}</div>
-                </CardContent>
-              </Card>
+            {summary.map((item) => (
+              <SummaryCard key={item.title} data={item} />
             ))}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3  gap-4">
@@ -143,11 +161,7 @@ const Dashboard = () => {
           {/* Appointment Summary Cards */}
           <div className="appointments-section">
             {appointmentStats.map((item, idx) => (
-              <div
-                className="card"
-                key={idx}
-                style={{ backgroundColor: item.color }}
-              >
+              <div className="card" key={idx} style={{ backgroundColor: item.color }}>
                 <div className="icon">{item.icon}</div>
                 <div className="info">
                   <h4>{item.label}</h4>

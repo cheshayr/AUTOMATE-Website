@@ -1,5 +1,6 @@
 import authenticatedApi, { getAxiosErrorMessage } from '@/api/axiosInstance';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 export const useAdminUpdateAppointment = () => {
   const queryClient = useQueryClient();
@@ -17,12 +18,12 @@ export const useAdminUpdateAppointment = () => {
     mutationFn: (payload) => mutationFn(payload),
     onSuccess: () => {
       queryClient.invalidateQueries('appointments');
-      alert('Appointment updated successfully');
+      toast.success('Appointment updated successfully');
     },
     onError: (error) => {
       const message = getAxiosErrorMessage(error) || 'Failed to update appointment';
       console.error('Error updating appointment:', message);
-      alert(message);
+      toast.error(message);
     },
   });
 };
@@ -43,12 +44,12 @@ export const useAdminDeleteAppointment = () => {
     mutationFn: (payload) => mutationFn(payload),
     onSuccess: () => {
       queryClient.invalidateQueries('appointments');
-      alert('Appointment deleted successfully');
+      toast.success('Appointment deleted successfully');
     },
     onError: (error) => {
       const message = getAxiosErrorMessage(error) || 'Failed to delete appointment';
       console.error('Error deleteing appointment:', message);
-      alert(message);
+      toast.error(message);
     },
   });
 };

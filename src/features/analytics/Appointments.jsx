@@ -5,6 +5,7 @@ import * as React from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar'; // Your custom Calendar component
 import { useFetchAppointmentsEvent } from '@/hooks/useAnalytticsQuery';
+import { Label } from '@/components/ui/label';
 
 export function Appointments() {
   const [date, setDate] = React.useState(new Date());
@@ -38,10 +39,10 @@ export function Appointments() {
 
     return data.data.filter((event) => new Date(event.from).toDateString() === date.toDateString());
   }, [date, data]);
-
+  console.log(selectedDateEvents);
   return (
-    <Card className="p-4 w-[70%] flex-row shadow-none">
-      <CardContent className="px-4 flex-1">
+    <Card className="p-4 w-full flex-col md:flex-row shadow-none">
+      <CardContent className="px-4 w-full md:w-1/3">
         <Calendar
           mode="single"
           selected={date}
@@ -61,6 +62,9 @@ export function Appointments() {
               month: 'long',
               year: 'numeric',
             })}
+          </div>
+          <div>
+            <Label>Total {selectedDateEvents.length}</Label>
           </div>
         </div>
         <div className="flex w-full flex-col gap-4">

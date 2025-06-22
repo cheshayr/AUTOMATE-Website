@@ -22,6 +22,7 @@ import { useAuthContext } from './context/AuthContext.jsx';
 import { Navigate } from 'react-router-dom';
 import AdminAnalytics from './features/analytics/AdminAnalytics.jsx';
 import Feedbacks from './features/Feedbacks.jsx';
+import { Toaster } from './components/ui/sonner.jsx';
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuthContext();
@@ -34,6 +35,7 @@ const ProtectedRoute = ({ children }) => {
 function App() {
   return (
     <Router>
+      <Toaster position="top-center" />
       <QueryClientProvider client={new QueryClient()}>
         <AuthProvider>
           <Routes>

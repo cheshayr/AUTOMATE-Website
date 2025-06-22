@@ -11,11 +11,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useSearchParams } from 'react-router-dom';
 
 function DataTable({ columns, data, ...props }) {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
-
+  const [searchParams, setSearchParams] = useSearchParams();
+  const filter = searchParams.get('filter') || 'All';
+  console.log(filter);
   const table = useReactTable({
     data,
     columns,
@@ -28,6 +31,14 @@ function DataTable({ columns, data, ...props }) {
     state: {
       sorting,
       columnFilters,
+    },
+    initialState: {
+      columnFilters: [
+        {
+          id: 'status', // The ID of the column you want to filter
+          value: filter, // The default filter value
+        },
+      ],
     },
   });
 
@@ -42,7 +53,8 @@ function DataTable({ columns, data, ...props }) {
         />
         <Select
           value={table.getColumn('status')?.getFilterValue() ?? ''}
-          onValueChange={(value) => table.getColumn('status')?.setFilterValue(value === 'All' ? '' : value)}
+          onValueChange={(value) => table.getColumn('status')?.setFilterValue(value === 'All' ? null : value)}
+          defaultValue="Booked"
         >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filter by status" />
