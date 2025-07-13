@@ -182,8 +182,7 @@ function AppointmentSheet({ appointment, onSave, onCancel, staffList = [], vehic
                         </SelectTrigger>
                         <SelectContent>
                           <SelectGroup>
-                            <SelectLabel>Staff</SelectLabel>
-                            <SelectItem value="apple">Apple</SelectItem>
+                            <SelectLabel>Select new status</SelectLabel>
                             {status.map((item) => (
                               <SelectItem key={item} value={item}>
                                 {item}

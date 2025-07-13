@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 export function Appointments() {
   const [date, setDate] = React.useState(new Date());
   const { data, isPending, isSuccess } = useFetchAppointmentsEvent();
+  console.log('🚀 ~ Appointments ~ data:', data);
 
   // 1. Calculate which days have bookings using useMemo for efficiency.
   const bookedDays = React.useMemo(() => {

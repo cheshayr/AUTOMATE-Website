@@ -271,7 +271,16 @@ const AppointmentsPage = () => {
 
             cell: ({ row }) => {
               const appointment = row.original;
-              const statusMap = ['Booked', 'Vehicle Arrived', 'Assessment', 'In Progress', 'Completed'];
+              const statusMap = ['Pending', 'Booked', 'Vehicle Arrived', 'Assessment', 'In Progress', 'Completed'];
+              const btnStatusText = [
+                'Pending',
+                'Confirm Booking',
+                'Vehicle Arrived',
+                'Assessment',
+                'In Progress',
+                'Completed',
+              ];
+
               const currentStatusIndex = statusMap.indexOf(row.original.status);
               const nextStatusIndex = currentStatusIndex > statusMap.length ? statusMap.length : currentStatusIndex + 1;
               console.log(appointment._id);
@@ -282,7 +291,7 @@ const AppointmentsPage = () => {
                       variant={'outline'}
                       onClick={handleQuickUpdateStatus.bind(null, appointment._id, statusMap[nextStatusIndex])}
                     >
-                      <CheckSquare /> {statusMap[nextStatusIndex]}
+                      <CheckSquare /> {btnStatusText[nextStatusIndex]}
                     </Button>
                   ) : (
                     <Button variant={'outline'} onClick={handleOpenInvoiceModal.bind(null, appointment._id)}>
@@ -301,7 +310,7 @@ const AppointmentsPage = () => {
       enableHiding: false,
       cell: ({ row }) => {
         const appointment = row.original;
-        const statusMap = ['Booked', 'Vehicle Arrived', 'Assessment', 'In Progress', 'Completed'];
+        const statusMap = ['Pending', 'Booked', 'Vehicle Arrived', 'Assessment', 'In Progress', 'Completed'];
         const currentStatusIndex = statusMap.indexOf(row.original.status);
         const nextStatusIndex = currentStatusIndex > statusMap.length ? statusMap.length : currentStatusIndex + 1;
         const handleDelete = () => {
@@ -375,7 +384,7 @@ const AppointmentsPage = () => {
             </CardAction>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-4 pb-4 mb-4 border-b">
+            <div className="flex gap-4 pb-4 mb-4">
               {summary.map((item) => (
                 <AppointmentCard key={item.title} data={item} />
               ))}
