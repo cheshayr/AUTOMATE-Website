@@ -31,7 +31,9 @@ export const useEditService = () => {
   const queryClient = useQueryClient();
 
   const editService = async (data) => {
-    const response = await authenticatedApi.patch(`/services/${data.id}`, data);
+    const id = data.get('id');
+
+    const response = await authenticatedApi.patch(`/services/${id}`, data);
     if (response.status !== 200) {
       throw new Error('Failed to edit service');
     }

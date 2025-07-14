@@ -1,20 +1,13 @@
-import React, { useState, useEffect } from "react";
-import DashboardLayout from "../../features/DashboardLayout";
-import { useServicesQuery } from "@/hooks/useServices.query";
-import { ServiceCard } from "./components/ServiceCard";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import AddServiceModal from "./components/AddServiceModal";
-import { useAlert } from "@/hooks/useAlert";
-import { useDeleteService } from "@/hooks/useServices.mutation";
-import { Plus } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import DashboardLayout from '../../features/DashboardLayout';
+import { useServicesQuery } from '@/hooks/useServices.query';
+import { ServiceCard } from './components/ServiceCard';
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import AddServiceModal from './components/AddServiceModal';
+import { useAlert } from '@/hooks/useAlert';
+import { useDeleteService } from '@/hooks/useServices.mutation';
+import { Plus } from 'lucide-react';
 
 const ServiceConfigPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -37,14 +30,14 @@ const ServiceConfigPage = () => {
 
   const handleDelete = (id) => {
     showConfirm({
-      title: "Delete Item",
-      description: "Are you sure you want to delete this item permanently?",
-      actionLabel: "Yes, Delete It",
+      title: 'Delete Item',
+      description: 'Are you sure you want to delete this item permanently?',
+      actionLabel: 'Yes, Delete It',
       onConfirm: () => {
         mutate(id);
       },
       onCancel: () => {
-        console.log("Deletion cancelled.");
+        console.log('Deletion cancelled.');
       },
     });
   };
@@ -61,8 +54,7 @@ const ServiceConfigPage = () => {
           <CardHeader>
             <CardTitle className="text-2xl font-semibold">Services</CardTitle>
             <CardDescription className="line-clamp-3">
-              Maintain your services here. You can add, edit, or delete services
-              as needed.
+              Maintain your services here. You can add, edit, or delete services as needed.
             </CardDescription>
             <CardAction>
               <Button onClick={handleAddServiceClick}>
@@ -73,7 +65,7 @@ const ServiceConfigPage = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {data?.map((service, idx) => (
+              {data?.data?.map((service, idx) => (
                 <ServiceCard
                   key={service._id}
                   data={service}

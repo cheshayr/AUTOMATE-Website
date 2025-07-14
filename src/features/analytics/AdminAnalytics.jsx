@@ -22,7 +22,7 @@ const AdminAnalytics = () => {
             <FeedbacksAnalytics />
           </div>
         </div>
-        <Appointments />
+        {/* <Appointments />  */}
       </CardContent>
     </Card>
   );

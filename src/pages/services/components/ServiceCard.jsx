@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAlert } from '@/hooks/useAlert';
@@ -17,6 +18,15 @@ export function ServiceCard({ data, handleEdit, handleDelete }) {
   return (
     <Card className="w-full max-w-sm">
       <CardHeader className="flex-1 flex flex-col ">
+        <div className="h-[200px] w-full mb-4 relative">
+          {data?.imageUrl && (
+            <img src={data?.imageUrl} alt={data?.name} className="service-image w-full h-full  rounded-lg" />
+          )}
+          <Badge variant="absolute">
+            {' '}
+            {data.rangeMin} - {data.rangeMax}
+          </Badge>
+        </div>
         <CardTitle>{data?.name || 'Service Title'}</CardTitle>
         <CardDescription className="line-clamp-3">{data?.description || 'No description available.'}</CardDescription>
       </CardHeader>
