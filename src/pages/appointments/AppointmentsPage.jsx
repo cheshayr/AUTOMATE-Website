@@ -299,6 +299,7 @@ const AppointmentsPage = () => {
 
             cell: ({ row }) => {
               const appointment = row.original;
+              if (appointment.status === 'Canceled') return null; // No actions for canceled appointments
               const statusMap = ['Pending', 'Booked', 'Vehicle Arrived', 'Assessment', 'In Progress', 'Completed'];
               const btnStatusText = [
                 'Pending',
@@ -373,7 +374,9 @@ const AppointmentsPage = () => {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {/* <DropdownMenuItem onSelect={handleOpenModal.bind(null, appointment)}>View / Edit</DropdownMenuItem> */}
-                <DropdownMenuItem onSelect={handleOpenModal.bind(null, appointment)}>View Invoice</DropdownMenuItem>
+                <DropdownMenuItem onSelect={handleOpenInvoiceModal.bind(null, appointment._id)}>
+                  View Invoice
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-red-600 focus:text-red-700 focus:bg-red-50"

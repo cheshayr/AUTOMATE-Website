@@ -16,6 +16,7 @@ import { useSearchParams } from 'react-router-dom';
 function DataTable({ columns, data, ...props }) {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
+  const [globalFilter, setGlobalFilter] = useState('');
   const [searchParams, setSearchParams] = useSearchParams();
   const filter = searchParams.get('filter') || 'All';
   const table = useReactTable({
@@ -23,6 +24,7 @@ function DataTable({ columns, data, ...props }) {
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -30,6 +32,7 @@ function DataTable({ columns, data, ...props }) {
     state: {
       sorting,
       columnFilters,
+      globalFilter,
     },
     initialState: {
       columnFilters: [
@@ -45,9 +48,11 @@ function DataTable({ columns, data, ...props }) {
     <div {...props}>
       <div className="flex items-center py-4 gap-2">
         <Input
-          placeholder="Filter by customer name..."
-          value={table.getColumn('name')?.getFilterValue() ?? ''}
-          onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
+          placeholder="Filter by Customer or Ref #"
+          // value={table.getColumn('name')?.getFilterValue() ?? ''}
+          // onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
+          value={globalFilter ?? ''}
+          onChange={(event) => setGlobalFilter(event.target.value)}
           className="max-w-sm"
         />
         <Select

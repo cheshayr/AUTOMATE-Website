@@ -100,10 +100,12 @@ function AppointmentSheet({ appointment, onSave, onCancel, staffList = [], vehic
                 <Label>Ref No.</Label>
                 <p>{appointment.refNo || '-'}</p>
               </div>
-              <div className="h-full flex  align-middle gap-2">
-                <Label>Final Cost</Label>
-                <p>{formatToPHP(appointment.finalCost) || 'TBD'}</p>
-              </div>
+              {appointment.finalCost && (
+                <div className="h-full flex  align-middle gap-2">
+                  <Label>Final Cost</Label>
+                  <p>{appointment.finalCost ? formatToPHP(appointment.finalCost) : 'TBD'}</p>
+                </div>
+              )}
               {appointment.customerNotes && (
                 <div className="flex flex-col">
                   <Label>Customer Notes</Label>
