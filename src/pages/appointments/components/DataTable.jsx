@@ -60,11 +60,13 @@ function DataTable({ columns, data, ...props }) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="All">All</SelectItem>
+            <SelectItem value="Pending">Pending</SelectItem>
             <SelectItem value="Booked">Booked</SelectItem>
             <SelectItem value="Vehicle Arrived">Vehicle Arrived</SelectItem>
             <SelectItem value="Assessment">Assessment</SelectItem>
             <SelectItem value="In Progress">In Progress</SelectItem>
             <SelectItem value="Completed">Completed</SelectItem>
+            <SelectItem value="Canceled">Canceled</SelectItem>
           </SelectContent>
         </Select>
       </div>

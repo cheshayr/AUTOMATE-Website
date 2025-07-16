@@ -78,11 +78,11 @@ function UploadInvoice({ appointmentId, onSave, onCancel, setInvoiceFile }) {
                       // previewUrl ? 'p-0' : 'p-4' // Remove padding if an image is loaded
                     )}
                   >
-                    {currentData?.imageUrl || previewUrl ? (
+                    {currentData?.invoiceImgUrl || previewUrl ? (
                       <img
-                        src={previewUrl || currentData?.imageUrl} // Use previewUrl or currentData's imageUrl
+                        src={previewUrl || currentData?.invoiceImgUrl} // Use previewUrl or currentData's imageUrl
                         alt="Preview"
-                        className="h-full w-full rounded-md" // object-cover to fill the space
+                        className="h-full  rounded-md" // object-cover to fill the space
                       />
                     ) : (
                       <div className="flex flex-col items-center justify-center">
