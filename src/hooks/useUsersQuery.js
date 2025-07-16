@@ -1,44 +1,47 @@
-import authenticatedApi from '@/api/axiosInstance';
+import authenticatedApi from '@/api/axiosInstance'; // Make sure this path is correct
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
+// Add page and limit parameters with default values
 export const useFetchUsers = (searchQuery = '', role = '', page = 1, limit = 10) => {
-  // Add page and limit with defaults
   const queryClient = useQueryClient();
 
   const fetchUsers = async ({ queryKey }) => {
-    // Extract parameters directly from queryKey for a cleaner approach
+    // Extract parameters directly from queryKey to ensure consistency
     const [_key, currentSearchQuery, currentRole, currentPage, currentLimit] = queryKey;
 
-    // Construct query parameters
-    const params = new URLSearchParams();
+    const params = new URLSearchParams(); // Create URLSearchParams object
+
     if (currentSearchQuery) {
       params.append('searchQuery', currentSearchQuery);
     }
+    // Only append role if it's provided and not 'all' (if 'all' is a special value you handle)
     if (currentRole && currentRole !== 'all') {
       params.append('role', currentRole);
     }
-    params.append('page', currentPage);
+    params.append('page', currentPage); // Append pagination parameters
     params.append('limit', currentLimit);
 
-    // Make the API call with parameters
+    // Make the API call, converting params to a query string
     const response = await authenticatedApi.get(`/users?${params.toString()}`);
 
     if (response.status !== 200) {
       throw new Error('Failed to fetch users');
     }
-    return response.data; // Ensure your backend sends the full object with data, totalPages, etc.
+    // Ensure you return the entire data object which contains pagination metadata
+    return response.data;
   };
 
   return useQuery({
-    // Include page and limit in the queryKey for react-query to re-fetch when they change
+    // The queryKey must include all parameters that affect the data, including page and limit
     queryKey: ['users', searchQuery, role, page, limit],
-    queryFn: fetchUsers, // Pass the function directly
+    queryFn: fetchUsers,
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 5, // 5 minutes
     cacheTime: 1000 * 60 * 10, // 10 minutes
     onError: (error) => {
       console.error('Error fetching users:', error);
     },
-    keepPreviousData: true, // Recommended for pagination for smoother UX
+    // Keep previous data visible while new data is fetching for a smoother UX
+    keepPreviousData: true,
   });
 };
