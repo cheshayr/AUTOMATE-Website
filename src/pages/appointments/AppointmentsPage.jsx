@@ -3,10 +3,30 @@ import './AppointmentsPage.css';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../../context/AuthContext';
 import DashboardLayout from '../../features/DashboardLayout';
-
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sheet } from '@/components/ui/sheet';
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowUpDown, CheckSquare, MoreHorizontal, Plus, Upload } from 'lucide-react';
+import {
+  ArrowUpDown,
+  Calendar,
+  Calendar1,
+  Check,
+  CheckSquare,
+  Eye,
+  MoreHorizontal,
+  Plus,
+  Table,
+  Timer,
+  Upload,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -17,15 +37,28 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import AppointmentsDataTable from './components/DataTable';
-import { useAppointments } from '@/hooks/useAppointments.query';
+import { useAppointments, useGetAppointmentSummary } from '@/hooks/useAppointments.query';
 import DataTable from './components/DataTable';
 import AppointmentForm from './components/AppointmentForm';
 import { Dialog } from '@/components/ui/dialog';
 import { CalendarEvent } from './components/CalendarEvent';
-import { useAdminDeleteAppointment, useAdminUpdateAppointment } from '@/hooks/useAppointments.mutation';
+import {
+  useAdminDeleteAppointment,
+  useAdminUpdateAppointment,
+  useUploadInvoice,
+} from '@/hooks/useAppointments.mutation';
 import { useFetchUsers } from '@/hooks/useUsersQuery';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Appointments } from '@/features/analytics/Appointments';
+import AppointmentCard from './components/AppointmentCard';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import AppointmentSheet from './components/AppointmentSheet';
+import { toast } from 'sonner';
+import UploadInvoice from './components/UploadInvoice';
 
-const tabs = ['Pending Visit', 'Ongoing Repair', 'Billing', 'Completed', 'Cancelled'];
+const status = ['Pending Visit', 'Ongoing Repair', 'Billing', 'Completed', 'Cancelled'];
 
 const events = [
   {
@@ -48,16 +81,19 @@ const events = [
 // --- 1. DEFINE TABLE COLUMNS ---
 
 const AppointmentsPage = () => {
-  const { data } = useAppointments();
+  const { user } = useAuthContext();
+  const { data, isLoading } = useAppointments();
+  const { data: summaryData, isLoading: summaryIsLoading } = useGetAppointmentSummary();
   const { data: users } = useFetchUsers('', 'staff');
-  console.log({ users });
+  const isAdmin = user?.role === 'admin';
   const appointments = data?.appointments || [];
   const staff = users?.data || [];
-  console.log({ staff });
+  console.log({ user });
   const [date, setDate] = useState(new Date());
   const [staffList, setStaffList] = useState([]); // Initialize as empty array
   const [vehicleList, setVehicleList] = useState([appointments?.vehicle]);
   const [loading, setLoading] = useState(true);
+  const [invoiceFile, setInvoiceFile] = useState(null); // No type annotation
 
   useEffect(() => {
     if (users?.data) {
@@ -66,19 +102,58 @@ const AppointmentsPage = () => {
   }, [users]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalInvoiceOpen, setIsModalInvoiceOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(''); // For invoice modal, if needed
   const [editingAppointment, setEditingAppointment] = useState(null); // null for new, object for edit
   const { mutateAsync: appointmentMutation } = useAdminUpdateAppointment();
   const { mutateAsync: appointmentDeleteMutation } = useAdminDeleteAppointment();
+  const { mutateAsync: uploadInvoiceMutation } = useUploadInvoice();
+
+  const summary = [
+    {
+      title: 'Total Appointments',
+      value: summaryIsLoading ? <LoadingSpinner /> : summaryData?.summary.total,
+      icon: <Calendar />,
+      bgColor: 'bg-blue-500',
+    },
+    {
+      title: "Today's Appointments",
+      value: summaryIsLoading ? <LoadingSpinner /> : summaryData?.summary.today,
+      icon: <Calendar1 />,
+      bgColor: 'bg-orange-500',
+    },
+    {
+      title: 'On-going',
+      value: summaryIsLoading ? <LoadingSpinner /> : summaryData?.summary.ongoing,
+
+      icon: <Timer />,
+      bgColor: 'bg-yellow-500',
+    },
+    {
+      title: 'Completed',
+      value: summaryIsLoading ? <LoadingSpinner /> : summaryData?.summary.completed,
+
+      icon: <Check />,
+      bgColor: 'bg-green-500',
+    },
+    {
+      title: 'Canceled',
+      value: summaryIsLoading ? <LoadingSpinner /> : summaryData?.summary.canceled,
+      icon: <Check />,
+      bgColor: 'bg-red-500',
+    },
+  ];
+
   const handleOpenModal = (appointment = null) => {
-    console.log(appointment);
     setEditingAppointment(appointment);
-    setIsModalOpen(true);
+    // setIsModalOpen(true);
+    setIsSheetOpen(true);
   };
 
   const handleCloseModal = () => {
-    setIsModalOpen(false);
     setEditingAppointment(null);
+    // setIsModalOpen(false);
+    setIsSheetOpen(false);
   };
 
   const handleOpenInvoiceModal = (appointmentId) => {
@@ -94,15 +169,16 @@ const AppointmentsPage = () => {
   };
 
   const handleSaveAppointment = async (formData) => {
+    if (!isAdmin) toast('You are not allowed to make this action.');
     if (editingAppointment) {
       console.log('Updating appointment:', editingAppointment._id, formData);
       const scheduledTime = `${formData.scheduledDate}T${formData.scheduledTime}`;
       const updatedData = {
-        scheduledTime,
+        // scheduledTime,
         assignedStaff: formData.assignedStaff,
         status: formData.status,
         notes: {
-          customerNotes: formData.customerNotes,
+          // customerNotes: formData.customerNotes,
           staffNotes: formData.staffNotes,
         },
       };
@@ -132,18 +208,44 @@ const AppointmentsPage = () => {
 
     await appointmentMutation({ id: appointmentId, updatedData });
   };
+
+  const handleUploadInvoice = async (e) => {
+    console.log('Uploading invoice for appointment:', selectedAppointment);
+
+    e.preventDefault();
+    // e.preventDefault(); // Use 'e' for consistency with event handlers
+    const formDataInitial = new FormData(e.target);
+    const formData = new FormData();
+
+    const finalCost = formDataInitial.get('finalCost');
+
+    formData.append('finalCost', finalCost);
+    formData.append('id', selectedAppointment);
+
+    if (invoiceFile) formData.append('image', invoiceFile);
+
+    console.table([...formData]);
+
+    await uploadInvoiceMutation({ id: selectedAppointment, updatedData: formData });
+  };
+
   const columns = [
+    {
+      accessorKey: 'refNo',
+      header: 'Ref #',
+      cell: ({ row }) => <div className="capitalize font-medium">{row.original.refNo}</div>,
+    },
     {
       accessorKey: 'name',
       header: 'Customer',
-      cell: ({ row }) => <div className="capitalize font-medium">{row.original.name}</div>,
+      cell: ({ row }) => <div className="capitalize">{row.original.name}</div>,
     },
     {
       accessorKey: 'vehicle',
       header: 'Vehicle',
       cell: ({ row }) => (
         <div>
-          <div className="font-medium">{`${row.original.vehicle.brand} ${row.original.vehicle.model}`}</div>
+          <div>{`${row.original.vehicle.brand} ${row.original.vehicle.model} (${row.original.vehicle.year})`}</div>
           <div className="text-muted-foreground text-xs">{row.original.vehicle.licensePlate}</div>
         </div>
       ),
@@ -154,11 +256,7 @@ const AppointmentsPage = () => {
       cell: ({ row }) => (
         <div>
           {row.original.services && row.original.services.length > 0 ? (
-            row.original.services.map((service, index) => (
-              <div key={index} className="font-medium">
-                {service.service.name}
-              </div>
-            ))
+            row.original.services.map((service, index) => <div key={index}>{service.service.name}</div>)
           ) : (
             <div className="text-muted-foreground text-xs">No services listed</div>
           )}
@@ -184,6 +282,7 @@ const AppointmentsPage = () => {
           Booked: 'bg-blue-200/50',
           'In Progress': 'bg-yellow-200/50',
           'Vehicle Arrived': 'bg-orange-200/50',
+          Canceled: 'bg-red-200/50',
         };
         return (
           <Badge variant={row.getValue('status')} className={bgColorMap[row.getValue('status')]}>
@@ -192,48 +291,55 @@ const AppointmentsPage = () => {
         );
       },
     },
-    // {
-    //   accessorKey: 'assignedStaff.name',
-    //   header: 'Assigned Staff',
-    //   cell: ({ row }) => (
-    //     <div>
-    //       {row.original.assignedStaff?.name || <span className="text-sm italic text-muted-foreground">Unassigned</span>}
-    //     </div>
-    //   ),
-    // },
-    {
-      header: 'Quick Actions',
-      enableHiding: false,
-      cell: ({ row }) => {
-        const appointment = row.original;
-        const statusMap = ['Booked', 'Vehicle Arrived', 'Assessment', 'In Progress', 'Completed'];
-        const currentStatusIndex = statusMap.indexOf(row.original.status);
-        const nextStatusIndex = currentStatusIndex > statusMap.length ? statusMap.length : currentStatusIndex + 1;
-        console.log(appointment._id);
-        return (
-          <>
-            {currentStatusIndex !== statusMap.length - 1 ? (
-              <Button
-                variant={'outline'}
-                onClick={handleQuickUpdateStatus.bind(null, appointment._id, statusMap[nextStatusIndex])}
-              >
-                <CheckSquare /> {statusMap[nextStatusIndex]}
-              </Button>
-            ) : (
-              <Button variant={'outline'} onClick={handleOpenInvoiceModal.bind(null, appointment._id)}>
-                <Upload /> Upload Invoice
-              </Button>
-            )}
-          </>
-        );
-      },
-    },
+    ...(isAdmin
+      ? [
+          {
+            header: 'Quick Actions',
+            enableHiding: false,
+
+            cell: ({ row }) => {
+              const appointment = row.original;
+              if (appointment.status === 'Canceled') return null; // No actions for canceled appointments
+              const statusMap = ['Pending', 'Booked', 'Vehicle Arrived', 'Assessment', 'In Progress', 'Completed'];
+              const btnStatusText = [
+                'Pending',
+                'Confirm Booking',
+                'Vehicle Arrived',
+                'Assessment',
+                'In Progress',
+                'Completed',
+              ];
+
+              const currentStatusIndex = statusMap.indexOf(row.original.status);
+              const nextStatusIndex = currentStatusIndex > statusMap.length ? statusMap.length : currentStatusIndex + 1;
+              console.log(appointment._id);
+              return (
+                <>
+                  {currentStatusIndex !== statusMap.length - 1 ? (
+                    <Button
+                      variant={'outline'}
+                      onClick={handleQuickUpdateStatus.bind(null, appointment._id, statusMap[nextStatusIndex])}
+                    >
+                      <CheckSquare /> {btnStatusText[nextStatusIndex]}
+                    </Button>
+                  ) : (
+                    <Button variant={'outline'} onClick={handleOpenInvoiceModal.bind(null, appointment._id)}>
+                      <Upload /> Upload Invoice
+                    </Button>
+                  )}
+                </>
+              );
+            },
+          },
+        ]
+      : []),
+
     {
       id: 'actions',
       enableHiding: false,
       cell: ({ row }) => {
         const appointment = row.original;
-        const statusMap = ['Booked', 'Vehicle Arrived', 'Assessment', 'In Progress', 'Completed'];
+        const statusMap = ['Pending', 'Booked', 'Vehicle Arrived', 'Assessment', 'In Progress', 'Completed'];
         const currentStatusIndex = statusMap.indexOf(row.original.status);
         const nextStatusIndex = currentStatusIndex > statusMap.length ? statusMap.length : currentStatusIndex + 1;
         const handleDelete = () => {
@@ -245,7 +351,10 @@ const AppointmentsPage = () => {
         };
 
         return (
-          <div className="flex justify-between">
+          <div className="flex justify-end gap-2">
+            <Button variant={'outline'} onClick={handleOpenModal.bind(null, appointment)}>
+              <Eye />
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0">
@@ -257,19 +366,22 @@ const AppointmentsPage = () => {
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                 <DropdownMenuItem
                   onSelect={async () => {
-                    await navigator.clipboard.writeText(appointment._id);
-                    alert(`Appointment ID ${appointment._id} copied to clipboard!`);
+                    await navigator.clipboard.writeText(appointment.refNo);
+                    alert(`Appointment ID ${appointment.refNo} copied to clipboard!`);
                   }}
                 >
                   Copy Appointment ID
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={handleOpenModal.bind(null, appointment)}>View / Edit</DropdownMenuItem>
-                <DropdownMenuItem onSelect={handleOpenModal.bind(null, appointment)}>View Invoice</DropdownMenuItem>
+                {/* <DropdownMenuItem onSelect={handleOpenModal.bind(null, appointment)}>View / Edit</DropdownMenuItem> */}
+                <DropdownMenuItem onSelect={handleOpenInvoiceModal.bind(null, appointment._id)}>
+                  View Invoice
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-red-600 focus:text-red-700 focus:bg-red-50"
                   onSelect={handleDeleteAppointment.bind(null, appointment)}
+                  disabled={!isAdmin}
                 >
                   Delete
                 </DropdownMenuItem>
@@ -283,68 +395,80 @@ const AppointmentsPage = () => {
 
   return (
     // <DashboardLayout>
-    <div className="flex items-center justify-between mb-4">
-      <Card className="flex-1 bg-transparent shadow-none border-0">
-        <CardHeader>
-          <CardTitle className="text-2xl font-semibold">Appointments</CardTitle>
-          <CardDescription className="line-clamp-3">
-            Manage your appointments efficiently. You can view, edit, or delete existing appointments as needed.
-          </CardDescription>
-          {/* <CardAction>
-            <Button onClick={handleOpenModal}>
-              <Plus />
-              Create Appointment
-            </Button>
-          </CardAction> */}
-        </CardHeader>
-        <CardContent>
-          {/* <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {data?.map((service, idx) => (
-                <ServiceCard
-                  key={service._id}
-                  data={service}
-                  handleDelete={() => handleDelete(service._id)}
-                  handleEdit={() => handleEditServiceClick(service)}
-                />
+    <Tabs defaultValue="table">
+      <div className="flex items-center justify-between mb-4">
+        <Card className="flex-1 bg-transparent shadow-none border-0">
+          <CardHeader>
+            <CardTitle className="text-2xl font-semibold">Appointments</CardTitle>
+            <CardDescription className="line-clamp-3">
+              Manage your appointments efficiently. You can view, edit, or delete existing appointments as needed.
+            </CardDescription>
+            <CardAction>
+              <TabsList>
+                <TabsTrigger value="table">
+                  <Table /> Table
+                </TabsTrigger>
+                <TabsTrigger value="calendar">
+                  <Calendar /> Calendar
+                </TabsTrigger>
+              </TabsList>
+            </CardAction>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-4 pb-4 mb-4">
+              {summary.map((item) => (
+                <AppointmentCard key={item.title} data={item} />
               ))}
-            </div> */}
-          <div className="flex gap-4">
-            <DataTable columns={columns} data={appointments} className="flex-1" />
-            {/* <div>
-              <CalendarEvent date={date} setDate={setDate} data={events} />
-            </div> */}
-          </div>
-        </CardContent>
-        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          {isModalOpen && (
-            <AppointmentForm
-              appointment={editingAppointment}
-              onSave={handleSaveAppointment}
-              onCancel={handleCloseModal}
-              staffList={staffList}
-              vehicleList={vehicleList}
-            />
-          )}
-        </Dialog>
-        <Dialog open={isModalInvoiceOpen} onOpenChange={setIsModalInvoiceOpen}>
-          {isModalInvoiceOpen && (
-            <AppointmentForm
-              appointment={editingAppointment}
-              onSave={handleSaveAppointment}
-              onCancel={handleCloseModal}
-              staffList={staffList}
-              vehicleList={vehicleList}
-            />
-          )}
-        </Dialog>
-      </Card>
-      {/* <Card className={'bg-transparent shadow-none border-0'}></Card> */}
-      {/* <div className="bg-[#f5f7ff] min-h-screen p-6">
+            </div>
+            <TabsContent value="table">
+              <DataTable columns={columns} data={appointments} className="flex-1" />
+            </TabsContent>
+            <TabsContent value="calendar">
+              <Appointments />
+            </TabsContent>
+          </CardContent>
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            {isModalOpen && (
+              <AppointmentForm
+                appointment={editingAppointment}
+                onSave={handleSaveAppointment}
+                onCancel={handleCloseModal}
+                staffList={staffList}
+                vehicleList={vehicleList}
+              />
+            )}
+          </Dialog>
+          <Dialog open={isModalInvoiceOpen} onOpenChange={setIsModalInvoiceOpen}>
+            {isModalInvoiceOpen && (
+              <UploadInvoice
+                // currentData={appointments.find((appointment) => appointment._id === selectedAppointment)}
+                appointmentId={selectedAppointment}
+                onSave={handleUploadInvoice}
+                onCancel={handleCloseModal}
+                setInvoiceFile={setInvoiceFile}
+              />
+            )}
+          </Dialog>
+          <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+            {isSheetOpen && (
+              <AppointmentSheet
+                appointment={editingAppointment}
+                onSave={handleSaveAppointment}
+                onCancel={handleCloseModal}
+                staffList={staffList}
+                vehicleList={vehicleList}
+              />
+            )}
+          </Sheet>
+        </Card>
+        {/* <Card className={'bg-transparent shadow-none border-0'}></Card> */}
+        {/* <div className="bg-[#f5f7ff] min-h-screen p-6">
         <h1 className="text-4xl font-bold mb-8">Appointments</h1>
         <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
         <AppointmentsTable appointments={filteredData} />
       </div> */}
-    </div>
+      </div>
+    </Tabs>
 
     // </DashboardLayout>
   );

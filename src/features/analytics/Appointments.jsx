@@ -5,10 +5,12 @@ import * as React from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar'; // Your custom Calendar component
 import { useFetchAppointmentsEvent } from '@/hooks/useAnalytticsQuery';
+import { Label } from '@/components/ui/label';
 
 export function Appointments() {
   const [date, setDate] = React.useState(new Date());
   const { data, isPending, isSuccess } = useFetchAppointmentsEvent();
+  console.log('🚀 ~ Appointments ~ data:', data);
 
   // 1. Calculate which days have bookings using useMemo for efficiency.
   const bookedDays = React.useMemo(() => {
@@ -38,10 +40,10 @@ export function Appointments() {
 
     return data.data.filter((event) => new Date(event.from).toDateString() === date.toDateString());
   }, [date, data]);
-
+  console.log(selectedDateEvents);
   return (
-    <Card className="p-4 w-[70%] flex-row shadow-none">
-      <CardContent className="px-4 flex-1">
+    <Card className="p-4 w-full flex-col md:flex-row shadow-none">
+      <CardContent className="px-4 w-full md:w-1/3">
         <Calendar
           mode="single"
           selected={date}
@@ -62,6 +64,9 @@ export function Appointments() {
               year: 'numeric',
             })}
           </div>
+          <div>
+            <Label>Total {selectedDateEvents.length}</Label>
+          </div>
         </div>
         <div className="flex w-full flex-col gap-4">
           {isPending && (
@@ -76,6 +81,8 @@ export function Appointments() {
                     key={event.title + event.from}
                     className="bg-muted flex items-center justify-between after:bg-primary relative rounded-md p-2 pl-8 text-sm after:absolute after:inset-y-2 after:left-4 after:w-1 after:rounded-full"
                   >
+                    {console.log('Event:', event)}
+
                     <div>
                       <div className="font-medium">{event.title}</div>
                       <div className="text-muted-foreground">{event.user}</div>

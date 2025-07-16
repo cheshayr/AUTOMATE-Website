@@ -40,111 +40,6 @@ import { NavLink } from 'react-router-dom';
 import { Nav } from 'react-day-picker';
 
 const data = {
-  user: {
-    name: 'shadcn',
-    email: 'm@example.com',
-    avatar: '/avatars/shadcn.jpg',
-    name: 'shadcn',
-    email: 'm@example.com',
-    avatar: '/avatars/shadcn.jpg',
-  },
-  navMain: [
-    {
-      title: 'Playground',
-      url: '#',
-      title: 'Playground',
-      url: '#',
-      icon: SquareTerminal,
-      isActive: true,
-      items: [
-        {
-          title: 'History',
-          url: '#',
-          title: 'History',
-          url: '#',
-        },
-        {
-          title: 'Starred',
-          url: '#',
-          title: 'Starred',
-          url: '#',
-        },
-        {
-          title: 'Settings',
-          url: '#',
-          title: 'Settings',
-          url: '#',
-        },
-      ],
-    },
-    {
-      title: 'Models',
-      url: '#',
-      title: 'Models',
-      url: '#',
-      icon: Bot,
-      items: [
-        {
-          title: 'Genesis',
-          url: '#',
-        },
-        {
-          title: 'Explorer',
-          url: '#',
-        },
-        {
-          title: 'Quantum',
-          url: '#',
-        },
-      ],
-    },
-    {
-      title: 'Documentation',
-      url: '#',
-      icon: BookOpen,
-      items: [
-        {
-          title: 'Introduction',
-          url: '#',
-        },
-        {
-          title: 'Get Started',
-          url: '#',
-        },
-        {
-          title: 'Tutorials',
-          url: '#',
-        },
-        {
-          title: 'Changelog',
-          url: '#',
-        },
-      ],
-    },
-    {
-      title: 'Settings',
-      url: '#',
-      icon: Settings2,
-      items: [
-        {
-          title: 'General',
-          url: '#',
-        },
-        {
-          title: 'Team',
-          url: '#',
-        },
-        {
-          title: 'Billing',
-          url: '#',
-        },
-        {
-          title: 'Limits',
-          url: '#',
-        },
-      ],
-    },
-  ],
   navSecondary: [
     {
       title: 'Support',
@@ -161,7 +56,7 @@ const data = {
     { url: '/dashboard', icon: Home, name: 'Dashboard' },
     { url: '/appointments', icon: Calendar, name: 'Appointments' },
     { url: '/services', icon: Wrench, name: 'Services' },
-    { url: '/inventory', icon: Package, name: 'Inventory' },
+    // { url: '/inventory', icon: Package, name: 'Inventory' },
     { url: '/user', icon: Users, name: 'User Management' },
     { url: '/feedbacks', icon: MessageCircle, name: 'Feedbacks' },
     { url: '/analytics', icon: BarChart2, name: 'Analytics' },
@@ -171,7 +66,7 @@ const data = {
     { url: '/dashboard', icon: Home, name: 'Dashboard' },
     { url: '/appointments', icon: Calendar, name: 'Appointments' },
     { url: '/services', icon: Wrench, name: 'Services' },
-    { url: '/inventory', icon: Package, name: 'Inventory' },
+    // { url: '/inventory', icon: Package, name: 'Inventory' },
     { url: '/feedbacks', icon: MessageCircle, name: 'Feedbacks' },
     { url: '/activities', icon: Frame, name: 'Activity Logs' },
     { url: '/analytics', icon: BarChart2, name: 'Analytics' },

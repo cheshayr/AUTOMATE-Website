@@ -1,10 +1,10 @@
 import authenticatedApi from '@/api/axiosInstance';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-export const useAppointments = (filter = null) => {
+export const useGetDashboardSummary = () => {
   const queryClient = useQueryClient();
-  const fetch = async (filter) => {
-    const response = await authenticatedApi.get(`/appointments?filter=${filter || ''}`);
+  const queryFn = async () => {
+    const response = await authenticatedApi.get(`/dashboard/summary`);
     if (response.status !== 200) {
       throw new Error('Failed to fetch services');
     }
@@ -12,8 +12,8 @@ export const useAppointments = (filter = null) => {
   };
 
   return useQuery({
-    queryKey: ['appointments', filter],
-    queryFn: ({ queryKey: [_key, filterValue] }) => fetch(filterValue),
+    queryKey: ['dashboard', 'summary'],
+    queryFn,
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 5, // 5 minutes
     cacheTime: 1000 * 60 * 10, // 10 minutes
@@ -23,31 +23,10 @@ export const useAppointments = (filter = null) => {
   });
 };
 
-export const useGetAppointmentById = (id) => {
-  const queryFn = async () => {
-    const response = await authenticatedApi.get(`/appointments/${id}`);
-    if (response.status !== 200) {
-      throw new Error('Failed to fetch appointment');
-    }
-    return response.data?.data?.appointment || {};
-  };
-
-  return useQuery({
-    queryKey: ['appointment', id],
-    queryFn,
-    refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    cacheTime: 1000 * 60 * 10, // 10 minutes
-    onError: (error) => {
-      console.error('Error fetching appointment:', error);
-    },
-  });
-};
-
-export const useGetAppointmentSummary = () => {
+export const useGetServices = () => {
   const queryClient = useQueryClient();
   const queryFn = async () => {
-    const response = await authenticatedApi.get(`/appointments/summary`);
+    const response = await authenticatedApi.get(`/dashboard/monthly-services`);
     if (response.status !== 200) {
       throw new Error('Failed to fetch services');
     }
@@ -55,13 +34,35 @@ export const useGetAppointmentSummary = () => {
   };
 
   return useQuery({
-    queryKey: ['appointments', 'summary'],
+    queryKey: ['monthly-services'],
     queryFn,
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 5, // 5 minutes
     cacheTime: 1000 * 60 * 10, // 10 minutes
     onError: (error) => {
       console.error('Error fetching services:', error);
+    },
+  });
+};
+
+export const useGetSales = () => {
+  const queryClient = useQueryClient();
+  const queryFn = async () => {
+    const response = await authenticatedApi.get(`/dashboard/monthly-sales`);
+    if (response.status !== 200) {
+      throw new Error('Failed to fetch sales');
+    }
+    return response.data || [];
+  };
+
+  return useQuery({
+    queryKey: ['monthly-sales'],
+    queryFn,
+    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    cacheTime: 1000 * 60 * 10, // 10 minutes
+    onError: (error) => {
+      console.error('Error fetching sales:', error);
     },
   });
 };

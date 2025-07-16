@@ -11,16 +11,20 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useSearchParams } from 'react-router-dom';
 
 function DataTable({ columns, data, ...props }) {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
-
+  const [globalFilter, setGlobalFilter] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const filter = searchParams.get('filter') || 'All';
   const table = useReactTable({
     data,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -28,6 +32,15 @@ function DataTable({ columns, data, ...props }) {
     state: {
       sorting,
       columnFilters,
+      globalFilter,
+    },
+    initialState: {
+      columnFilters: [
+        {
+          id: 'status', // The ID of the column you want to filter
+          value: filter, // The default filter value
+        },
+      ],
     },
   });
 
@@ -35,25 +48,30 @@ function DataTable({ columns, data, ...props }) {
     <div {...props}>
       <div className="flex items-center py-4 gap-2">
         <Input
-          placeholder="Filter by customer name..."
-          value={table.getColumn('name')?.getFilterValue() ?? ''}
-          onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
+          placeholder="Filter by Customer or Ref #"
+          // value={table.getColumn('name')?.getFilterValue() ?? ''}
+          // onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
+          value={globalFilter ?? ''}
+          onChange={(event) => setGlobalFilter(event.target.value)}
           className="max-w-sm"
         />
         <Select
           value={table.getColumn('status')?.getFilterValue() ?? ''}
-          onValueChange={(value) => table.getColumn('status')?.setFilterValue(value === 'All' ? '' : value)}
+          onValueChange={(value) => table.getColumn('status')?.setFilterValue(value === 'All' ? null : value)}
+          defaultValue="Booked"
         >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="All">All</SelectItem>
+            <SelectItem value="Pending">Pending</SelectItem>
             <SelectItem value="Booked">Booked</SelectItem>
             <SelectItem value="Vehicle Arrived">Vehicle Arrived</SelectItem>
             <SelectItem value="Assessment">Assessment</SelectItem>
             <SelectItem value="In Progress">In Progress</SelectItem>
             <SelectItem value="Completed">Completed</SelectItem>
+            <SelectItem value="Canceled">Canceled</SelectItem>
           </SelectContent>
         </Select>
       </div>

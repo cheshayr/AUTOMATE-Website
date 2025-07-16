@@ -1,58 +1,38 @@
-import { TrendingUp } from "lucide-react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  LabelList,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { TrendingUp } from 'lucide-react';
+import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from 'recharts';
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { useGetServices } from '@/hooks/useDashboard.query';
 
-export const description = "A bar chart with a custom label";
-
-const chartData = [
-  { month: "January", desktop: 186, mobile: 80 },
-  { month: "February", desktop: 305, mobile: 200 },
-  { month: "March", desktop: 237, mobile: 120 },
-  { month: "April", desktop: 73, mobile: 190 },
-  { month: "May", desktop: 209, mobile: 130 },
-  { month: "June", desktop: 214, mobile: 140 },
-];
-
-const chartConfig = {
-  desktop: {
-    label: "Desktop",
-    color: "var(--chart-2)",
-  },
-  mobile: {
-    label: "Mobile",
-    color: "var(--chart-2)",
-  },
-  label: {
-    color: "var(--background)",
-  },
-};
+export const description = 'A bar chart with a custom label';
 
 export function ChartServices() {
+  const { data: services, isLoading: summaryIsLoading } = useGetServices();
+
+  console.log(services);
+
+  const chartData = services?.data;
+
+  const chartConfig = {
+    services: {
+      label: 'services',
+      color: 'var(--chart-2)',
+    },
+    mobile: {
+      label: 'Mobile',
+      color: 'var(--chart-2)',
+    },
+    label: {
+      color: 'var(--background)',
+    },
+  };
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Services Chart</CardTitle>
-        <CardDescription>January - June 2025</CardDescription>
+        <CardDescription>{services?.fromTo}</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
@@ -74,17 +54,9 @@ export function ChartServices() {
               tickFormatter={(value) => value.slice(0, 3)}
               hide
             />
-            <XAxis dataKey="desktop" type="number" hide />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent indicator="line" />}
-            />
-            <Bar
-              dataKey="desktop"
-              layout="vertical"
-              fill="var(--color-desktop)"
-              radius={4}
-            >
+            <XAxis dataKey="services" type="number" hide />
+            <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
+            <Bar dataKey="services" layout="vertical" fill="var(--color-services)" radius={4}>
               <LabelList
                 dataKey="month"
                 position="insideLeft"
@@ -92,13 +64,7 @@ export function ChartServices() {
                 className="fill-(--color-label)"
                 fontSize={12}
               />
-              <LabelList
-                dataKey="desktop"
-                position="right"
-                offset={8}
-                className="fill-foreground"
-                fontSize={12}
-              />
+              <LabelList dataKey="services" position="right" offset={8} className="fill-foreground" fontSize={12} />
             </Bar>
           </BarChart>
         </ChartContainer>
