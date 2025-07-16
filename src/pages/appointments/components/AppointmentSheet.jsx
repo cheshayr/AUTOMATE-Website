@@ -39,6 +39,7 @@ import { Calendar, Timer } from 'lucide-react';
 import { status } from '../../../const/appointmentStatus';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthContext } from '@/context/AuthContext';
+import { formatToPHP } from '@/utils/formatters';
 
 function AppointmentSheet({ appointment, onSave, onCancel, staffList = [], vehicleList = [] }) {
   const { user } = useAuthContext();
@@ -95,9 +96,13 @@ function AppointmentSheet({ appointment, onSave, onCancel, staffList = [], vehic
                   </div>
                 </div>
               </div>
-              <div className="h-full flex  align-middle gap-2">
+              <div className="h-full flex  gap-2">
                 <Label>Ref No.</Label>
                 <p>{appointment.refNo || '-'}</p>
+              </div>
+              <div className="h-full flex  align-middle gap-2">
+                <Label>Final Cost</Label>
+                <p>{formatToPHP(appointment.finalCost) || 'TBD'}</p>
               </div>
               {appointment.customerNotes && (
                 <div className="flex flex-col">
