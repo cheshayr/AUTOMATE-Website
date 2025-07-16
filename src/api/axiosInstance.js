@@ -3,7 +3,7 @@ import axios from 'axios';
 const authenticatedApi = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   headers: {
-    'Content-Type': 'multipart/form-data',
+    'Content-Type': 'application/json',
     Accept: 'application/json',
   },
   withCredentials: true,
@@ -24,6 +24,29 @@ const authenticatedApi = axios.create({
 // );
 
 export default authenticatedApi;
+
+export const authenticatedApiForm = axios.create({
+  baseURL: import.meta.env.VITE_API_URL,
+  headers: {
+    'Content-Type': 'multipart/form-data',
+    Accept: 'application/json',
+  },
+  withCredentials: true,
+});
+
+// authenticatedApi.interceptors.request.use(
+//   async (config) => {
+//     const token = await getToken();
+//     if (token) {
+//       config.headers.Authorization = `Bearer ${token}`;
+//     }
+//     // console.log("API called!", config);
+//     return config;
+//   },
+//   (error) => {
+//     return Promise.reject(error);
+//   }
+// );
 
 export const getAxiosErrorMessage = (error) => {
   // 1. Server responded with an error

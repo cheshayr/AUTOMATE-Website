@@ -42,7 +42,11 @@ import DataTable from './components/DataTable';
 import AppointmentForm from './components/AppointmentForm';
 import { Dialog } from '@/components/ui/dialog';
 import { CalendarEvent } from './components/CalendarEvent';
-import { useAdminDeleteAppointment, useAdminUpdateAppointment } from '@/hooks/useAppointments.mutation';
+import {
+  useAdminDeleteAppointment,
+  useAdminUpdateAppointment,
+  useUploadInvoice,
+} from '@/hooks/useAppointments.mutation';
 import { useFetchUsers } from '@/hooks/useUsersQuery';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
@@ -52,6 +56,7 @@ import AppointmentCard from './components/AppointmentCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import AppointmentSheet from './components/AppointmentSheet';
 import { toast } from 'sonner';
+import UploadInvoice from './components/UploadInvoice';
 
 const status = ['Pending Visit', 'Ongoing Repair', 'Billing', 'Completed', 'Cancelled'];
 
@@ -88,6 +93,7 @@ const AppointmentsPage = () => {
   const [staffList, setStaffList] = useState([]); // Initialize as empty array
   const [vehicleList, setVehicleList] = useState([appointments?.vehicle]);
   const [loading, setLoading] = useState(true);
+  const [invoiceFile, setInvoiceFile] = useState(null); // No type annotation
 
   useEffect(() => {
     if (users?.data) {
@@ -101,6 +107,7 @@ const AppointmentsPage = () => {
   const [editingAppointment, setEditingAppointment] = useState(null); // null for new, object for edit
   const { mutateAsync: appointmentMutation } = useAdminUpdateAppointment();
   const { mutateAsync: appointmentDeleteMutation } = useAdminDeleteAppointment();
+  const { mutateAsync: uploadInvoiceMutation } = useUploadInvoice();
 
   const summary = [
     {
@@ -201,6 +208,27 @@ const AppointmentsPage = () => {
 
     await appointmentMutation({ id: appointmentId, updatedData });
   };
+
+  const handleUploadInvoice = async (e) => {
+    console.log('Uploading invoice for appointment:', selectedAppointment);
+
+    e.preventDefault();
+    // e.preventDefault(); // Use 'e' for consistency with event handlers
+    const formDataInitial = new FormData(e.target);
+    const formData = new FormData();
+
+    const finalCost = formDataInitial.get('finalCost');
+
+    formData.append('finalCost', finalCost);
+    formData.append('id', selectedAppointment);
+
+    if (invoiceFile) formData.append('image', invoiceFile);
+
+    console.table([...formData]);
+
+    await uploadInvoiceMutation({ id: selectedAppointment, updatedData: formData });
+  };
+
   const columns = [
     {
       accessorKey: 'refNo',
@@ -407,17 +435,17 @@ const AppointmentsPage = () => {
               />
             )}
           </Dialog>
-          {/* <Dialog open={isModalInvoiceOpen} onOpenChange={setIsModalInvoiceOpen}>
+          <Dialog open={isModalInvoiceOpen} onOpenChange={setIsModalInvoiceOpen}>
             {isModalInvoiceOpen && (
-              <AppointmentForm
-                appointment={editingAppointment}
-                onSave={handleSaveAppointment}
+              <UploadInvoice
+                // currentData={appointments.find((appointment) => appointment._id === selectedAppointment)}
+                appointmentId={selectedAppointment}
+                onSave={handleUploadInvoice}
                 onCancel={handleCloseModal}
-                staffList={staffList}
-                vehicleList={vehicleList}
+                setInvoiceFile={setInvoiceFile}
               />
             )}
-          </Dialog> */}
+          </Dialog>
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             {isSheetOpen && (
               <AppointmentSheet

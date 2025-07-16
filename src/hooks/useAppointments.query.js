@@ -23,6 +23,27 @@ export const useAppointments = (filter = null) => {
   });
 };
 
+export const useGetAppointmentById = (id) => {
+  const queryFn = async () => {
+    const response = await authenticatedApi.get(`/appointments/${id}`);
+    if (response.status !== 200) {
+      throw new Error('Failed to fetch appointment');
+    }
+    return response.data?.data?.appointment || {};
+  };
+
+  return useQuery({
+    queryKey: ['appointment', id],
+    queryFn,
+    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    cacheTime: 1000 * 60 * 10, // 10 minutes
+    onError: (error) => {
+      console.error('Error fetching appointment:', error);
+    },
+  });
+};
+
 export const useGetAppointmentSummary = () => {
   const queryClient = useQueryClient();
   const queryFn = async () => {

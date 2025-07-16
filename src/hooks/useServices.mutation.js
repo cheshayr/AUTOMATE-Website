@@ -1,4 +1,4 @@
-import authenticatedApi, { getAxiosErrorMessage } from '@/api/axiosInstance';
+import authenticatedApi, { authenticatedApiForm, getAxiosErrorMessage } from '@/api/axiosInstance';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -6,7 +6,7 @@ export const useAddService = () => {
   const queryClient = useQueryClient();
 
   const addService = async (data) => {
-    const response = await authenticatedApi.post('/services', data);
+    const response = await authenticatedApiForm.post('/services', data);
     if (response.status !== 201) {
       throw new Error('Failed to add service');
     }
@@ -33,7 +33,7 @@ export const useEditService = () => {
   const editService = async (data) => {
     const id = data.get('id');
 
-    const response = await authenticatedApi.patch(`/services/${id}`, data);
+    const response = await authenticatedApiForm.patch(`/services/${id}`, data);
     if (response.status !== 200) {
       throw new Error('Failed to edit service');
     }

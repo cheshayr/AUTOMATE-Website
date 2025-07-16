@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAlert } from '@/hooks/useAlert';
 import { Pencil, Trash2 } from 'lucide-react';
+import { formatToPHP } from '@/utils/formatters';
 
 export function ServiceCard({ data, handleEdit, handleDelete }) {
   return (
@@ -24,7 +25,7 @@ export function ServiceCard({ data, handleEdit, handleDelete }) {
           )}
           <Badge variant="absolute">
             {' '}
-            {data.rangeMin} - {data.rangeMax}
+            {formatToPHP(data.rangeMin)} - {formatToPHP(data.rangeMax)}
           </Badge>
         </div>
         <CardTitle>{data?.name || 'Service Title'}</CardTitle>

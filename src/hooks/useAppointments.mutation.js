@@ -1,4 +1,4 @@
-import authenticatedApi, { getAxiosErrorMessage } from '@/api/axiosInstance';
+import authenticatedApi, { authenticatedApiForm, getAxiosErrorMessage } from '@/api/axiosInstance';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -49,6 +49,34 @@ export const useAdminDeleteAppointment = () => {
     onError: (error) => {
       const message = getAxiosErrorMessage(error) || 'Failed to delete appointment';
       console.error('Error deleteing appointment:', message);
+      toast.error(message);
+    },
+  });
+};
+
+export const useUploadInvoice = () => {
+  const queryClient = useQueryClient();
+
+  const mutationFn = async (payload) => {
+    const id = payload.id;
+    const data = payload.updatedData;
+
+    const response = await authenticatedApiForm.patch(`/appointments/${id}/upload-invoice`, data);
+    if (response.status !== 200) {
+      throw new Error('Failed to upload invoice');
+    }
+    return response.data;
+  };
+
+  return useMutation({
+    mutationFn: (data) => mutationFn(data),
+    onSuccess: (data, payload) => {
+      queryClient.invalidateQueries(['appointment', payload.id]);
+      toast.success('Invoice uploaded successfully');
+    },
+    onError: (error) => {
+      const message = getAxiosErrorMessage(error) || 'Failed to upload invoice';
+      console.error('Error on uploading invoice: ', message);
       toast.error(message);
     },
   });

@@ -14,6 +14,7 @@ const ServiceConfigPage = () => {
   const [serviceToEdit, setServiceToEdit] = useState(null); // State to hold data of service being edited
 
   const { data, error, isLoading } = useServicesQuery();
+  console.log('🚀 ~ ServiceConfigPage ~ data:', data);
   const { mutate } = useDeleteService();
 
   const { showConfirm, AlertDialogProvider } = useAlert();
@@ -64,16 +65,21 @@ const ServiceConfigPage = () => {
             </CardAction>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {data?.data?.map((service, idx) => (
-                <ServiceCard
-                  key={service._id}
-                  data={service}
-                  handleDelete={() => handleDelete(service._id)}
-                  handleEdit={() => handleEditServiceClick(service)}
-                />
-              ))}
-            </div>
+            {isLoading && <p>Loading services...</p>}
+            {error && <p className="text-red-500">Error loading services: {error.message}</p>}
+            {data?.data?.length === 0 && <p>No services available. Please add some.</p>}
+            {data?.data?.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {data?.data?.map((service, idx) => (
+                  <ServiceCard
+                    key={service._id}
+                    data={service}
+                    handleDelete={() => handleDelete(service._id)}
+                    handleEdit={() => handleEditServiceClick(service)}
+                  />
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </AlertDialogProvider>
