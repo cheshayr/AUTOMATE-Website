@@ -81,6 +81,8 @@ export function Appointments() {
                     key={event.title + event.from}
                     className="bg-muted flex items-center justify-between after:bg-primary relative rounded-md p-2 pl-8 text-sm after:absolute after:inset-y-2 after:left-4 after:w-1 after:rounded-full"
                   >
+                    {console.log('Event:', event)}
+
                     <div>
                       <div className="font-medium">{event.title}</div>
                       <div className="text-muted-foreground">{event.user}</div>

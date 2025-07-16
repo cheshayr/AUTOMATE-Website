@@ -12,14 +12,81 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import ManageUserStatus from './MangeUserStatus';
 import { useDebounce } from '@uidotdev/usehooks';
 
-// --- Mock Data (Replace with API call) ---
+// Import Pagination components from shadcn/ui
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 
 // --- User Management Component ---
 const UserManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
-  const { data: usersData, isPending: usersDataPending, error: usersDataError } = useFetchUsers(debouncedSearchQuery);
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10); // Default items per page
+
+  // Pass pagination parameters to your fetch hook
+  const {
+    data: usersData,
+    isPending: usersDataPending,
+    error: usersDataError,
+  } = useFetchUsers(debouncedSearchQuery, currentPage, itemsPerPage); // Modify useFetchUsers to accept these
+
+  // Extract pagination metadata from the fetched data
+  const totalPages = usersData?.totalPages || 1;
+  const totalItems = usersData?.totalItems || 0;
+
+  // Function to handle page change
+  const handlePageChange = (pageNumber) => {
+    if (pageNumber > 0 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
+    }
+  };
+
+  // Helper to generate page numbers for pagination control
+  const getPaginationItems = useMemo(() => {
+    const pages = [];
+    const maxPageButtons = 5; // Max number of page buttons to show (e.g., 1, 2, ..., 5, 6, 7)
+
+    if (totalPages <= maxPageButtons) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      let startPage = Math.max(1, currentPage - Math.floor(maxPageButtons / 2));
+      let endPage = Math.min(totalPages, startPage + maxPageButtons - 1);
+
+      if (endPage - startPage + 1 < maxPageButtons) {
+        startPage = Math.max(1, endPage - maxPageButtons + 1);
+      }
+
+      if (startPage > 1) {
+        pages.push(1);
+        if (startPage > 2) {
+          pages.push('ellipsisStart');
+        }
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+          pages.push('ellipsisEnd');
+        }
+        pages.push(totalPages);
+      }
+    }
+    return pages;
+  }, [totalPages, currentPage]);
 
   return (
     <>
@@ -43,7 +110,6 @@ const UserManagement = () => {
           </div>
           {/* Replace with your Add User Modal Trigger */}
           <Table>
-            {/* <TableCaption>A list of all users in the system.</TableCaption> */}
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
@@ -63,8 +129,8 @@ const UserManagement = () => {
                     <LoadingSpinner />
                   </div>
                 </TableCell>
-              ) : (
-                usersData?.data?.map((user) => (
+              ) : usersData?.data && usersData.data.length > 0 ? (
+                usersData.data.map((user) => (
                   <TableRow key={user._id} className={!user.isActive ? 'bg-red-50/50' : ''}>
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
@@ -86,16 +152,53 @@ const UserManagement = () => {
                     <TableCell>{user.role}</TableCell>
                     <TableCell>{user.position}</TableCell>
                     <TableCell className="flex items-center justify-center space-x-2 p-3">
-                      {/* Replace with your Edit User Modal Trigger */}
-
                       <AddUserModal user={user} />
                       <ManageUserStatus userName={user.name} id={user._id} isActive={user.isActive} />
                     </TableCell>
                   </TableRow>
                 ))
+              ) : (
+                <TableCell colSpan={8} className="h-24 text-center text-gray-500">
+                  No users found.
+                </TableCell>
               )}
             </TableBody>
           </Table>
+
+          {/* Pagination Controls */}
+          {usersData && totalPages > 1 && (
+            <Pagination className="mt-4">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    aria-disabled={currentPage === 1}
+                    className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
+                  />
+                </PaginationItem>
+                {getPaginationItems.map((item, index) => (
+                  <PaginationItem key={index}>
+                    {item === 'ellipsisStart' || item === 'ellipsisEnd' ? (
+                      <PaginationEllipsis />
+                    ) : (
+                      <PaginationLink href="#" isActive={item === currentPage} onClick={() => handlePageChange(item)}>
+                        {item}
+                      </PaginationLink>
+                    )}
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    aria-disabled={currentPage === totalPages}
+                    className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
         </CardContent>
       </Card>
     </>

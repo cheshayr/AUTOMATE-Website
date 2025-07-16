@@ -18,7 +18,6 @@ function DataTable({ columns, data, ...props }) {
   const [columnFilters, setColumnFilters] = useState([]);
   const [searchParams, setSearchParams] = useSearchParams();
   const filter = searchParams.get('filter') || 'All';
-  console.log(filter);
   const table = useReactTable({
     data,
     columns,
