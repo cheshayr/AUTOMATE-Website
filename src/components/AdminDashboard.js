@@ -2,7 +2,7 @@ import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { Home, Calendar, Bell, Package, Wrench, Users, FileText, UserCircle, LogOut } from 'lucide-react';
 import './Dashboard.css';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
 
 const appointmentStats = [
@@ -69,7 +69,7 @@ function AdminDashboard() {
           <div className="chart-box">
             <div className="chart-header">
               <h4>Service</h4>
-              <a href="#">See more</a>
+              <Link to="/services">See more</Link>
             </div>
             <ResponsiveContainer width="100%" height={150}>
   <BarChart data={serviceData} layout="vertical">
@@ -85,7 +85,7 @@ function AdminDashboard() {
           <div className="chart-box wide-box">
             <div className="chart-header">
               <h4>Sales Overview</h4>
-              <a href="#">See more</a>
+              <Link to="/sales">See more</Link>
             </div>
             <div className="sales-content">
               <div className="sales-chart">
