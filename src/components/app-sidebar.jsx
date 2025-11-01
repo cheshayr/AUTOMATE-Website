@@ -18,6 +18,7 @@ import {
   Users,
   Wrench,
   MessageCircle,
+  FileText,
 } from 'lucide-react';
 
 import { NavMain } from '@/components/nav-main';
@@ -60,6 +61,7 @@ const data = {
     { url: '/user', icon: Users, name: 'User Management' },
     { url: '/feedbacks', icon: MessageCircle, name: 'Feedbacks' },
     { url: '/analytics', icon: BarChart2, name: 'Analytics' },
+    { url: '/reports', icon: FileText, name: 'Reports' },
   ],
 
   staff: [
@@ -70,6 +72,8 @@ const data = {
     { url: '/feedbacks', icon: MessageCircle, name: 'Feedbacks' },
     { url: '/activities', icon: Frame, name: 'Activity Logs' },
     { url: '/analytics', icon: BarChart2, name: 'Analytics' },
+    { url: '/reports', icon: FileText, name: 'Reports' },
+
     // { to: '/dashboard', icon: <Home size={24} />, label: 'Dashboard' },
     //   { to: '/appointments', icon: <Calendar size={24} />, label: 'Appointments' },
     //   { to: '/services', icon: <Wrench size={24} />, label: 'Services' },

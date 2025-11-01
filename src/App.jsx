@@ -23,6 +23,7 @@ import { Navigate } from 'react-router-dom';
 import AdminAnalytics from './features/analytics/AdminAnalytics.jsx';
 import Feedbacks from './features/Feedbacks.jsx';
 import { Toaster } from './components/ui/sonner.jsx';
+import Reports from './pages/reports/Reports.jsx';
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuthContext();
@@ -117,6 +118,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <EditServicePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reports"
+              element={
+                <ProtectedRoute>
+                  <Reports />
                 </ProtectedRoute>
               }
             />
