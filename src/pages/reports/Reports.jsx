@@ -6,15 +6,16 @@ import { toast } from 'sonner';
 import { topAvailedServicesData, customerFeedbackData, vehicleHistoryData, revenueData } from './mockReports.js';
 import { FileText, TrendingUp, Users, DollarSign, Calendar as CalendarIcon, ChevronDownIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button.jsx';
-import { ReportsTable } from './ReportsTable.jsx';
 import { Switch } from '@/components/ui/switch.jsx';
 import { useGenerateReportQuery } from '@/hooks/useReports.query.js';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar.jsx';
 import { subDays } from 'date-fns';
+import { ReportsTable } from './ReportsTable.jsx';
 const Reports = () => {
   const [reportType, setReportType] = useState('top-services');
   const [dateRange, setDateRange] = useState('weekly');
+  const [selectedMonth, setSelectedMonth] = useState((new Date().getMonth() + 1).toString().padStart(2, '0'));
   const [dateFrom, setDateFrom] = useState(subDays(new Date(), 7));
   const [dateTo, setDateTo] = useState(new Date());
   const [dateFromOpen, setDateFromOpen] = useState(false);
@@ -50,6 +51,16 @@ const Reports = () => {
     }
 
     setDateFrom(date);
+    setSelectedMonth((date.getMonth() + 1).toString().padStart(2, '0'));
+  };
+
+  const handleSelectMonthChange = (month) => {
+    setSelectedMonth(month);
+    const newDateFrom = new Date();
+    newDateFrom.setMonth(parseInt(month) - 1);
+    newDateFrom.setDate(1);
+    setDateFrom(newDateFrom);
+    setDateTo(new Date(newDateFrom.getFullYear(), newDateFrom.getMonth() + 1, 0));
   };
 
   const getReportConfig = () => {
@@ -143,7 +154,7 @@ const Reports = () => {
   };
 
   const reportConfig = getReportConfig();
-
+  console.log({ selectedMonth });
   return (
     <Card className="w-full bg-transparent shadow-none border-0">
       {/* <CardHeader>
@@ -170,7 +181,7 @@ const Reports = () => {
                 </div>
               </div>
             </div>
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4  md:grid-cols-2 lg:grid-cols-3">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Report Type</label>
                 <Select value={reportType} onValueChange={(value) => setReportType(value)}>
@@ -188,15 +199,35 @@ const Reports = () => {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Date Range</label>
-                <Select value={dateRange} onValueChange={(value) => setDateRange(value)}>
-                  <SelectTrigger className={'w-full'}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover">
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex space-x-2">
+                  <Select value={dateRange} onValueChange={(value) => setDateRange(value)}>
+                    <SelectTrigger className={'w-full'}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover">
+                      <SelectItem value="weekly">Weekly</SelectItem>
+                      <SelectItem value="monthly">Monthly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {/* selection of month */}
+                  {dateRange === 'monthly' && (
+                    <Select value={selectedMonth} onValueChange={(value) => handleSelectMonthChange(value)}>
+                      <SelectTrigger className={'w-full'} disabled={dateRange !== 'monthly'}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover">
+                        {
+                          /* Generate month items */
+                          Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                            <SelectItem key={month} value={month.toString().padStart(2, '0')}>
+                              {new Date(0, month - 1).toLocaleString('default', { month: 'long' })}
+                            </SelectItem>
+                          ))
+                        }
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
@@ -269,6 +300,8 @@ const Reports = () => {
                   columns={reportConfig.columns}
                   data={reportConfig.data}
                   onExportPDF={handleExportPDF}
+                  dateFrom={dateFrom}
+                  dateTo={dateTo}
                 />
               </CardContent>
             </Card>
