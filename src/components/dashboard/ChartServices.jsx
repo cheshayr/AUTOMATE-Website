@@ -5,34 +5,38 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { useGetServices } from '@/hooks/useDashboard.query';
 
-export const description = 'A bar chart with a custom label';
+export function ChartServices({ filter }) {
+  const { data: services } = useGetServices(filter);
 
-export function ChartServices() {
-  const { data: services, isLoading: summaryIsLoading } = useGetServices();
+  // DEBUG: Check your browser console to see exactly what the API names the service field
+  console.log("Service Data:", services?.data);
 
-  console.log(services);
+  const rawData = services?.data || [];
 
-  const chartData = services?.data;
+  // 1. DATA MAPPING
+  // We map the API data to a standard format: { name: "Oil Change", count: 10 }
+  // We try multiple common keys (name, serviceName, label) in case the API uses a different one.
+  const chartData = rawData
+    .map(item => ({
+      name: item.name || item.serviceName || item.service || 'Unknown Service', 
+      count: item.value || item.count || item.services || 0,
+    }))
+    .filter((item) => item.count > 0); // Remove 0 counts
 
   const chartConfig = {
     services: {
-      label: 'services',
+      label: 'Count',
       color: 'var(--chart-2)',
-    },
-    mobile: {
-      label: 'Mobile',
-      color: 'var(--chart-2)',
-    },
-    label: {
-      color: 'var(--background)',
     },
   };
+
+  const displayFilter = filter ? filter.charAt(0).toUpperCase() + filter.slice(1) : 'Monthly';
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Services Chart</CardTitle>
-        <CardDescription>{services?.fromTo}</CardDescription>
+        <CardTitle>{displayFilter} Services</CardTitle>
+        <CardDescription>{services?.fromTo || 'Top Services'}</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
@@ -41,42 +45,41 @@ export function ChartServices() {
             data={chartData}
             layout="vertical"
             margin={{
-              right: 16,
+              left: 0, // Reset margin, we control spacing via YAxis width
+              right: 20
             }}
           >
             <CartesianGrid horizontal={false} />
+            
+            {/* Y-AXIS (Left Side): Shows the Service Names */}
             <YAxis
-              dataKey="month"
+              dataKey="name"
               type="category"
               tickLine={false}
-              tickMargin={10}
               axisLine={false}
-              tickFormatter={(value) => value.slice(0, 3)}
-              hide
+              width={120} // <--- INCREASED WIDTH: This makes space for the names
+              tick={{ fill: 'black', fontSize: 12 }} // Ensure text is visible
             />
-            <XAxis dataKey="services" type="number" hide />
+
+            {/* X-AXIS (Bottom): Hidden, but type must be number for the bars to grow sideways */}
+            <XAxis dataKey="count" type="number" hide />
+            
             <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
-            <Bar dataKey="services" layout="vertical" fill="var(--color-services)" radius={4}>
-              <LabelList
-                dataKey="month"
-                position="insideLeft"
-                offset={8}
-                className="fill-(--color-label)"
-                fontSize={12}
+            
+            <Bar dataKey="count" layout="vertical" fill="var(--color-services)" radius={4}>
+              {/* Shows the number inside/next to the bar */}
+              <LabelList 
+                dataKey="count" 
+                position="right" 
+                offset={8} 
+                className="fill-foreground" 
+                fontSize={12} 
               />
-              <LabelList dataKey="services" position="right" offset={8} className="fill-foreground" fontSize={12} />
             </Bar>
           </BarChart>
         </ChartContainer>
       </CardContent>
-      {/* <CardFooter className="flex-col items-start gap-2 text-sm">
-        <div className="flex gap-2 leading-none font-medium">
-          Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
-        </div>
-        <div className="text-muted-foreground leading-none">
-          Showing total visitors for the last 6 months
-        </div>
-      </CardFooter> */}
     </Card>
   );
 }
+
