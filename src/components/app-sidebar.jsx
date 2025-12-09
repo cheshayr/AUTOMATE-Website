@@ -70,7 +70,7 @@ const data = {
     { url: '/services', icon: Wrench, name: 'Services' },
     { url: '/inventory', icon: Package, name: 'Inventory' },
     { url: '/feedbacks', icon: MessageCircle, name: 'Feedbacks' },
-    { url: '/activities', icon: Frame, name: 'Activity Logs' },
+    //{ url: '/activities', icon: Frame, name: 'Activity Logs' },
     { url: '/analytics', icon: BarChart2, name: 'Analytics' },
     { url: '/reports', icon: FileText, name: 'Reports' },
 

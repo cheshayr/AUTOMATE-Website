@@ -1,38 +1,18 @@
 'use client';
 
-import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from 'recharts';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { TrendingUp } from 'lucide-react';
+import { Bar, BarChart, CartesianGrid, LabelList, XAxis } from 'recharts';
+
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { useGetSales } from '@/hooks/useDashboard.query';
 
-export function ChartSales({ filter }) {
-  const { data: sales } = useGetSales(filter);
+export const description = 'A bar chart with a label';
 
-  // 1. Filter out zero sales
-  const chartData = (sales?.data || []).filter(item => item.sales > 0);
+export function ChartSales() {
+  const { data: sales, isLoading: summaryIsLoading } = useGetSales();
 
-  // 2. Calculate the Max and Mid lines based on your "Round Up" logic
-  const maxSaleValue = Math.max(...chartData.map((d) => d.sales), 0);
-  
-  let domainMax = 0;
-  let midLine = 0;
-
-  if (maxSaleValue > 0) {
-    const rawMid = maxSaleValue / 2;
-    
-    // Determine magnitude (e.g., is it in the 100s, 1000s, etc?)
-    // This helps us decide whether to round to the nearest 100 or 1000.
-    const magnitude = Math.pow(10, Math.floor(Math.log10(rawMid)));
-    
-    // Round the mid value UP to the nearest magnitude
-    // Example: 3760 -> Magnitude 1000 -> 3.76 -> Ceil 4 -> 4000
-    midLine = Math.ceil(rawMid / magnitude) * magnitude;
-    
-    // If the rounded mid is exactly the raw mid (unlikely with "next even"), 
-    // we force a step up to ensure clean lines if needed, but usually Ceil handles it.
-    
-    domainMax = midLine * 2;
-  }
+  const chartData = sales?.data;
 
   const chartConfig = {
     sales: {
@@ -41,16 +21,11 @@ export function ChartSales({ filter }) {
     },
   };
 
-  const displayFilter = filter ? filter.charAt(0).toUpperCase() + filter.slice(1) : 'Monthly';
-
-  // Currency Formatter
-  const formatCurrency = (value) => `₱${value.toLocaleString()}`;
-
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{displayFilter} Sales</CardTitle>
-        <CardDescription>{sales?.fromTo || 'Sales Overview'}</CardDescription>
+        <CardTitle>Sales Chart</CardTitle>
+        <CardDescription>January - June 2024</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
@@ -59,48 +34,31 @@ export function ChartSales({ filter }) {
             data={chartData}
             margin={{
               top: 20,
-              left: 10, // Added margin for the YAxis labels
             }}
           >
             <CartesianGrid vertical={false} />
-            
-            {/* XAxis: Removed labels (hide={true}) but kept dataKey for mapping */}
             <XAxis
-              dataKey="month" // or "date" depending on API
+              dataKey="month"
               tickLine={false}
               tickMargin={10}
               axisLine={false}
-              hide={true} 
+              tickFormatter={(value) => value.slice(0, 3)}
             />
-
-            {/* YAxis: Added Custom Scale and Ticks */}
-            <YAxis 
-              axisLine={false}
-              tickLine={false}
-              tickCount={3} // 0, Mid, Max
-              domain={[0, domainMax]}
-              ticks={[0, midLine, domainMax]}
-              tickFormatter={formatCurrency}
-              width={60} // Width to fit the currency text
-            />
-
-            <ChartTooltip 
-              cursor={false} 
-              content={<ChartTooltipContent hideLabel formatter={(value) => formatCurrency(value)} />} 
-            />
-            
+            <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
             <Bar dataKey="sales" fill="var(--color-sales)" radius={8}>
-              <LabelList 
-                position="top" 
-                offset={12} 
-                className="fill-foreground" 
-                fontSize={12} 
-                formatter={formatCurrency}
-              />
+              <LabelList position="top" offset={12} className="fill-foreground" fontSize={12} />
             </Bar>
           </BarChart>
         </ChartContainer>
       </CardContent>
+      {/* <CardFooter className="flex-col items-start gap-2 text-sm">
+        <div className="flex gap-2 leading-none font-medium">
+          Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
+        </div>
+        <div className="text-muted-foreground leading-none">
+          Showing total visitors for the last 6 months
+        </div>
+      </CardFooter> */}
     </Card>
   );
 }

@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar.jsx';
 import { subDays } from 'date-fns';
 import { ReportsTable } from './ReportsTable.jsx';
+
 const Reports = () => {
   const [reportType, setReportType] = useState('top-services');
   const [dateRange, setDateRange] = useState('weekly');
@@ -22,6 +23,8 @@ const Reports = () => {
   const [dateToOpen, setDateToOpen] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [isMockData, setIsMockData] = useState(false);
+  const [preparedBy, setPreparedBy] = useState('');
+
   // const [reportConfig, setReportConfig] = useState({});
 
   const {
@@ -34,8 +37,18 @@ const Reports = () => {
 
   console.log({ reportData });
   const handleExportPDF = () => {
-    toast.success('Exporting report to PDF...');
-  };
+  if (!preparedBy.trim()) {
+    toast.error("Please enter who prepared the report.");
+    return;
+  }
+
+  console.log("Prepared By:", preparedBy);
+
+  toast.success(`Exporting report (Prepared by: ${preparedBy})...`);
+
+  // You will later attach this value to the actual PDF export logic
+};
+
 
   const handleDateFromChange = (date) => {
     if (dateRange === 'weekly') {
@@ -170,6 +183,16 @@ const Reports = () => {
             <CardDescription className="line-clamp-3">
               Select report parameters and generate your report
             </CardDescription>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Prepared By</label>
+              <input
+                type="text"
+                value={preparedBy}
+                onChange={(e) => setPreparedBy(e.target.value)}
+                placeholder="Enter your name"
+                className="w-full px-3 py-2 border rounded-md bg-background"
+              />
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid gap-4 md:grid-cols-3">
@@ -302,6 +325,7 @@ const Reports = () => {
                   onExportPDF={handleExportPDF}
                   dateFrom={dateFrom}
                   dateTo={dateTo}
+                  preparedBy={preparedBy} 
                 />
               </CardContent>
             </Card>

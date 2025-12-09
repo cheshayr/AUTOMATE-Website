@@ -8,7 +8,15 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { isValid, parseISO, format } from 'date-fns';
 
-export const ReportsTable = ({ columns, data, onExportPDF, reportTitle = 'Report', dateFrom, dateTo }) => {
+export const ReportsTable = ({
+  columns,
+  data,
+  onExportPDF,
+  reportTitle = 'Report',
+  dateFrom,
+  dateTo,
+  preparedBy,
+}) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState(null);
 
@@ -21,28 +29,25 @@ export const ReportsTable = ({ columns, data, onExportPDF, reportTitle = 'Report
   };
 
   const filteredData = data.filter((row) =>
-    Object.values(row).some((value) => String(value).toLowerCase().includes(searchTerm.toLowerCase()))
+    Object.values(row).some((value) =>
+      String(value).toLowerCase().includes(searchTerm.toLowerCase())
+    )
   );
 
   const sortedData = [...filteredData].sort((a, b) => {
     if (!sortConfig) return 0;
-
     const aValue = a[sortConfig.key];
     const bValue = b[sortConfig.key];
-
     if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
     if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
     return 0;
   });
 
   const renderCellValue = (value, column) => {
-    console.log('cell value', value);
-    //check if the value is null or empty
     if (value === null || value === undefined || value === '') {
       return <span className="text-muted-foreground">-</span>;
     }
 
-    // Check if the value is a valid date string and format it
     if (typeof value === 'string') {
       const date = parseISO(value);
       if (isValid(date)) {
@@ -50,9 +55,12 @@ export const ReportsTable = ({ columns, data, onExportPDF, reportTitle = 'Report
       }
     }
 
-    //if column is rating, render stars, check if column name is Rating
-
-    if (typeof value === 'number' && value >= 0 && value <= 5 && column.key.toLowerCase().includes('rating')) {
+    if (
+      typeof value === 'number' &&
+      value >= 0 &&
+      value <= 5 &&
+      column.key.toLowerCase().includes('rating')
+    ) {
       return (
         <div className="flex items-center">
           {Array.from({ length: value }).map((_, index) => (
@@ -73,70 +81,83 @@ export const ReportsTable = ({ columns, data, onExportPDF, reportTitle = 'Report
     if (typeof value === 'object' && value?.type === 'badge') {
       return <Badge variant={value.variant || 'default'}>{value.text}</Badge>;
     }
+
     return value;
   };
 
   const handleExportPDF = () => {
+    // ✅ Validation: Prevent export if name is empty
+    if (!preparedBy || preparedBy.trim() === '') {
+      alert('Please enter your name in "Prepared By" before exporting.');
+      return;
+    }
+
     const doc = new jsPDF();
 
-    // Add title
+    // Add Logo
+    const imgData = '/src/assets/logo.png'; // Replace with your logo base64 or path
+    doc.addImage(imgData, 'PNG', 14, 1, 35, 35); // x, y, width, height
+
+    // Title
     doc.setFontSize(16);
-    doc.text(reportTitle, 14, 15);
-    //Add date from and date to if available
+    doc.text(reportTitle, 60, 20);
+
+    // Date Range
     doc.setFontSize(10);
     const from = dateFrom ? `${format(dateFrom, 'MMM dd, yyyy')}` : '';
     const to = dateTo ? `${format(dateTo, 'MMM dd, yyyy')}` : '';
     if (from || to) {
       const dateRangeText = [from, to].filter(Boolean).join(' - ');
-      doc.text(dateRangeText, 14, 20);
+      doc.text(`Date Range: ${dateRangeText}`, 14, 35);
     }
 
-    // Add date
-    doc.setFontSize(10);
-    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 25);
+    // Prepared By
+    doc.text(`Prepared By: ${preparedBy}`, 14, 42);
 
-    // Prepare table data
+    // Table headers + rows
     const headers = columns.map((col) => col.label);
     const rows = sortedData.map((row) =>
       columns.map((col) => {
         const value = row[col.key];
-        //check if the value is null or empty
-        if (value === null || value === undefined || value === '') {
-          return '-';
-        }
+        if (value === null || value === undefined || value === '') return '-';
 
-        // Check if the value is a valid date string and format it
         if (typeof value === 'string') {
           const date = parseISO(value);
           if (isValid(date)) {
             return format(date, 'MMM dd, yyyy');
           }
         }
-        // Handle badge objects
+
         if (typeof value === 'object' && value?.text) {
           return value.text;
         }
-        // Replace '₱' with 'PHP ' for Service Cost column to avoid jumbled characters in PDF
+
         if (typeof value === 'string' && value.includes('₱')) {
           return value.replace('₱', 'PHP ');
         }
+
         return String(value || '');
       })
     );
 
-    // Generate table
     autoTable(doc, {
       head: [headers],
       body: rows,
-      startY: 28,
+      startY: 50,
       styles: { fontSize: 9 },
       headStyles: { fillColor: [71, 85, 105] },
     });
 
-    // Save the PDF
-    doc.save(`${reportTitle.replace(/\s+/g, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.pdf`);
+    // Save PDF
+    doc.save(
+      `${reportTitle.replace(/\s+/g, '_').toLowerCase()}_${new Date()
+        .toISOString()
+        .split('T')[0]}.pdf`
+    );
 
-    onExportPDF();
+    if (onExportPDF) {
+      onExportPDF(reportTitle, columns, sortedData, preparedBy);
+    }
   };
 
   return (
@@ -151,7 +172,10 @@ export const ReportsTable = ({ columns, data, onExportPDF, reportTitle = 'Report
             className="pl-10"
           />
         </div>
-        <Button onClick={handleExportPDF} variant="outline">
+        <Button
+          onClick={handleExportPDF}
+          variant="outline"
+        >
           <Download className="h-4 w-4 mr-2" />
           Export to PDF
         </Button>
@@ -189,7 +213,9 @@ export const ReportsTable = ({ columns, data, onExportPDF, reportTitle = 'Report
               sortedData.map((row, idx) => (
                 <TableRow key={idx} className="hover:bg-muted/50 transition-colors">
                   {columns.map((column) => (
-                    <TableCell key={column.key}>{renderCellValue(row[column.key], column)}</TableCell>
+                    <TableCell key={column.key}>
+                      {renderCellValue(row[column.key], column)}
+                    </TableCell>
                   ))}
                 </TableRow>
               ))
