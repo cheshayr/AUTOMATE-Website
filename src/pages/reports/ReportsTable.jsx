@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { isValid, parseISO, format } from 'date-fns';
+import logo from '@/assets/logo.png';
 
 export const ReportsTable = ({
   columns,
@@ -95,7 +96,7 @@ export const ReportsTable = ({
     const doc = new jsPDF();
 
     // Add Logo
-    const imgData = '/src/assets/logo.png'; // Replace with your logo base64 or path
+    const imgData = logo; // Replace with your logo base64 or path
     doc.addImage(imgData, 'PNG', 14, 1, 35, 35); // x, y, width, height
 
     // Title
