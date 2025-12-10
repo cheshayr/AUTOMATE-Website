@@ -3,7 +3,6 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -14,49 +13,41 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Eye, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useAddItem, useUpdateItem } from '@/hooks/useInventoryMutation';
+import { useAddItem } from '@/hooks/useInventoryMutation'; 
 import LoadingSpinner from '@/components/LoadingSpinner';
 
-function AddItemModal({ isAdd = true, item = {}, itemCategories }) {
-  const [itemDetails, setItemDetails] = useState(item);
+function AddItemModal({ itemCategories }) {
+  const [itemDetails, setItemDetails] = useState({ 
+    itemName: '', 
+    category: '', 
+    lowStockThreshold: 10, 
+  });
   const [isOpen, setIsOpen] = useState(false);
 
   const {
     mutateAsync: addItemMutation,
     isPending: addItemMutationPending,
-    isError: addItemMutationError,
     isSuccess: addItemMutationSuccess,
     reset: resetAddItemMutation,
   } = useAddItem();
 
-  const {
-    mutateAsync: updateItemMutation,
-    isPending: updateItemMutationPending,
-    isError: updateItemMutationError,
-    isSuccess: updateItemMutationSuccess,
-    reset: resetUpdateItemMutation,
-  } = useUpdateItem();
 
   useEffect(() => {
-    if (addItemMutationSuccess || updateItemMutationSuccess) {
+    if (addItemMutationSuccess) {
       setIsOpen(false);
+      setItemDetails({ itemName: '', category: '', lowStockThreshold: 10 }); 
     }
 
-    isAdd && setItemDetails({});
-
     resetAddItemMutation();
-    resetUpdateItemMutation();
-  }, [addItemMutationSuccess, updateItemMutationSuccess, isOpen]);
+  }, [addItemMutationSuccess, isOpen]);
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -64,30 +55,18 @@ function AddItemModal({ isAdd = true, item = {}, itemCategories }) {
     await addItemMutation(itemDetails);
   };
 
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-
-    await updateItemMutation(itemDetails);
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        {isAdd ? (
-          <Button className="min-w-36">
-            <Plus /> Add Item
-          </Button>
-        ) : (
-          <Button variant="outline" className="text-blue-600 hover:text-blue-700" size="icon">
-            <Eye size={18} />
-          </Button>
-        )}
+        <Button className="min-w-36">
+          <Plus /> Add Product
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{isAdd ? 'Add Item' : 'Item Details'}</DialogTitle>
+          <DialogTitle>Add Product</DialogTitle>
         </DialogHeader>
-        <form>
+        <form onSubmit={handleSave}>
           <div className="grid gap-4 mb-4">
             <div className="grid gap-3">
               <Label htmlFor="name">Item Name</Label>
@@ -97,23 +76,23 @@ function AddItemModal({ isAdd = true, item = {}, itemCategories }) {
                 name="name"
                 placeholder="Item name"
                 value={itemDetails.itemName}
+                required
               />
             </div>
             <div className="grid gap-3">
               <Label htmlFor="category">Item Category</Label>
               <Select
-                disabled={!isAdd}
                 id="category"
                 name="category"
                 value={itemDetails.category}
                 onValueChange={(newValue) => setItemDetails({ ...itemDetails, category: newValue })}
+                required
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    <SelectItem value="All">All</SelectItem>
                     {itemCategories?.map((category) => (
                       <SelectItem key={category.id} value={category.categoryName}>
                         {category.categoryName}
@@ -123,41 +102,8 @@ function AddItemModal({ isAdd = true, item = {}, itemCategories }) {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex gap-4">
-              <div className="grid gap-3">
-                <Label htmlFor="stock">Item Stock</Label>
-                <Input
-                  value={itemDetails.stock}
-                  onChange={(e) =>
-                    setItemDetails({
-                      ...itemDetails,
-                      stock: e.target.value,
-                    })
-                  }
-                  disabled={!isAdd}
-                  type="number"
-                  id="stock"
-                  name="stock"
-                  placeholder="Stock"
-                />
-              </div>
-              <div className="grid gap-3">
-                <Label htmlFor="price">Item Price</Label>
-                <Input
-                  value={itemDetails.price}
-                  onChange={(e) =>
-                    setItemDetails({
-                      ...itemDetails,
-                      price: e.target.value,
-                    })
-                  }
-                  type="number"
-                  id="price"
-                  name="price"
-                  placeholder="Price"
-                />
-              </div>
-            </div>
+            
+            {/* Low Stock Threshold Field Re-added */}
             <div className="grid gap-3">
               <Label htmlFor="lowStockThreshold">Low Stock Threshold</Label>
               <Input
@@ -172,6 +118,8 @@ function AddItemModal({ isAdd = true, item = {}, itemCategories }) {
                 id="lowStockThreshold"
                 name="lowStockThreshold"
                 placeholder="Low stock threshold"
+                min="0"
+                required
               />
             </div>
           </div>
@@ -179,29 +127,16 @@ function AddItemModal({ isAdd = true, item = {}, itemCategories }) {
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>
             </DialogClose>
-            {isAdd ? (
-              <Button onClick={handleSave}>
-                {addItemMutationPending ? (
-                  <span className="flex items-center gap-2">
-                    <LoadingSpinner />
-                    Saving
-                  </span>
-                ) : (
-                  'Save'
-                )}
-              </Button>
-            ) : (
-              <Button onClick={handleUpdate}>
-                {updateItemMutationPending ? (
-                  <span className="flex items-center gap-2">
-                    <LoadingSpinner />
-                    Updating
-                  </span>
-                ) : (
-                  'Update'
-                )}
-              </Button>
-            )}
+            <Button type="submit">
+              {addItemMutationPending ? (
+                <span className="flex items-center gap-2">
+                  <LoadingSpinner />
+                  Saving
+                </span>
+              ) : (
+                'Save'
+              )}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

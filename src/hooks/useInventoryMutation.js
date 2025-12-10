@@ -33,16 +33,17 @@ export const useUpdateItem = () => {
   const updateItem = async (data) => {
     console.log(data);
     const response = await authenticatedApi.patch(`/inventory/${data._id}`, data);
-    if (response.status !== 201) {
-      throw new Error('Failed to update item');
-    }
+if (response.status !== 200 && response.status !== 201) {
+  throw new Error('Failed to update item');
+}
     return response.data;
   };
 
   return useMutation({
     mutationFn: (data) => updateItem(data),
     onSuccess: () => {
-      queryClient.invalidateQueries('inventory');
+      // Invalidate both inventory and specific item queries if necessary
+      queryClient.invalidateQueries('inventory'); 
       toast.success('Item updated successfully');
     },
     onError: (error) => {
@@ -53,6 +54,7 @@ export const useUpdateItem = () => {
   });
 };
 
+// NOTE: useAddStock is kept, but no longer used by the StockManagement UI
 export const useAddStock = () => {
   const queryClient = useQueryClient();
 
@@ -78,6 +80,7 @@ export const useAddStock = () => {
   });
 };
 
+// NOTE: useDeductStock is kept, but no longer used by the StockManagement UI
 export const useDeductStock = () => {
   const queryClient = useQueryClient();
 
@@ -102,15 +105,17 @@ export const useDeductStock = () => {
     },
   });
 };
+
 export const useDeleteItem = () => {
   const queryClient = useQueryClient();
 
   const deleteItem = async (data) => {
+    // Assuming API returns 204 No Content for successful deletion
     const response = await authenticatedApi.delete(`/inventory/${data.id}`);
-    if (response.status !== 204) {
-      throw new Error('Failed to delete stock');
+    if (response.status !== 204 && response.status !== 200) {
+      throw new Error('Failed to delete item');
     }
-    // return response.data;
+    // No response.data expected for 204
   };
 
   return useMutation({
@@ -120,8 +125,8 @@ export const useDeleteItem = () => {
       toast.success('Item deleted successfully');
     },
     onError: (error) => {
-      const message = getAxiosErrorMessage(error) || 'Failed to delete stock';
-      console.error('Error deleting stock:', message);
+      const message = getAxiosErrorMessage(error) || 'Failed to delete item';
+      console.error('Error deleting item:', message);
       toast.error(message);
     },
   });
@@ -147,6 +152,38 @@ export const useAddCategory = () => {
     onError: (error) => {
       const message = getAxiosErrorMessage(error) || 'Failed to add category';
       console.error('Error adding category:', message);
+      toast.error(message);
+    },
+  });
+};
+
+/**
+ * Hook for deleting an item category.
+ * This was added to support the Delete Category feature requested.
+ */
+export const useDeleteCategory = () => {
+  const queryClient = useQueryClient();
+
+  const deleteCategory = async (data) => {
+    // Assuming the endpoint for deleting a category is /inventory/category/:id
+    const response = await authenticatedApi.delete(`/inventory/category/${data.id}`);
+    // Assuming API returns 204 No Content for successful deletion
+    if (response.status !== 204 && response.status !== 200) {
+      throw new Error('Failed to delete category');
+    }
+  };
+
+  return useMutation({
+    mutationFn: (data) => deleteCategory(data),
+    onSuccess: () => {
+      // Invalidate both category list and inventory data, as items might be affected
+      queryClient.invalidateQueries('item-categories');
+      queryClient.invalidateQueries('inventory'); 
+      toast.success('Category deleted successfully');
+    },
+    onError: (error) => {
+      const message = getAxiosErrorMessage(error) || 'Failed to delete category';
+      console.error('Error deleting category:', message);
       toast.error(message);
     },
   });

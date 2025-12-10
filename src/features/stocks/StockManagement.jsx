@@ -1,63 +1,121 @@
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../DashboardLayout';
-
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AddItemModal from './AddItemModal';
-import { Eye, Loader2, LoaderCircle, MinusCircle, PlusCircle, Trash2 } from 'lucide-react';
+import { Trash2, Save, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AddCategoryModal from './AddCategoryModal';
-import AddStockModal from './AddStockModal';
-import DeductStockModal from './DeductStockModal';
 import DeleteItemModal from './DeleteItemModal';
-import { Label } from 'recharts';
+import DeleteCategoryModal from './DeleteCategoryModal';
+import { Label } from '@/components/ui/label';
 import { useFetchInventory, useFetchItemCategories } from '@/hooks/useInventoryQuery';
 import { useDebounce } from '@uidotdev/usehooks';
 import { Input } from '@/components/ui/input';
+import { useUpdateItem } from '@/hooks/useInventoryMutation';
+import { toast } from 'sonner';
 
 const StockManagement = () => {
   const [itemCategory, setItemCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [stockChanges, setStockChanges] = useState({});
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
-  const {
-    data: inventoryData,
-    isPending: inventoryDataPending,
-    error: inventoryDataError,
-  } = useFetchInventory({ filter: itemCategory, searchQuery: debouncedSearchQuery });
+  const { data: inventoryData, isPending: inventoryDataPending } = useFetchInventory({
+    filter: itemCategory,
+    searchQuery: debouncedSearchQuery,
+  });
 
-  const {
-    data: itemCategoriesData,
-    isPending: itemCategoriesDataPending,
-    error: itemCategoriesDataError,
-  } = useFetchItemCategories();
+  const { data: itemCategoriesData } = useFetchItemCategories();
+
+  const { mutateAsync: updateItemMutation, isPending: updateItemMutationPending } = useUpdateItem();
+
+  // Initialize stockChanges
+  useEffect(() => {
+    if (inventoryData?.data) {
+      const initialChanges = inventoryData.data.reduce((acc, item) => {
+        acc[item._id] = { sellOut: 0, pullOut: 0, addStock: 0, isModified: false };
+        return acc;
+      }, {});
+      setStockChanges(initialChanges);
+    }
+  }, [inventoryData?.data]);
+
+  const handleStockChange = (id, field, value) => {
+    const numericValue = Math.max(0, Number(value));
+    setStockChanges((prev) => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        [field]: numericValue,
+        isModified: true,
+      },
+    }));
+  };
+
+  const calculateTotalStock = (item) => {
+    const changes = stockChanges[item._id] || { sellOut: 0, pullOut: 0, addStock: 0 };
+    const initialStock = Number(item.stock) || 0;
+    return initialStock - changes.sellOut - changes.pullOut + changes.addStock;
+  };
+
+  const calculateStockStatus = (item) => {
+    const totalStock = calculateTotalStock(item);
+    const threshold = Number(item.lowStockThreshold) || 0;
+
+    if (totalStock <= 0) return <span className="text-red-600 font-semibold">Out of Stock</span>;
+    else if (totalStock <= threshold) return <span className="text-yellow-600 font-semibold">Low Stock</span>;
+    else return <span className="text-green-600 font-semibold">In Stock</span>;
+  };
+
+  const handleSaveStockChanges = async (item) => {
+  const totalStock = calculateTotalStock(item);
+
+  if (totalStock < 0) {
+    toast.error('Cannot save changes: Total stock cannot be negative.');
+    return;
+  }
+
+  try {
+    await updateItemMutation({
+      _id: item._id,
+      stock: totalStock,
+      itemName: item.itemName,
+      category: item.category,
+      lowStockThreshold: item.lowStockThreshold,
+      price: item.price || 0,
+    });
+
+    // Optimistic update: update local state immediately
+    setLocalInventory((prev) =>
+      prev.map((i) => (i._id === item._id ? { ...i, stock: totalStock } : i))
+    );
+
+    // Reset input fields
+    setStockChanges((prev) => ({
+      ...prev,
+      [item._id]: { sellOut: 0, pullOut: 0, addStock: 0, isModified: false },
+    }));
+
+    // Refetch inventory from backend
+    queryClient.invalidateQueries({ queryKey: ['inventory'] });
+
+  } catch (error) {
+    console.error('Failed to commit stock changes:', error);
+    toast.error('Failed to update stock. Please try again.');
+  }
+};
 
   return (
-    // <DashboardLayout>
     <>
       <Card className="w-full bg-transparent shadow-none border-0">
         <CardHeader>
           <CardTitle className="text-2xl font-semibold">Inventory Management</CardTitle>
-          <CardDescription className="line-clamp-3">Manage inventory, track all the stocks and parts.</CardDescription>
+          <CardDescription className="line-clamp-3">
+            Manage inventory, track all the stocks and parts.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex mb-4 justify-between">
@@ -95,6 +153,7 @@ const StockManagement = () => {
                 </Select>
               </div>
               <AddCategoryModal />
+              <DeleteCategoryModal itemCategories={itemCategoriesData?.data} />
               <AddItemModal itemCategories={itemCategoriesData?.data} />
             </div>
           </div>
@@ -102,31 +161,77 @@ const StockManagement = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[250px]">Item Name</TableHead>
-                <TableHead>Category</TableHead> <TableHead>Stock</TableHead> <TableHead>Status</TableHead>
-                <TableHead className="text-right">Price</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Stock Status</TableHead>
+                <TableHead>Sell Out</TableHead>
+                <TableHead>Pull Out</TableHead>
+                <TableHead>Add Stock</TableHead>
+                <TableHead>Total Stock</TableHead>
                 <TableHead className="text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody className="">
+            <TableBody>
               {inventoryDataPending ? (
-                <TableCell colSpan={6} className="h-96 ">
-                  <div className="flex items-center justify-center w-full h-full ">
-                    <LoadingSpinner />
-                  </div>
-                </TableCell>
+                <TableRow>
+                  <TableCell colSpan={8} className="h-96">
+                    <div className="flex items-center justify-center w-full h-full">
+                      <LoadingSpinner />
+                    </div>
+                  </TableCell>
+                </TableRow>
               ) : (
                 inventoryData?.data?.map((item) => (
                   <TableRow key={item._id}>
                     <TableCell className="font-medium">{item.itemName}</TableCell>
                     <TableCell>{item.category}</TableCell>
-                    <TableCell>{item.stock}</TableCell> <TableCell>{item.status}</TableCell>{' '}
-                    <TableCell className="text-right">{item.price}</TableCell>
+                    <TableCell>{calculateStockStatus(item)}</TableCell>
+
+                    <TableCell>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={stockChanges[item._id]?.sellOut || 0}
+                        onChange={(e) => handleStockChange(item._id, 'sellOut', e.target.value)}
+                        className="w-24 p-2 text-center"
+                      />
+                    </TableCell>
+
+                    <TableCell>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={stockChanges[item._id]?.pullOut || 0}
+                        onChange={(e) => handleStockChange(item._id, 'pullOut', e.target.value)}
+                        className="w-24 p-2 text-center"
+                      />
+                    </TableCell>
+
+                    <TableCell>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={stockChanges[item._id]?.addStock || 0}
+                        onChange={(e) => handleStockChange(item._id, 'addStock', e.target.value)}
+                        className="w-24 p-2 text-center"
+                      />
+                    </TableCell>
+
+                    <TableCell className="font-bold">{calculateTotalStock(item)}</TableCell>
+
                     <TableCell className="flex items-center justify-center space-x-3 p-3">
-                      <DeductStockModal id={item._id} />
-
-                      <AddStockModal id={item._id} />
-
-                      <AddItemModal isAdd={false} item={item} itemCategories={itemCategoriesData?.data} />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-blue-600 hover:text-blue-700"
+                        onClick={() => handleSaveStockChanges(item)}
+                        disabled={!stockChanges[item._id]?.isModified || updateItemMutationPending}
+                      >
+                        {updateItemMutationPending && stockChanges[item._id]?.isModified ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Save size={18} />
+                        )}
+                      </Button>
 
                       <DeleteItemModal itemName={item.itemName} id={item._id} />
                     </TableCell>
@@ -138,8 +243,6 @@ const StockManagement = () => {
         </CardContent>
       </Card>
     </>
-
-    // </DashboardLayout>
   );
 };
 
