@@ -165,20 +165,17 @@ export const useDeleteCategory = () => {
   const queryClient = useQueryClient();
 
   const deleteCategory = async (data) => {
-    // Assuming the endpoint for deleting a category is /inventory/category/:id
-    const response = await authenticatedApi.delete(`/inventory/category/${data.id}`);
-    // Assuming API returns 204 No Content for successful deletion
-    if (response.status !== 204 && response.status !== 200) {
-      throw new Error('Failed to delete category');
-    }
-  };
+  const response = await authenticatedApi.delete(`/inventory/item-categories/${data.id}`);
+  if (response.status !== 204 && response.status !== 200) {
+    throw new Error('Failed to delete category');
+  }
+};
 
   return useMutation({
-    mutationFn: (data) => deleteCategory(data),
+    mutationFn: deleteCategory,
     onSuccess: () => {
-      // Invalidate both category list and inventory data, as items might be affected
       queryClient.invalidateQueries('item-categories');
-      queryClient.invalidateQueries('inventory'); 
+      queryClient.invalidateQueries('inventory');
       toast.success('Category deleted successfully');
     },
     onError: (error) => {

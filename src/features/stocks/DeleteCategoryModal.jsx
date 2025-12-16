@@ -16,7 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
 import { Label } from '@/components/ui/label';
 import { Trash2 } from 'lucide-react';
 import { useDeleteCategory } from '@/hooks/useInventoryMutation';
@@ -26,7 +25,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 function DeleteCategoryModal({ itemCategories }) {
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
   const [isOpen, setIsOpen] = useState(false);
-  const [isConfirming, setIsConfirming] = useState(false); 
+  const [isConfirming, setIsConfirming] = useState(false);
 
   const {
     mutateAsync: deleteCategoryMutation,
@@ -38,34 +37,32 @@ function DeleteCategoryModal({ itemCategories }) {
   useEffect(() => {
     if (deleteCategoryMutationSuccess) {
       setIsOpen(false);
-      setIsConfirming(false); 
+      setIsConfirming(false);
       setSelectedCategoryId('');
-      resetDeleteCategoryMutation(); 
+      resetDeleteCategoryMutation();
     }
   }, [deleteCategoryMutationSuccess]);
-  
-  // Reset states when modal is closed
+
   useEffect(() => {
     if (!isOpen) {
-        setIsConfirming(false);
-        setSelectedCategoryId('');
+      setIsConfirming(false);
+      setSelectedCategoryId('');
     }
   }, [isOpen]);
 
   const handleInitialDeleteClick = () => {
-    // Only proceed if a category has been selected
-    if (selectedCategoryId) {
-        setIsConfirming(true);
-    }
+    if (selectedCategoryId) setIsConfirming(true);
   };
 
   const handleFinalDelete = async () => {
-    if (selectedCategoryId) {
-        await deleteCategoryMutation({ id: selectedCategoryId });
-    }
-  };
-  
-  const selectedCategoryName = itemCategories?.find(cat => cat.id === selectedCategoryId)?.categoryName;
+  if (!selectedCategoryId) return; // safety check
+
+  // Pass an object with the id
+  await deleteCategoryMutation({ id: selectedCategoryId });
+};
+
+
+  const selectedCategoryName = itemCategories?.find(cat => cat._id === selectedCategoryId)?.categoryName;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -78,67 +75,61 @@ function DeleteCategoryModal({ itemCategories }) {
         <DialogHeader>
           <DialogTitle>{isConfirming ? 'Confirm Category Deletion' : 'Delete Category'}</DialogTitle>
         </DialogHeader>
-        
+
         {!isConfirming ? (
-            <div className="grid gap-4 mb-4">
-              <div className="grid gap-3">
-                <Label htmlFor="category">Select Category to Delete</Label>
-                <Select
-                  id="category"
-                  name="category"
-                  // Ensure this holds the single selected value/ID
-                  value={selectedCategoryId} 
-                  onValueChange={(newValue) => setSelectedCategoryId(newValue)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {/* Using category.id as the unique key and value */}
-                      {itemCategories?.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.categoryName}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
+          <div className="grid gap-4 mb-4">
+            <div className="grid gap-3">
+              <Label htmlFor="category">Select Category to Delete</Label>
+              <Select
+                id="category"
+                value={selectedCategoryId}
+                onValueChange={setSelectedCategoryId}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {itemCategories?.map((category) => (
+                      <SelectItem key={category._id} value={category._id}>
+                        {category.categoryName}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
+          </div>
         ) : (
-            <div className="grid gap-4 mb-4">
-                <p>
-                    Are you sure you want to permanently delete the category: 
-                    <span className="font-bold"> {selectedCategoryName}</span>?
-                </p>
-                <p className="text-sm text-red-500">
-                    This action cannot be undone and may affect associated items.
-                </p>
-            </div>
+          <div className="grid gap-4 mb-4">
+            <p>
+              Are you sure you want to permanently delete the category:
+              <span className="font-bold"> {selectedCategoryName}</span>?
+            </p>
+            <p className="text-sm text-red-500">
+              This action cannot be undone and may affect associated items.
+            </p>
+          </div>
         )}
-        
+
         <DialogFooter>
-          {/* Adjusted Back/Cancel button logic */}
           <Button variant="outline" onClick={() => isConfirming ? setIsConfirming(false) : setIsOpen(false)}>
             {isConfirming ? 'Back' : 'Cancel'}
           </Button>
-          
+
           {!isConfirming ? (
-            <Button 
-                onClick={handleInitialDeleteClick} 
-                // Enable only if an ID is selected
-                disabled={!selectedCategoryId} 
-                variant="destructive"
+            <Button
+              onClick={handleInitialDeleteClick}
+              disabled={!selectedCategoryId}
+              variant="destructive"
             >
-                Next (Confirm)
+              Next (Confirm)
             </Button>
           ) : (
             <Button onClick={handleFinalDelete} variant="destructive">
               {deleteCategoryMutationPending ? (
                 <span className="flex items-center gap-1">
-                  <LoadingSpinner />
-                  Deleting
+                  <LoadingSpinner /> Deleting
                 </span>
               ) : (
                 'Delete Category Permanently'
@@ -152,3 +143,4 @@ function DeleteCategoryModal({ itemCategories }) {
 }
 
 export default DeleteCategoryModal;
+
