@@ -7,9 +7,12 @@ import "./EditServicePage.css";
 const EditServicePage = () => {
   const { serviceName } = useParams();
   const decodedServiceName = decodeURIComponent(serviceName);
+
   const [title, setTitle] = useState(decodedServiceName);
   const [description, setDescription] = useState("");
+  const [priceStartsAt, setPriceStartsAt] = useState(""); // NEW
   const [image, setImage] = useState(null);
+
   const navigate = useNavigate();
 
   const handleImageChange = (e) => {
@@ -19,19 +22,28 @@ const EditServicePage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Saving:", { title, description, image });
+
+    console.log("Saving:", {
+      title,
+      description,
+      priceStartsAt,
+      image,
+    });
+
     navigate("/services");
   };
 
   return (
     <div className="service-config-wrapper">
       <Sidebar role="admin" onLogout={() => console.log("Logout")} />
+
       <main className="service-main">
         <div className="service-header">
           <h1>Edit Service</h1>
         </div>
 
         <form onSubmit={handleSubmit} style={{ maxWidth: "500px" }}>
+          {/* Service Title */}
           <div style={{ marginBottom: "1rem" }}>
             <label>Service Title</label>
             <input
@@ -43,6 +55,7 @@ const EditServicePage = () => {
             />
           </div>
 
+          {/* Description */}
           <div style={{ marginBottom: "1rem" }}>
             <label>Description</label>
             <textarea
@@ -53,6 +66,21 @@ const EditServicePage = () => {
             />
           </div>
 
+          {/* Price Starts At */}
+          <div style={{ marginBottom: "1rem" }}>
+            <label>Price Starts At (USD)</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={priceStartsAt}
+              onChange={(e) => setPriceStartsAt(e.target.value)}
+              placeholder="e.g. 25"
+              className="input"
+            />
+          </div>
+
+          {/* Upload Image */}
           <div style={{ marginBottom: "1rem" }}>
             <label>Upload Image</label>
             <input type="file" accept="image/*" onChange={handleImageChange} />
