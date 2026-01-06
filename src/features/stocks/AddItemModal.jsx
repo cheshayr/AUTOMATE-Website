@@ -29,7 +29,6 @@ function AddItemModal({ itemCategories, suppliers }) {
     itemName: "",
     category: "",
     supplier: "",
-    unit: "",
     stock: 0,
     price: 0,
     lowStockThreshold: 10,
@@ -37,7 +36,12 @@ function AddItemModal({ itemCategories, suppliers }) {
 
   const [isOpen, setIsOpen] = useState(false);
 
-  const { mutateAsync: addItemMutation, isPending: addItemMutationPending, isSuccess: addItemMutationSuccess, reset: resetAddItemMutation } = useAddItem();
+  const { 
+    mutateAsync: addItemMutation, 
+    isPending: addItemMutationPending, 
+    isSuccess: addItemMutationSuccess, 
+    reset: resetAddItemMutation 
+  } = useAddItem();
 
   useEffect(() => {
     if (addItemMutationSuccess) {
@@ -46,21 +50,19 @@ function AddItemModal({ itemCategories, suppliers }) {
         itemName: "",
         category: "",
         supplier: "",
-        unit: "",
         stock: 0,
         price: 0,
         lowStockThreshold: 10,
       });
       toast.success("Item added successfully!");
+      resetAddItemMutation();
     }
-    resetAddItemMutation();
   }, [addItemMutationSuccess, resetAddItemMutation]);
 
   const handleSave = async (e) => {
     e.preventDefault();
-
     if (!itemDetails.itemName || !itemDetails.category || !itemDetails.supplier) {
-      toast.error("Please complete all required fields: Item Name, Category, Supplier.");
+      toast.error("Please fill in Item Name, Category, and Supplier.");
       return;
     }
 
@@ -76,7 +78,7 @@ function AddItemModal({ itemCategories, suppliers }) {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button className="min-w-36">
-          <Plus /> Add Product
+          <Plus className="mr-2 h-4 w-4" /> Add Product
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[450px]">
@@ -84,48 +86,54 @@ function AddItemModal({ itemCategories, suppliers }) {
           <DialogTitle>Add Product</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSave}>
-          <div className="grid gap-4 mb-4">
-            {/* Item Name */}
+          <div className="grid gap-4 mb-4 pt-4">
+            
+            {/* ITEM NAME */}
             <div className="grid gap-2">
               <Label htmlFor="name">Item Name</Label>
               <Input
                 id="name"
-                placeholder="Item Name"
                 value={itemDetails.itemName}
                 onChange={(e) => setItemDetails({ ...itemDetails, itemName: e.target.value })}
                 required
               />
             </div>
 
-            {/* Category */}
-            <div className="grid gap-2">
-              <Label htmlFor="category">Category</Label>
-              <Select
-                id="category"
-                value={itemDetails.category}
-                onValueChange={(val) => setItemDetails({ ...itemDetails, category: val })}
-                required
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {itemCategories?.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.categoryName}>
-                        {cat.categoryName}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Category Dropdown */}
+<div className="grid gap-2">
+  <Label htmlFor="category">Category</Label>
+  <Select
+    value={itemDetails.category}
+    onValueChange={(val) => setItemDetails({ ...itemDetails, category: val })}
+    required
+  >
+    <SelectTrigger className="w-full">
+      <SelectValue placeholder="Select a category" />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectGroup>
+        {/* We check if it's an array and has items */}
+        {Array.isArray(itemCategories) && itemCategories.length > 0 ? (
+          itemCategories.map((cat) => (
+            <SelectItem key={cat._id || cat.id} value={cat.categoryName}>
+              {cat.categoryName}
+            </SelectItem>
+          ))
+        ) : (
+          <SelectItem disabled value="none">
+            {/* If you see this, the data isn't reaching the modal */}
+            No categories found in system
+          </SelectItem>
+        )}
+      </SelectGroup>
+    </SelectContent>
+  </Select>
+</div>
 
-            {/* Supplier */}
+            {/* SUPPLIER DROPDOWN */}
             <div className="grid gap-2">
               <Label htmlFor="supplier">Supplier</Label>
               <Select
-                id="supplier"
                 value={itemDetails.supplier}
                 onValueChange={(val) => setItemDetails({ ...itemDetails, supplier: val })}
                 required
@@ -137,7 +145,7 @@ function AddItemModal({ itemCategories, suppliers }) {
                   <SelectGroup>
                     {suppliers?.map((s) => (
                       <SelectItem key={s._id} value={s._id}>
-                        {s.companyName} ({s.contactPerson})
+                        {s.companyName}
                       </SelectItem>
                     ))}
                   </SelectGroup>
@@ -145,73 +153,36 @@ function AddItemModal({ itemCategories, suppliers }) {
               </Select>
             </div>
 
-            {/* Unit */}
-            <div className="grid gap-2">
-              <Label htmlFor="unit">Unit</Label>
-              <Input
-                id="unit"
-                placeholder="pcs, liters, etc."
-                value={itemDetails.unit}
-                onChange={(e) => setItemDetails({ ...itemDetails, unit: e.target.value })}
-                required
-              />
-            </div>
-
-            {/* Stock */}
+            {/* STOCK & PRICE */}
             <div className="grid gap-2">
               <Label htmlFor="stock">Initial Stock</Label>
               <Input
                 id="stock"
                 type="number"
-                min="0"
-                placeholder="Stock quantity"
                 value={itemDetails.stock}
                 onChange={(e) => setItemDetails({ ...itemDetails, stock: e.target.value })}
                 required
               />
             </div>
 
-            {/* Price */}
             <div className="grid gap-2">
-              <Label htmlFor="price">Price *</Label>
+              <Label htmlFor="price">Price</Label>
               <Input
                 id="price"
                 type="number"
-                min="0"
-                placeholder="Price per unit"
                 value={itemDetails.price}
                 onChange={(e) => setItemDetails({ ...itemDetails, price: e.target.value })}
                 required
               />
             </div>
-
-            {/* Low Stock Threshold */}
-            <div className="grid gap-2">
-              <Label htmlFor="lowStockThreshold">Low Stock Threshold</Label>
-              <Input
-                id="lowStockThreshold"
-                type="number"
-                min="0"
-                placeholder="Low stock threshold"
-                value={itemDetails.lowStockThreshold}
-                onChange={(e) => setItemDetails({ ...itemDetails, lowStockThreshold: e.target.value })}
-                required
-              />
-            </div>
           </div>
 
-          <DialogFooter className="flex justify-end space-x-2">
+          <DialogFooter>
             <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline" type="button">Cancel</Button>
             </DialogClose>
             <Button type="submit" disabled={addItemMutationPending}>
-              {addItemMutationPending ? (
-                <span className="flex items-center gap-2">
-                  <LoadingSpinner /> Saving
-                </span>
-              ) : (
-                "Save"
-              )}
+              {addItemMutationPending ? "Saving..." : "Save Product"}
             </Button>
           </DialogFooter>
         </form>

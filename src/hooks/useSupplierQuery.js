@@ -3,10 +3,10 @@ import authenticatedApi from "@/api/axiosInstance";
 
 export const useFetchSuppliers = () => {
   return useQuery({
-    queryKey: ["suppliers"],
+    queryKey: ["suppliers"], // This MUST match ["suppliers"] in your mutation
     queryFn: async () => {
-      const res = await authenticatedApi.get("/suppliers");
-      return res.data; // must be { data: [...] }
+      const response = await authenticatedApi.get("/inventory/suppliers");
+      return response.data;
     },
   });
 };

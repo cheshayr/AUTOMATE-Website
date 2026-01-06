@@ -1,101 +1,77 @@
-import { Button } from '@/components/ui/button';
+import React, { useState } from "react";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Plus } from "lucide-react"; // Re-added the icon
+import { useAddCategory } from "@/hooks/useInventoryMutation";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Plus } from 'lucide-react';
-import { useAddCategory } from '@/hooks/useInventoryMutation';
-import { useEffect, useState } from 'react';
-import LoadingSpinner from '@/components/LoadingSpinner';
-
-function AddCategoryModal() {
-  const [category, setCategory] = useState('');
-  const [isOpen, setIsOpen] = useState(false);
-
-  const {
-    mutateAsync: addCategoryMutation,
-    isPending: addCategoryMutationPending,
-    isError: addCategoryMutationError,
-    isSuccess: addCategoryMutationSuccess,
-    reset: resetAddCategoryMutation,
-  } = useAddCategory();
-
-  useEffect(() => {
-    if (isOpen && addCategoryMutationSuccess) {
-      setIsOpen(false); // <--- This is the programmatic close
-      setCategory(''); // Clear input for next time modal opens
-      resetAddCategoryMutation(); // Reset mutation status for a clean slate
-    }
-  }, [addCategoryMutationSuccess, isOpen]);
+const AddCategoryModal = ({ children }) => {
+  const [categoryName, setCategoryName] = useState("");
+  const [open, setOpen] = useState(false);
+  
+  const { mutateAsync: addCategory, isPending } = useAddCategory();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!categoryName.trim()) return;
 
-    await addCategoryMutation({ categoryName: category });
+    try {
+      await addCategory({ categoryName: categoryName.trim() });
+      setCategoryName("");
+      setOpen(false);
+    } catch (error) {
+      console.error("Add Category Error:", error);
+    }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="min-w-36">
-          <Plus /> Add Category
-        </Button>
+        {/* Added the Plus icon back into the trigger button */}
+        {children || (
+          <Button variant="outline">
+            <Plus className="mr-2 h-4 w-4" /> Add Category
+          </Button>
+        )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
-          <DialogTitle>Add Category</DialogTitle>
+          <DialogTitle>Add New Category</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 mb-4">
-            <div className="grid gap-3">
-              <Label htmlFor="category">Item Category</Label>
-              <Input
-                id="category"
-                category="category"
-                placeholder="Item Category"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-              />
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+          <div className="grid gap-2">
+            <Label htmlFor="categoryName">Category Name</Label>
+            <Input
+              id="categoryName"
+              placeholder="e.g., Engine Parts, Accessories"
+              value={categoryName}
+              onChange={(e) => setCategoryName(e.target.value)}
+              required
+              autoFocus
+            />
           </div>
-          <DialogFooter>
+          <DialogFooter className="pt-4">
             <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button type="button" variant="outline">Cancel</Button>
             </DialogClose>
-            <Button type="submit">
-              {addCategoryMutationPending ? (
-                <span className="flex items-center gap-1">
-                  <LoadingSpinner />
-                  Saving
-                </span>
-              ) : (
-                'Save'
-              )}
+            <Button type="submit" disabled={isPending}>
+              {isPending ? <LoadingSpinner /> : "Add Category"}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
   );
-}
+};
 
 export default AddCategoryModal;

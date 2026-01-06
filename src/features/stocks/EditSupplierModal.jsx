@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import authenticatedApi from "@/api/axiosInstance"; // your Axios instance
+import authenticatedApi from "@/api/axiosInstance"; 
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 const EditSupplierModal = ({ supplier, onSupplierUpdated, children }) => {
@@ -26,9 +26,9 @@ const EditSupplierModal = ({ supplier, onSupplierUpdated, children }) => {
   });
   const [isSaving, setIsSaving] = useState(false);
 
-  // Sync modal state whenever supplier changes
+  // Sync state when modal opens or supplier changes
   useEffect(() => {
-    if (supplier) {
+    if (supplier && isOpen) {
       setSupplierDetails({
         companyName: supplier.companyName || "",
         contactPerson: supplier.contactPerson || "",
@@ -37,52 +37,42 @@ const EditSupplierModal = ({ supplier, onSupplierUpdated, children }) => {
         address: supplier.address || "",
       });
     }
-  }, [supplier]);
+  }, [supplier, isOpen]);
 
   const handleSave = async (e) => {
     e.preventDefault();
 
-    if (!supplier?._id) {
-      toast.error("Supplier ID is missing");
-      return;
-    }
+    // CRITICAL FIX: Ensure we have a valid ID before sending the request
+    const supplierId = supplier?._id || supplier?.id;
 
-    const { companyName, contactPerson } = supplierDetails;
-    if (!companyName || !contactPerson) {
-      toast.error("Company Name and Contact Person are required");
+    if (!supplierId || supplierId === "undefined") {
+      console.error("ID ERROR: The supplier object is missing an ID!", supplier);
+      toast.error("Critical Error: Supplier ID not found.");
       return;
     }
 
     setIsSaving(true);
 
     try {
-      console.log("Updating supplier:", supplier._id, supplierDetails);
-
-      // Send PUT request to backend
-      const response = await authenticatedApi.put(
-        `/suppliers/${supplier._id}`,
+      // FIX: Correct Path and Method
+      const response = await authenticatedApi.patch(
+        `/inventory/suppliers/${supplierId}`,
         supplierDetails
       );
 
-      console.log("Update response:", response.data);
-
-      toast.success("Supplier updated successfully!");
-
-      // Call parent callback to update state
-      if (onSupplierUpdated) onSupplierUpdated(response.data.data || response.data);
-
-      // Close modal
-      setIsOpen(false);
+      if (response.status === 200 || response.status === 201) {
+        toast.success("Supplier updated successfully!");
+        
+        // Pass the updated data back to the parent to refresh the UI
+        const updatedData = response.data?.data || response.data;
+        if (onSupplierUpdated) onSupplierUpdated(updatedData);
+        
+        setIsOpen(false);
+      }
     } catch (error) {
-      console.error("Failed to update supplier:", error);
-
-      // Show detailed error if available
-      const msg =
-        error.response?.data?.message ||
-        error.message ||
-        "Unknown error. Check your backend.";
-
-      toast.error("Failed to update supplier: " + msg);
+      console.error("Update failed:", error);
+      const msg = error.response?.data?.message || "Check your backend connection.";
+      toast.error("Failed to update: " + msg);
     } finally {
       setIsSaving(false);
     }
@@ -93,18 +83,16 @@ const EditSupplierModal = ({ supplier, onSupplierUpdated, children }) => {
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[450px]">
         <DialogHeader>
-          <DialogTitle>Edit Supplier</DialogTitle>
+          <DialogTitle>Edit Supplier Details</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSave} className="grid gap-4">
+        <form onSubmit={handleSave} className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label htmlFor="companyName">Company Name *</Label>
             <Input
               id="companyName"
               value={supplierDetails.companyName}
-              onChange={(e) =>
-                setSupplierDetails({ ...supplierDetails, companyName: e.target.value })
-              }
+              onChange={(e) => setSupplierDetails({ ...supplierDetails, companyName: e.target.value })}
               required
             />
           </div>
@@ -114,9 +102,7 @@ const EditSupplierModal = ({ supplier, onSupplierUpdated, children }) => {
             <Input
               id="contactPerson"
               value={supplierDetails.contactPerson}
-              onChange={(e) =>
-                setSupplierDetails({ ...supplierDetails, contactPerson: e.target.value })
-              }
+              onChange={(e) => setSupplierDetails({ ...supplierDetails, contactPerson: e.target.value })}
               required
             />
           </div>
@@ -127,9 +113,7 @@ const EditSupplierModal = ({ supplier, onSupplierUpdated, children }) => {
               id="email"
               type="email"
               value={supplierDetails.email}
-              onChange={(e) =>
-                setSupplierDetails({ ...supplierDetails, email: e.target.value })
-              }
+              onChange={(e) => setSupplierDetails({ ...supplierDetails, email: e.target.value })}
             />
           </div>
 
@@ -138,9 +122,7 @@ const EditSupplierModal = ({ supplier, onSupplierUpdated, children }) => {
             <Input
               id="contactNumber"
               value={supplierDetails.contactNumber}
-              onChange={(e) =>
-                setSupplierDetails({ ...supplierDetails, contactNumber: e.target.value })
-              }
+              onChange={(e) => setSupplierDetails({ ...supplierDetails, contactNumber: e.target.value })}
             />
           </div>
 
@@ -149,26 +131,16 @@ const EditSupplierModal = ({ supplier, onSupplierUpdated, children }) => {
             <Input
               id="address"
               value={supplierDetails.address}
-              onChange={(e) =>
-                setSupplierDetails({ ...supplierDetails, address: e.target.value })
-              }
+              onChange={(e) => setSupplierDetails({ ...supplierDetails, address: e.target.value })}
             />
           </div>
 
-          <DialogFooter className="flex justify-end space-x-2">
+          <DialogFooter className="mt-4">
             <DialogClose asChild>
-              <Button variant="outline" disabled={isSaving}>
-                Cancel
-              </Button>
+              <Button variant="outline" type="button" disabled={isSaving}>Cancel</Button>
             </DialogClose>
             <Button type="submit" disabled={isSaving}>
-              {isSaving ? (
-                <span className="flex items-center gap-2">
-                  <LoadingSpinner /> Saving...
-                </span>
-              ) : (
-                "Save"
-              )}
+              {isSaving ? <><LoadingSpinner className="mr-2" /> Saving...</> : "Save Changes"}
             </Button>
           </DialogFooter>
         </form>
