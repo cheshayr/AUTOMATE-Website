@@ -24,7 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Trash2, ArrowUp, ArrowDown, History, Package, Truck } from "lucide-react";
+import { Plus, Edit, Trash2, ArrowUp, ArrowDown, History, Truck } from "lucide-react";
 import { useDebounce } from "@uidotdev/usehooks";
 import { toast } from "sonner";
 
@@ -107,7 +107,7 @@ const StockManagement = () => {
     const totalStock = Number(item.stock) || 0;
     const threshold = Number(item.lowStockThreshold) || 0;
     if (totalStock <= 0) return <span className="text-red-600 font-bold">Out of Stock</span>;
-    if (totalStock <= threshold) return <span className="text-yellow-600 font-bold">Low Stock</span>;
+    if (totalStock <= 10) return <span className="text-yellow-600 font-bold">Low Stock</span>;
     return <span className="text-green-600 font-bold">In Stock</span>;
   };
 
@@ -237,12 +237,9 @@ const StockManagement = () => {
             <Button variant="outline"><Truck className="mr-2 h-4 w-4" /> Add Supplier</Button>
           </AddSupplierModal>
 
-          {/* Look for this line in your StockManagement.jsx */}
-<AddCategoryModal>
-  <Button variant="outline">
-    <Plus className="mr-2 h-4 w-4" /> Add Category
-  </Button>
-</AddCategoryModal>
+          <AddCategoryModal>
+            <Button variant="outline"><Plus className="mr-2 h-4 w-4" /> Add Category</Button>
+          </AddCategoryModal>
           
           <DeleteCategoryModal itemCategories={currentCategories}>
             <Button variant="ghost" className="text-destructive">Delete Category</Button>
@@ -257,7 +254,7 @@ const StockManagement = () => {
           </Button>
         </div>
 
-        {/* Supplier Directory */}
+        {/* Supplier Directory - UPDATED COLUMNS */}
         {showSuppliers && (
           <div className="mb-8 border rounded-lg p-4 bg-slate-50 animate-in fade-in duration-300">
             <h3 className="font-bold mb-4">Supplier Directory</h3>
@@ -265,7 +262,9 @@ const StockManagement = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Company</TableHead>
-                  <TableHead>Contact</TableHead>
+                  <TableHead>Contact Person</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Address</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -275,7 +274,9 @@ const StockManagement = () => {
                   return (
                     <TableRow key={sId}>
                       <TableCell className="font-medium">{s.companyName}</TableCell>
-                      <TableCell>{s.contactPerson}</TableCell>
+                      <TableCell>{s.contactPerson || "—"}</TableCell>
+                      <TableCell>{s.contactNumber || "—"}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{s.address || "—"}</TableCell>
                       <TableCell className="text-right space-x-2">
                         <EditSupplierModal supplier={s} onSupplierUpdated={handleUpdateSupplier}>
                           <Button size="icon" variant="ghost"><Edit size={14}/></Button>
@@ -286,7 +287,7 @@ const StockManagement = () => {
                       </TableCell>
                     </TableRow>
                   );
-                }) : <TableRow><TableCell colSpan={3} className="text-center">No suppliers registered.</TableCell></TableRow>}
+                }) : <TableRow><TableCell colSpan={5} className="text-center">No suppliers registered.</TableCell></TableRow>}
               </TableBody>
             </Table>
           </div>

@@ -19,7 +19,7 @@ const StockOutModal = ({ open, setOpen, item, onSave }) => {
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
 
-  const reasonsList = ["Usage", "Damage", "Adjustment", "Transfer", "Expired"];
+  const reasonsList = ["Sale", "Damage", "Adjustment", "Expired"];
 
   useEffect(() => {
     const now = new Date();
