@@ -70,7 +70,6 @@ export const ReportsTable = ({
               className={`h-4 w-4 ${index < value ? 'text-yellow-400' : 'text-gray-300'}`}
               fill="currentColor"
               viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
             >
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.974a1 1 0 00.95.69h4.18c.969 0 1.371 1.24.588 1.81l-3.39 2.462a1 1 0 00-.364 1.118l1.287 3.974c.3.921-.755 1.688-1.54 1.118l-3.39-2.462a1 1 0 00-1.175 0l-3.39 2.462c-.784.57-1.838-.197-1.539-1.118l1.286-3.974a1 1 0 00-.364-1.118L2.034 9.4c-.783-.57-.38-1.81.588-1.81h4.18a1 1 0 00.95-.69l1.286-3.974z" />
             </svg>
@@ -87,7 +86,7 @@ export const ReportsTable = ({
   };
 
   const handleExportPDF = () => {
-    // ✅ Validation: Prevent export if name is empty
+    // ✅ Validation
     if (!preparedBy || preparedBy.trim() === '') {
       alert('Please enter your name in "Prepared By" before exporting.');
       return;
@@ -95,9 +94,11 @@ export const ReportsTable = ({
 
     const doc = new jsPDF();
 
-    // Add Logo
-    const imgData = logo; // Replace with your logo base64 or path
-    doc.addImage(imgData, 'PNG', 14, 1, 35, 35); // x, y, width, height
+    // 🔹 Export timestamp (NEW)
+    const exportedAt = format(new Date(), 'MMM dd, yyyy • hh:mm a');
+
+    // Logo
+    doc.addImage(logo, 'PNG', 14, 1, 35, 35);
 
     // Title
     doc.setFontSize(16);
@@ -105,55 +106,51 @@ export const ReportsTable = ({
 
     // Date Range
     doc.setFontSize(10);
-    const from = dateFrom ? `${format(dateFrom, 'MMM dd, yyyy')}` : '';
-    const to = dateTo ? `${format(dateTo, 'MMM dd, yyyy')}` : '';
+    const from = dateFrom ? format(dateFrom, 'MMM dd, yyyy') : '';
+    const to = dateTo ? format(dateTo, 'MMM dd, yyyy') : '';
     if (from || to) {
-      const dateRangeText = [from, to].filter(Boolean).join(' - ');
-      doc.text(`Date Range: ${dateRangeText}`, 14, 35);
+      doc.text(`Date Range: ${[from, to].filter(Boolean).join(' - ')}`, 14, 35);
     }
 
     // Prepared By
     doc.text(`Prepared By: ${preparedBy}`, 14, 42);
 
-    // Table headers + rows
+    // 🔹 Exported Date & Time (NEW)
+    doc.text(`Exported On: ${exportedAt}`, 14, 48);
+
+    // Table
     const headers = columns.map((col) => col.label);
     const rows = sortedData.map((row) =>
       columns.map((col) => {
         const value = row[col.key];
-        if (value === null || value === undefined || value === '') return '-';
+        if (!value) return '-';
 
         if (typeof value === 'string') {
           const date = parseISO(value);
-          if (isValid(date)) {
-            return format(date, 'MMM dd, yyyy');
-          }
+          if (isValid(date)) return format(date, 'MMM dd, yyyy');
         }
 
-        if (typeof value === 'object' && value?.text) {
-          return value.text;
-        }
+        if (typeof value === 'object' && value?.text) return value.text;
+        if (typeof value === 'string' && value.includes('₱')) return value.replace('₱', 'PHP ');
 
-        if (typeof value === 'string' && value.includes('₱')) {
-          return value.replace('₱', 'PHP ');
-        }
-
-        return String(value || '');
+        return String(value);
       })
     );
 
     autoTable(doc, {
       head: [headers],
       body: rows,
-      startY: 50,
+      startY: 55, // ⬅️ adjusted to make room for timestamp
       styles: { fontSize: 9 },
       headStyles: { fillColor: [71, 85, 105] },
     });
 
-    // Save PDF
+    // Save
     doc.save(
-      `${reportTitle.replace(/\s+/g, '_').toLowerCase()}_${new Date()
-        .toISOString()
-        .split('T')[0]}.pdf`
+      `${reportTitle.replace(/\s+/g, '_').toLowerCase()}_${format(
+        new Date(),
+        'yyyy-MM-dd'
+      )}.pdf`
     );
 
     if (onExportPDF) {
@@ -173,10 +170,7 @@ export const ReportsTable = ({
             className="pl-10"
           />
         </div>
-        <Button
-          onClick={handleExportPDF}
-          variant="outline"
-        >
+        <Button onClick={handleExportPDF} variant="outline">
           <Download className="h-4 w-4 mr-2" />
           Export to PDF
         </Button>
@@ -187,12 +181,9 @@ export const ReportsTable = ({
           <TableHeader>
             <TableRow className="bg-muted/50">
               {columns.map((column) => (
-                <TableHead key={column.key} className="font-semibold">
+                <TableHead key={column.key}>
                   {column.sortable !== false ? (
-                    <button
-                      className="flex items-center gap-2 hover:text-foreground transition-colors"
-                      onClick={() => handleSort(column.key)}
-                    >
+                    <button onClick={() => handleSort(column.key)} className="flex gap-2">
                       {column.label}
                       <ArrowUpDown className="h-4 w-4" />
                     </button>
@@ -212,7 +203,7 @@ export const ReportsTable = ({
               </TableRow>
             ) : (
               sortedData.map((row, idx) => (
-                <TableRow key={idx} className="hover:bg-muted/50 transition-colors">
+                <TableRow key={idx}>
                   {columns.map((column) => (
                     <TableCell key={column.key}>
                       {renderCellValue(row[column.key], column)}
@@ -227,6 +218,3 @@ export const ReportsTable = ({
     </div>
   );
 };
-
-
-
