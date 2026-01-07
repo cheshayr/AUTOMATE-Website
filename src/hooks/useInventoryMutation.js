@@ -2,6 +2,7 @@ import authenticatedApi, { getAxiosErrorMessage } from '@/api/axiosInstance';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
+// --- ADD ITEM ---
 export const useAddItem = () => {
   const queryClient = useQueryClient();
 
@@ -16,128 +17,76 @@ export const useAddItem = () => {
   return useMutation({
     mutationFn: (data) => addItem(data),
     onSuccess: () => {
-      queryClient.invalidateQueries('inventory');
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
       toast.success('Item added successfully');
     },
     onError: (error) => {
       const message = getAxiosErrorMessage(error) || 'Failed to add item';
-      console.error('Error adding item:', message);
       toast.error(message);
     },
   });
 };
 
+// --- UPDATE ITEM (Handles Stock In/Out & Supplier Updates) ---
 export const useUpdateItem = () => {
   const queryClient = useQueryClient();
 
-  const updateItem = async (data) => {
-    console.log(data);
-    const response = await authenticatedApi.patch(`/inventory/${data._id}`, data);
-if (response.status !== 200 && response.status !== 201) {
-  throw new Error('Failed to update item');
-}
-    return response.data;
-  };
-
   return useMutation({
-    mutationFn: (data) => updateItem(data),
+    mutationFn: async (data) => {
+      const itemId = data.id || data._id;
+      if (!itemId) throw new Error('Item ID is missing');
+
+      // Tinatanggal ang ID sa payload para hindi mag-error ang MongoDB
+      const { id, _id, ...payload } = data;
+
+      const response = await authenticatedApi.patch(`/inventory/${itemId}`, payload);
+      return response.data;
+    },
     onSuccess: () => {
-      // Invalidate both inventory and specific item queries if necessary
-      queryClient.invalidateQueries('inventory'); 
-      toast.success('Item updated successfully');
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      toast.success('Inventory updated successfully');
     },
     onError: (error) => {
       const message = getAxiosErrorMessage(error) || 'Failed to update item';
-      console.error('Error updating item:', message);
       toast.error(message);
     },
   });
 };
 
-// NOTE: useAddStock is kept, but no longer used by the StockManagement UI
-export const useAddStock = () => {
-  const queryClient = useQueryClient();
-
-  const addStock = async (data) => {
-    const response = await authenticatedApi.patch(`/inventory/${data.id}/add-stock`, data);
-    if (response.status !== 201) {
-      throw new Error('Failed to add stock');
-    }
-    return response.data;
-  };
-
-  return useMutation({
-    mutationFn: (data) => addStock(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries('inventory');
-      toast.success('Item stock added successfully');
-    },
-    onError: (error) => {
-      const message = getAxiosErrorMessage(error) || 'Failed to add stock';
-      console.error('Error adding stock:', message);
-      toast.error(message);
-    },
-  });
-};
-
-// NOTE: useDeductStock is kept, but no longer used by the StockManagement UI
-export const useDeductStock = () => {
-  const queryClient = useQueryClient();
-
-  const deductStock = async (data) => {
-    const response = await authenticatedApi.patch(`/inventory/${data.id}/deduct-stock`, data);
-    if (response.status !== 201) {
-      throw new Error('Failed to deduct stock');
-    }
-    return response.data;
-  };
-
-  return useMutation({
-    mutationFn: (data) => deductStock(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries('inventory');
-      toast.success('Item stock deducted successfully');
-    },
-    onError: (error) => {
-      const message = getAxiosErrorMessage(error) || 'Failed to deduct stock';
-      console.error('Error deducting stock:', message);
-      toast.error(message);
-    },
-  });
-};
-
+// --- DELETE ITEM ---
 export const useDeleteItem = () => {
   const queryClient = useQueryClient();
 
   const deleteItem = async (data) => {
-    // Assuming API returns 204 No Content for successful deletion
     const response = await authenticatedApi.delete(`/inventory/${data.id}`);
     if (response.status !== 204 && response.status !== 200) {
       throw new Error('Failed to delete item');
     }
-    // No response.data expected for 204
   };
 
   return useMutation({
     mutationFn: (data) => deleteItem(data),
     onSuccess: () => {
-      queryClient.invalidateQueries('inventory');
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
       toast.success('Item deleted successfully');
     },
     onError: (error) => {
       const message = getAxiosErrorMessage(error) || 'Failed to delete item';
-      console.error('Error deleting item:', message);
       toast.error(message);
     },
   });
 };
 
+// --- ADD CATEGORY ---
 export const useAddCategory = () => {
   const queryClient = useQueryClient();
 
   const addCategory = async (data) => {
-    const response = await authenticatedApi.post('/inventory/add-category', data);
-    if (response.status !== 201) {
+    // FIX: Changed from '/inventory/add-category' 
+    // to '/inventory/item-categories' to match your backend routes
+    const response = await authenticatedApi.post('/inventory/item-categories', data);
+    
+    if (response.status !== 201 && response.status !== 200) {
       throw new Error('Failed to add category');
     }
     return response.data;
@@ -146,42 +95,68 @@ export const useAddCategory = () => {
   return useMutation({
     mutationFn: (data) => addCategory(data),
     onSuccess: () => {
-      queryClient.invalidateQueries('item-categories');
+      // Refresh the list after adding
+      queryClient.invalidateQueries({ queryKey: ['item-categories'] });
       toast.success('Category added successfully');
     },
     onError: (error) => {
       const message = getAxiosErrorMessage(error) || 'Failed to add category';
-      console.error('Error adding category:', message);
       toast.error(message);
     },
   });
 };
 
-/**
- * Hook for deleting an item category.
- * This was added to support the Delete Category feature requested.
- */
+// --- DELETE CATEGORY ---
 export const useDeleteCategory = () => {
   const queryClient = useQueryClient();
 
   const deleteCategory = async (data) => {
-  const response = await authenticatedApi.delete(`/inventory/item-categories/${data.id}`);
-  if (response.status !== 204 && response.status !== 200) {
-    throw new Error('Failed to delete category');
-  }
-};
+    // Siguraduhing data.id ang pinapasa
+    const response = await authenticatedApi.delete(`/inventory/item-categories/${data.id}`);
+    if (response.status !== 204 && response.status !== 200) {
+      throw new Error('Failed to delete category');
+    }
+  };
 
   return useMutation({
-    mutationFn: deleteCategory,
+    mutationFn: (data) => deleteCategory(data),
     onSuccess: () => {
-      queryClient.invalidateQueries('item-categories');
-      queryClient.invalidateQueries('inventory');
+      queryClient.invalidateQueries({ queryKey: ['item-categories'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
       toast.success('Category deleted successfully');
     },
     onError: (error) => {
       const message = getAxiosErrorMessage(error) || 'Failed to delete category';
-      console.error('Error deleting category:', message);
       toast.error(message);
+    },
+  });
+};
+
+// --- STOCK HANDLERS ---
+export const useAddStock = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data) => {
+      const response = await authenticatedApi.patch(`/inventory/${data.id}/add-stock`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      toast.success('Stock added');
+    },
+  });
+};
+
+export const useDeductStock = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data) => {
+      const response = await authenticatedApi.patch(`/inventory/${data.id}/deduct-stock`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      toast.success('Stock deducted');
     },
   });
 };

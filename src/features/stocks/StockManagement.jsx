@@ -1,5 +1,4 @@
-// StockManagement.js
-import React, { useEffect, useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -25,443 +24,361 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import {
-  Save,
-  Plus,
-  Edit,
-  Trash2,
-  ArrowUp,
-  ArrowDown,
-} from "lucide-react";
+import { Plus, Edit, Trash2, ArrowUp, ArrowDown, History, Package, Truck } from "lucide-react";
 import { useDebounce } from "@uidotdev/usehooks";
 import { toast } from "sonner";
 
+// Modals
 import AddItemModal from "./AddItemModal";
 import AddSupplierModal from "./AddSupplierModal";
 import EditSupplierModal from "./EditSupplierModal";
 import AddCategoryModal from "./AddCategoryModal";
 import DeleteCategoryModal from "./DeleteCategoryModal";
 import DeleteItemModal from "./DeleteItemModal";
-
 import StockInModal from "./StockInModal";
 import StockOutModal from "./StockOutModal";
 
+// Hooks
 import {
   useFetchInventory,
   useFetchItemCategories,
 } from "@/hooks/useInventoryQuery";
 import { useUpdateItem } from "@/hooks/useInventoryMutation";
 import { useFetchSuppliers } from "@/hooks/useSupplierQuery";
-import { useUpdateSupplier, useDeleteSupplier } from "@/hooks/useSupplierMutation";
+import {
+  useUpdateSupplier,
+  useDeleteSupplier,
+} from "@/hooks/useSupplierMutation";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 const StockManagement = () => {
   const [itemCategory, setItemCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-  const [stockChanges, setStockChanges] = useState({});
   const [showSuppliers, setShowSuppliers] = useState(false);
+  const [showTransactions, setShowTransactions] = useState(false);
 
   // Stock IN / OUT modal state
   const [stockInItem, setStockInItem] = useState(null);
   const [stockOutItem, setStockOutItem] = useState(null);
 
-  // Transaction history state
+  // Transaction history state (Current Session)
   const [transactions, setTransactions] = useState([]);
-  const [showTransactions, setShowTransactions] = useState(false);
-
-  const [suppliers, setSuppliers] = useState([]);
 
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
+  // Data Fetching
   const { data: inventoryData, isPending: inventoryDataPending } = useFetchInventory({
     filter: itemCategory,
     searchQuery: debouncedSearchQuery,
   });
+
   const { data: itemCategoriesData } = useFetchItemCategories();
   const { data: suppliersData } = useFetchSuppliers();
+
+  // Mutations
   const { mutateAsync: updateItemMutation } = useUpdateItem();
   const { mutateAsync: updateSupplierMutation } = useUpdateSupplier();
   const { mutateAsync: deleteSupplierMutation } = useDeleteSupplier();
 
-  // Sync suppliers from backend
-  useEffect(() => {
-    if (suppliersData?.data) setSuppliers(suppliersData.data);
+  // Memoized Supplier Map for Table display (ID -> Object)
+  const supplierMap = useMemo(() => {
+    const map = {};
+    if (suppliersData?.data) {
+      suppliersData.data.forEach((s) => {
+        const id = s._id || s.id;
+        if (id) map[id] = s;
+      });
+    }
+    return map;
   }, [suppliersData]);
 
-  // Initialize stock changes
-  useEffect(() => {
-    if (inventoryData?.data) {
-      const initialChanges = inventoryData.data.reduce((acc, item) => {
-        acc[item._id] = { sellOut: 0, addStock: 0, isModified: false };
-        return acc;
-      }, {});
-      setStockChanges(initialChanges);
-    }
-  }, [inventoryData?.data]);
+  const currentSuppliers = suppliersData?.data || [];
+  const currentCategories = itemCategoriesData?.data || [];
 
-  // --- STOCK HANDLERS ---
-  const handleStockChange = (id, field, value) => {
-    const numericValue = Math.max(0, Number(value));
-    setStockChanges((prev) => ({
-      ...prev,
-      [id]: { ...prev[id], [field]: numericValue, isModified: true },
-    }));
-  };
-
-  const calculateTotalStock = (item) => {
-    const changes = stockChanges[item._id] || { sellOut: 0, addStock: 0 };
-    return (Number(item.stock) || 0) - changes.sellOut + changes.addStock;
+  // Helper to get Supplier Name properly
+  const getSupplierName = (item) => {
+    if (item.supplier?.companyName) return item.supplier.companyName;
+    const supplierId = item.supplier?._id || item.supplier;
+    if (supplierMap[supplierId]) return supplierMap[supplierId].companyName;
+    return "N/A";
   };
 
   const calculateStockStatus = (item) => {
-    const totalStock = calculateTotalStock(item);
+    const totalStock = Number(item.stock) || 0;
     const threshold = Number(item.lowStockThreshold) || 0;
-
-    if (totalStock <= 0) return <span className="text-red-600 font-semibold">Out of Stock</span>;
-    if (totalStock <= threshold) return <span className="text-yellow-600 font-semibold">Low Stock</span>;
-    return <span className="text-green-600 font-semibold">In Stock</span>;
+    if (totalStock <= 0) return <span className="text-red-600 font-bold">Out of Stock</span>;
+    if (totalStock <= threshold) return <span className="text-yellow-600 font-bold">Low Stock</span>;
+    return <span className="text-green-600 font-bold">In Stock</span>;
   };
 
-  const handleSaveStockChanges = async (item) => {
-    const totalStock = calculateTotalStock(item);
-    if (totalStock < 0) {
-      toast.error("Cannot save changes: Total stock cannot be negative.");
-      return;
-    }
-
-    try {
-      await updateItemMutation({ ...item, stock: totalStock });
-      setStockChanges((prev) => ({
-        ...prev,
-        [item._id]: { sellOut: 0, addStock: 0, isModified: false },
-      }));
-      toast.success("Stock updated successfully!");
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to update stock. Please try again.");
-    }
-  };
-
-  // --- SUPPLIER HANDLERS ---
+  // Supplier Handlers
   const handleDeleteSupplier = async (id) => {
-    if (!confirm("Are you sure you want to delete this supplier?")) return;
+    if (!confirm("Are you sure? This will delete the supplier record.")) return;
     try {
       await deleteSupplierMutation(id);
-      setSuppliers((prev) => prev.filter((s) => s._id !== id));
       toast.success("Supplier deleted!");
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete supplier");
     }
   };
 
   const handleUpdateSupplier = async (updatedSupplier) => {
     try {
-      const res = await updateSupplierMutation(updatedSupplier);
-      setSuppliers((prev) => prev.map((s) => (s._id === res._id ? res : s)));
-      toast.success("Supplier updated successfully!");
-    } catch (error) {
-      toast.error("Failed to update supplier");
+      const id = updatedSupplier._id || updatedSupplier.id;
+      if (!id) throw new Error("Missing ID");
+      await updateSupplierMutation({ id, ...updatedSupplier });
+    } catch (err) {
+      console.error("Update callback error:", err);
     }
   };
 
-  const supplierMap = {};
-  suppliers.forEach((s) => {
-    supplierMap[s._id.toString()] = s;
-  });
-
-  // --- HANDLE STOCK IN / OUT SAVE ---
+  // Stock Movement Handlers
   const handleStockInSave = async (data) => {
     if (!stockInItem) return;
-
     try {
-      const newStock = (Number(stockInItem.stock) || 0) + data.quantity;
-      await updateItemMutation({ ...stockInItem, stock: newStock });
-      toast.success("Stock IN saved successfully!");
+      const currentStock = Number(stockInItem.stock) || 0;
+      const addedQuantity = Number(data.quantity) || 0;
+      const existingSupplierId = stockInItem.supplier?._id || stockInItem.supplier;
+      
+      await updateItemMutation({ 
+        id: stockInItem._id, 
+        stock: currentStock + addedQuantity,
+        supplier: existingSupplierId 
+      });
 
       setTransactions((prev) => [
         {
           id: Date.now(),
           itemName: stockInItem.itemName,
           type: "IN",
-          quantity: data.quantity,
-          supplierName: suppliers.find((s) => s._id === data.supplier)?.companyName || data.supplier,
-          reason: null,
+          quantity: addedQuantity,
+          supplierName: getSupplierName(stockInItem),
           remarks: data.remarks,
-          dateTime: data.date || new Date(),
+          dateTime: data.dateTime || new Date(),
         },
         ...prev,
       ]);
-
       setStockInItem(null);
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to save Stock IN");
+    } catch (err) {
+      console.error(err);
     }
   };
 
   const handleStockOutSave = async (data) => {
     if (!stockOutItem) return;
-
     try {
-      const newStock = (Number(stockOutItem.stock) || 0) - data.quantity;
+      const currentStock = Number(stockOutItem.stock) || 0;
+      const removedQuantity = Number(data.quantity) || 0;
+      const newStock = currentStock - removedQuantity;
+
       if (newStock < 0) {
-        toast.error("Insufficient stock");
+        toast.error("Insufficient stock!");
         return;
       }
-      await updateItemMutation({ ...stockOutItem, stock: newStock });
-      toast.success("Stock OUT saved successfully!");
+
+      await updateItemMutation({ 
+        id: stockOutItem._id, 
+        stock: newStock 
+      });
 
       setTransactions((prev) => [
         {
           id: Date.now(),
           itemName: stockOutItem.itemName,
           type: "OUT",
-          quantity: data.quantity,
-          supplierName: null,
-          reason: data.reason,
+          quantity: removedQuantity,
           remarks: data.remarks,
-          dateTime: data.date || new Date(),
+          dateTime: data.dateTime || new Date(),
         },
         ...prev,
       ]);
-
       setStockOutItem(null);
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to save Stock OUT");
+    } catch (err) {
+       console.error(err);
     }
   };
 
   return (
     <Card className="w-full bg-transparent shadow-none border-0">
       <CardHeader>
-        <CardTitle className="text-2xl font-semibold">Inventory Management</CardTitle>
-        <CardDescription>
-          Manage inventory, track all stocks, and add suppliers.
-        </CardDescription>
+        <CardTitle className="text-2xl font-bold">Inventory Management</CardTitle>
+        <CardDescription>Track items, categories, and suppliers in real-time.</CardDescription>
       </CardHeader>
 
       <CardContent>
-        {/* Search & Filters */}
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-4 gap-4">
-          <div className="flex-1">
-            <Input
-              placeholder="Search by item name..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:flex md:items-end md:gap-3">
-            <div className="min-w-36">
-              <Label>Item Category</Label>
-              <Select value={itemCategory} onValueChange={setItemCategory}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">All</SelectItem>
-                  {itemCategoriesData?.data?.map((c) => (
-                    <SelectItem key={c.id} value={c.categoryName}>
-                      {c.categoryName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        {/* Filters */}
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <Input
+            placeholder="Search item name..."
+            className="flex-1"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <div className="min-w-[200px]">
+            <Select value={itemCategory} onValueChange={setItemCategory}>
+              <SelectTrigger><SelectValue placeholder="Category" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Categories</SelectItem>
+                {currentCategories.map((c) => (
+                  <SelectItem key={c._id} value={c.categoryName}>{c.categoryName}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
-        {/* Action Buttons including Transaction History */}
-        <div className="flex flex-wrap gap-3 mb-6">
-          <AddCategoryModal>
-            <Button>Add Category</Button>
-          </AddCategoryModal>
-          <DeleteCategoryModal itemCategories={itemCategoriesData?.data}>
-            <Button variant="destructive">Delete Category</Button>
-          </DeleteCategoryModal>
-          <AddItemModal itemCategories={itemCategoriesData?.data} suppliers={suppliers}>
-            <Button><Plus /> Add Product</Button>
+        {/* Action Buttons */}
+        <div className="flex flex-wrap gap-3 mb-8">
+          <AddItemModal itemCategories={currentCategories} suppliers={currentSuppliers}>
+            <Button><Plus className="mr-2 h-4 w-4" /> Add Product</Button>
           </AddItemModal>
+
           <AddSupplierModal>
-            <Button><Plus /> Add Supplier</Button>
+            <Button variant="outline"><Truck className="mr-2 h-4 w-4" /> Add Supplier</Button>
           </AddSupplierModal>
-          <Button onClick={() => setShowSuppliers(!showSuppliers)}>
+
+          {/* Look for this line in your StockManagement.jsx */}
+<AddCategoryModal>
+  <Button variant="outline">
+    <Plus className="mr-2 h-4 w-4" /> Add Category
+  </Button>
+</AddCategoryModal>
+          
+          <DeleteCategoryModal itemCategories={currentCategories}>
+            <Button variant="ghost" className="text-destructive">Delete Category</Button>
+          </DeleteCategoryModal>
+
+          <Button variant="secondary" onClick={() => setShowSuppliers(!showSuppliers)}>
             {showSuppliers ? "Hide Suppliers" : "Show Suppliers"}
           </Button>
-          <Button onClick={() => setShowTransactions(!showTransactions)}>
-            {showTransactions ? "Hide Transactions" : "View Transactions"}
+
+          <Button variant="secondary" onClick={() => setShowTransactions(!showTransactions)}>
+            {showTransactions ? "Hide Log" : "View Logs"}
           </Button>
         </div>
 
-        {/* Suppliers Table */}
+        {/* Supplier Directory */}
         {showSuppliers && (
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-2">Suppliers List</h2>
+          <div className="mb-8 border rounded-lg p-4 bg-slate-50 animate-in fade-in duration-300">
+            <h3 className="font-bold mb-4">Supplier Directory</h3>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Company Name</TableHead>
-                  <TableHead>Contact Person</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Contact Number</TableHead>
-                  <TableHead>Address</TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
+                  <TableHead>Company</TableHead>
+                  <TableHead>Contact</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {suppliers.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center h-24">
-                      No suppliers yet
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  suppliers.map((s) => (
-                    <TableRow key={s._id}>
-                      <TableCell>{s.companyName}</TableCell>
+                {currentSuppliers.length > 0 ? currentSuppliers.map((s) => {
+                  const sId = s._id || s.id;
+                  return (
+                    <TableRow key={sId}>
+                      <TableCell className="font-medium">{s.companyName}</TableCell>
                       <TableCell>{s.contactPerson}</TableCell>
-                      <TableCell>{s.email || "N/A"}</TableCell>
-                      <TableCell>{s.contactNumber || "N/A"}</TableCell>
-                      <TableCell>{s.address || "N/A"}</TableCell>
-                      <TableCell className="flex justify-center gap-2">
+                      <TableCell className="text-right space-x-2">
                         <EditSupplierModal supplier={s} onSupplierUpdated={handleUpdateSupplier}>
-                          <Button size="icon" variant="ghost"><Edit size={16} /></Button>
+                          <Button size="icon" variant="ghost"><Edit size={14}/></Button>
                         </EditSupplierModal>
-                        <Button size="icon" variant="destructive" onClick={() => handleDeleteSupplier(s._id)}>
-                          <Trash2 size={16} />
+                        <Button size="icon" variant="ghost" className="text-destructive" onClick={() => handleDeleteSupplier(sId)}>
+                          <Trash2 size={14}/>
                         </Button>
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
+                  );
+                }) : <TableRow><TableCell colSpan={3} className="text-center">No suppliers registered.</TableCell></TableRow>}
               </TableBody>
             </Table>
           </div>
         )}
 
         {/* Inventory Table */}
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Item Name</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Supplier</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Sell Out</TableHead>
-              <TableHead>Add Stock</TableHead>
-              <TableHead>Total</TableHead>
-              <TableHead className="text-center">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {inventoryDataPending ? (
+        <div className="border rounded-md bg-white">
+          <Table>
+            <TableHeader className="bg-slate-50">
               <TableRow>
-                <TableCell colSpan={8} className="text-center h-40">
-                  <LoadingSpinner />
-                </TableCell>
+                <TableHead>Item Name</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Supplier</TableHead>
+                <TableHead>Stock</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-center">Stock Actions</TableHead>
               </TableRow>
-            ) : (
-              inventoryData?.data?.map((item) => (
-                <TableRow key={item._id}>
-                  <TableCell>{item.itemName}</TableCell>
-                  <TableCell>{item.category}</TableCell>
-                  <TableCell>{supplierMap[item.supplier]?.companyName || "N/A"}</TableCell>
-                  <TableCell>{calculateStockStatus(item)}</TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      value={stockChanges[item._id]?.sellOut || 0}
-                      onChange={(e) => handleStockChange(item._id, "sellOut", e.target.value)}
-                      className="w-20 text-center"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      value={stockChanges[item._id]?.addStock || 0}
-                      onChange={(e) => handleStockChange(item._id, "addStock", e.target.value)}
-                      className="w-20 text-center"
-                    />
-                  </TableCell>
-                  <TableCell className="font-bold">{calculateTotalStock(item)}</TableCell>
-                  <TableCell className="flex justify-center gap-2">
-                    <Button size="icon" variant="ghost" onClick={() => handleSaveStockChanges(item)}>
-                      <Save size={18} />
-                    </Button>
-                    <Button size="icon" variant="secondary" onClick={() => setStockInItem(item)}>
-                      <ArrowUp size={16} />
-                    </Button>
-                    <Button size="icon" variant="secondary" onClick={() => setStockOutItem(item)}>
-                      <ArrowDown size={16} />
-                    </Button>
-                    <DeleteItemModal itemName={item.itemName} id={item._id} />
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-
-        {/* Collapsible Transaction History */}
-        {showTransactions && (
-          <div className="mt-8 overflow-x-auto border rounded-lg">
-            {transactions.length === 0 ? (
-              <div className="text-center p-4">No transactions yet.</div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date & Time</TableHead>
-                    <TableHead>Item Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Quantity</TableHead>
-                    <TableHead>Supplier</TableHead>
-                    <TableHead>Reason</TableHead>
-                    <TableHead>Remarks</TableHead>
+            </TableHeader>
+            <TableBody>
+              {inventoryDataPending ? (
+                <TableRow><TableCell colSpan={6} className="text-center py-12"><LoadingSpinner /></TableCell></TableRow>
+              ) : inventoryData?.data?.length > 0 ? (
+                inventoryData.data.map((item) => (
+                  <TableRow key={item._id} className="hover:bg-slate-50/50">
+                    <TableCell className="font-medium">{item.itemName}</TableCell>
+                    <TableCell>{item.category}</TableCell>
+                    <TableCell>{getSupplierName(item)}</TableCell>
+                    <TableCell className="font-mono text-lg">{item.stock}</TableCell>
+                    <TableCell>{calculateStockStatus(item)}</TableCell>
+                    <TableCell className="flex justify-center gap-2">
+                      <Button size="icon" variant="outline" onClick={() => setStockInItem(item)} title="Stock In">
+                        <ArrowUp className="h-4 w-4 text-green-600"/>
+                      </Button>
+                      <Button size="icon" variant="outline" onClick={() => setStockOutItem(item)} title="Stock Out">
+                        <ArrowDown className="h-4 w-4 text-red-600"/>
+                      </Button>
+                      <DeleteItemModal itemName={item.itemName} id={item._id} />
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(transactions || []).map((t) => {
-                    let dateStr = "N/A";
-                    try {
-                      dateStr = t.dateTime ? new Date(t.dateTime).toLocaleString() : "N/A";
-                    } catch {
-                      dateStr = "Invalid Date";
-                    }
-                    return (
-                      <TableRow key={t._id || t.id || Math.random()}>
-                        <TableCell>{dateStr}</TableCell>
-                        <TableCell>{t.itemName || "N/A"}</TableCell>
-                        <TableCell className={t.type === "IN" ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
-                          {t.type || "N/A"}
-                        </TableCell>
-                        <TableCell>{t.quantity ?? "N/A"}</TableCell>
-                        <TableCell>{t.supplierName || "N/A"}</TableCell>
-                        <TableCell>{t.reason || "N/A"}</TableCell>
-                        <TableCell>{t.remarks || "N/A"}</TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
-          </div>
-        )}
+                ))
+              ) : (
+                <TableRow><TableCell colSpan={6} className="text-center py-10">No items found.</TableCell></TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
+        {/* Log section */}
+        {showTransactions && (
+           <div className="mt-8 border rounded-lg bg-slate-50 p-4 animate-in slide-in-from-bottom-2 duration-300">
+             <h3 className="font-bold mb-4 flex items-center gap-2"><History size={18}/> Recent Activity</h3>
+             <Table>
+               <TableHeader>
+                 <TableRow>
+                   <TableHead>Date</TableHead>
+                   <TableHead>Item</TableHead>
+                   <TableHead>Type</TableHead>
+                   <TableHead>Qty</TableHead>
+                   <TableHead>Remarks</TableHead>
+                 </TableRow>
+               </TableHeader>
+               <TableBody>
+                 {transactions.length === 0 ? <TableRow><TableCell colSpan={5} className="text-center py-4 text-muted-foreground">No recent stock movements.</TableCell></TableRow> :
+                 transactions.map((t) => (
+                   <TableRow key={t.id}>
+                     <TableCell className="text-xs text-muted-foreground">{new Date(t.dateTime).toLocaleString()}</TableCell>
+                     <TableCell className="font-medium">{t.itemName}</TableCell>
+                     <TableCell>
+                       <span className={t.type === "IN" ? "text-green-600 font-bold" : "text-red-600 font-bold"}>
+                         {t.type}
+                       </span>
+                     </TableCell>
+                     <TableCell className="font-semibold">{t.quantity}</TableCell>
+                     <TableCell className="text-xs italic text-muted-foreground">{t.remarks || "—"}</TableCell>
+                   </TableRow>
+                 ))}
+               </TableBody>
+             </Table>
+           </div>
+         )}
       </CardContent>
 
-      {/* Stock IN / OUT Modals */}
+      {/* Modals */}
       {stockInItem && (
         <StockInModal
           open={!!stockInItem}
           setOpen={() => setStockInItem(null)}
           item={stockInItem}
-          suppliers={suppliers}
+          suppliers={currentSuppliers}
           onSave={handleStockInSave}
         />
       )}
-
       {stockOutItem && (
         <StockOutModal
           open={!!stockOutItem}
