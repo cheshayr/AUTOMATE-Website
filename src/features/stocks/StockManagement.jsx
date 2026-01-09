@@ -22,47 +22,35 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Trash2, ArrowUp, ArrowDown, History, Truck } from "lucide-react";
+import { Plus, ArrowUp, ArrowDown, History } from "lucide-react";
 import { useDebounce } from "@uidotdev/usehooks";
 import { toast } from "sonner";
 
 // Modals
 import AddItemModal from "./AddItemModal";
-import AddSupplierModal from "./AddSupplierModal";
-import EditSupplierModal from "./EditSupplierModal";
 import AddCategoryModal from "./AddCategoryModal";
 import DeleteCategoryModal from "./DeleteCategoryModal";
 import DeleteItemModal from "./DeleteItemModal";
 import StockInModal from "./StockInModal";
 import StockOutModal from "./StockOutModal";
+import ProductHistoryModal from "./ProductHistoryModal"; 
 
 // Hooks
-import {
-  useFetchInventory,
-  useFetchItemCategories,
-} from "@/hooks/useInventoryQuery";
+import { useFetchInventory, useFetchItemCategories } from "@/hooks/useInventoryQuery";
 import { useUpdateItem } from "@/hooks/useInventoryMutation";
 import { useFetchSuppliers } from "@/hooks/useSupplierQuery";
-import {
-  useUpdateSupplier,
-  useDeleteSupplier,
-} from "@/hooks/useSupplierMutation";
+import { useCreateTransaction } from "@/hooks/useTransactionMutation"; // Hook we created
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 const StockManagement = () => {
   const [itemCategory, setItemCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-  const [showSuppliers, setShowSuppliers] = useState(false);
-  const [showTransactions, setShowTransactions] = useState(false);
-
-  // Stock IN / OUT modal state
+  
+  // Modal states
   const [stockInItem, setStockInItem] = useState(null);
   const [stockOutItem, setStockOutItem] = useState(null);
-
-  // Transaction history state (Current Session)
-  const [transactions, setTransactions] = useState([]);
+  const [historyItem, setHistoryItem] = useState(null);
 
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
@@ -71,130 +59,83 @@ const StockManagement = () => {
     filter: itemCategory,
     searchQuery: debouncedSearchQuery,
   });
-
   const { data: itemCategoriesData } = useFetchItemCategories();
   const { data: suppliersData } = useFetchSuppliers();
 
   // Mutations
   const { mutateAsync: updateItemMutation } = useUpdateItem();
-  const { mutateAsync: updateSupplierMutation } = useUpdateSupplier();
-  const { mutateAsync: deleteSupplierMutation } = useDeleteSupplier();
-
-  // Memoized Supplier Map for Table display (ID -> Object)
-  const supplierMap = useMemo(() => {
-    const map = {};
-    if (suppliersData?.data) {
-      suppliersData.data.forEach((s) => {
-        const id = s._id || s.id;
-        if (id) map[id] = s;
-      });
-    }
-    return map;
-  }, [suppliersData]);
+  const { mutateAsync: createTransaction } = useCreateTransaction();
 
   const currentSuppliers = suppliersData?.data || [];
   const currentCategories = itemCategoriesData?.data || [];
 
-  // Helper to get Supplier Name properly
-  const getSupplierName = (item) => {
-    if (item.supplier?.companyName) return item.supplier.companyName;
-    const supplierId = item.supplier?._id || item.supplier;
-    if (supplierMap[supplierId]) return supplierMap[supplierId].companyName;
-    return "N/A";
-  };
-
+  // Logic: Status Alert (10 Left Rule)
   const calculateStockStatus = (item) => {
     const totalStock = Number(item.stock) || 0;
-    const threshold = Number(item.lowStockThreshold) || 0;
-    if (totalStock <= 0) return <span className="text-red-600 font-bold">Out of Stock</span>;
-    if (totalStock <= 10) return <span className="text-yellow-600 font-bold">Low Stock</span>;
-    return <span className="text-green-600 font-bold">In Stock</span>;
+    if (totalStock <= 0) return <span className="text-red-600 font-bold px-2 py-1 bg-red-50 rounded text-xs">Out of Stock</span>;
+    if (totalStock <= 10) return <span className="text-yellow-600 font-bold px-2 py-1 bg-yellow-50 rounded text-xs">Low Stock</span>;
+    return <span className="text-green-600 font-bold px-2 py-1 bg-green-50 rounded text-xs">In Stock</span>;
   };
 
-  // Supplier Handlers
-  const handleDeleteSupplier = async (id) => {
-    if (!confirm("Are you sure? This will delete the supplier record.")) return;
-    try {
-      await deleteSupplierMutation(id);
-      toast.success("Supplier deleted!");
-    } catch {
-      toast.error("Failed to delete supplier");
-    }
-  };
-
-  const handleUpdateSupplier = async (updatedSupplier) => {
-    try {
-      const id = updatedSupplier._id || updatedSupplier.id;
-      if (!id) throw new Error("Missing ID");
-      await updateSupplierMutation({ id, ...updatedSupplier });
-    } catch (err) {
-      console.error("Update callback error:", err);
-    }
-  };
-
-  // Stock Movement Handlers
+  // Handler: STOCK IN (Updates Inventory + Saves Log to DB)
   const handleStockInSave = async (data) => {
     if (!stockInItem) return;
     try {
-      const currentStock = Number(stockInItem.stock) || 0;
       const addedQuantity = Number(data.quantity) || 0;
-      const existingSupplierId = stockInItem.supplier?._id || stockInItem.supplier;
       
+      // 1. Update the Main Inventory
       await updateItemMutation({ 
         id: stockInItem._id, 
-        stock: currentStock + addedQuantity,
-        supplier: existingSupplierId 
+        stock: (Number(stockInItem.stock) || 0) + addedQuantity,
+        supplier: stockInItem.supplier?._id || stockInItem.supplier 
       });
 
-      setTransactions((prev) => [
-        {
-          id: Date.now(),
-          itemName: stockInItem.itemName,
-          type: "IN",
-          quantity: addedQuantity,
-          supplierName: getSupplierName(stockInItem),
-          remarks: data.remarks,
-          dateTime: data.dateTime || new Date(),
-        },
-        ...prev,
-      ]);
+      // 2. Create Persistent Log in the Transactions Collection
+      await createTransaction({
+        itemName: stockInItem.itemName,
+        type: "IN",
+        quantity: addedQuantity,
+        remarks: data.remarks || "-",
+        dateTime: new Date(),
+      });
+
       setStockInItem(null);
     } catch (err) {
-      console.error(err);
+      console.error("Stock In failed", err);
     }
   };
 
+  // Handler: STOCK OUT (Updates Inventory + Saves Log to DB)
   const handleStockOutSave = async (data) => {
     if (!stockOutItem) return;
     try {
-      const currentStock = Number(stockOutItem.stock) || 0;
       const removedQuantity = Number(data.quantity) || 0;
-      const newStock = currentStock - removedQuantity;
+      const currentStock = Number(stockOutItem.stock) || 0;
 
-      if (newStock < 0) {
+      if (currentStock - removedQuantity < 0) {
         toast.error("Insufficient stock!");
         return;
       }
 
+      // 1. Update the Main Inventory
       await updateItemMutation({ 
         id: stockOutItem._id, 
-        stock: newStock 
+        stock: currentStock - removedQuantity 
       });
 
-      setTransactions((prev) => [
-        {
-          id: Date.now(),
-          itemName: stockOutItem.itemName,
-          type: "OUT",
-          quantity: removedQuantity,
-          remarks: data.remarks,
-          dateTime: data.dateTime || new Date(),
-        },
-        ...prev,
-      ]);
+      // 2. Create Persistent Log in the Transactions Collection
+      await createTransaction({
+        itemName: stockOutItem.itemName,
+        type: "OUT",
+        quantity: removedQuantity,
+        reason: data.reason, // Sale, Damage, Expired, Return, Adjustment, Transfer
+        remarks: data.remarks,
+        dateTime: new Date(),
+      });
+
       setStockOutItem(null);
     } catch (err) {
-       console.error(err);
+       console.error("Stock Out failed", err);
     }
   };
 
@@ -202,14 +143,14 @@ const StockManagement = () => {
     <Card className="w-full bg-transparent shadow-none border-0">
       <CardHeader>
         <CardTitle className="text-2xl font-bold">Inventory Management</CardTitle>
-        <CardDescription>Track items, categories, and suppliers in real-time.</CardDescription>
+        <CardDescription>Monitor stock levels and view detailed audit logs for every product.</CardDescription>
       </CardHeader>
 
       <CardContent>
-        {/* Filters */}
+        {/* Search & Category Filter */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <Input
-            placeholder="Search item name..."
+            placeholder="Search items..."
             className="flex-1"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -227,83 +168,30 @@ const StockManagement = () => {
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Global Action Buttons */}
         <div className="flex flex-wrap gap-3 mb-8">
           <AddItemModal itemCategories={currentCategories} suppliers={currentSuppliers}>
             <Button><Plus className="mr-2 h-4 w-4" /> Add Product</Button>
           </AddItemModal>
-
-          <AddSupplierModal>
-            <Button variant="outline"><Truck className="mr-2 h-4 w-4" /> Add Supplier</Button>
-          </AddSupplierModal>
-
           <AddCategoryModal>
-            <Button variant="outline"><Plus className="mr-2 h-4 w-4" /> Add Category</Button>
+            <Button variant="outline">Add Category</Button>
           </AddCategoryModal>
-          
           <DeleteCategoryModal itemCategories={currentCategories}>
             <Button variant="ghost" className="text-destructive">Delete Category</Button>
           </DeleteCategoryModal>
-
-          <Button variant="secondary" onClick={() => setShowSuppliers(!showSuppliers)}>
-            {showSuppliers ? "Hide Suppliers" : "Show Suppliers"}
-          </Button>
-
-          <Button variant="secondary" onClick={() => setShowTransactions(!showTransactions)}>
-            {showTransactions ? "Hide Log" : "View Logs"}
-          </Button>
         </div>
 
-        {/* Supplier Directory - UPDATED COLUMNS */}
-        {showSuppliers && (
-          <div className="mb-8 border rounded-lg p-4 bg-slate-50 animate-in fade-in duration-300">
-            <h3 className="font-bold mb-4">Supplier Directory</h3>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Company</TableHead>
-                  <TableHead>Contact Person</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Address</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {currentSuppliers.length > 0 ? currentSuppliers.map((s) => {
-                  const sId = s._id || s.id;
-                  return (
-                    <TableRow key={sId}>
-                      <TableCell className="font-medium">{s.companyName}</TableCell>
-                      <TableCell>{s.contactPerson || "—"}</TableCell>
-                      <TableCell>{s.contactNumber || "—"}</TableCell>
-                      <TableCell className="max-w-[200px] truncate">{s.address || "—"}</TableCell>
-                      <TableCell className="text-right space-x-2">
-                        <EditSupplierModal supplier={s} onSupplierUpdated={handleUpdateSupplier}>
-                          <Button size="icon" variant="ghost"><Edit size={14}/></Button>
-                        </EditSupplierModal>
-                        <Button size="icon" variant="ghost" className="text-destructive" onClick={() => handleDeleteSupplier(sId)}>
-                          <Trash2 size={14}/>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                }) : <TableRow><TableCell colSpan={5} className="text-center">No suppliers registered.</TableCell></TableRow>}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-
-        {/* Inventory Table */}
-        <div className="border rounded-md bg-white">
+        {/* Main Inventory Table */}
+        <div className="border rounded-md bg-white overflow-hidden">
           <Table>
             <TableHeader className="bg-slate-50">
               <TableRow>
-                <TableHead>Item Name</TableHead>
+                <TableHead className="w-[25%]">Item Name</TableHead>
                 <TableHead>Category</TableHead>
-                <TableHead>Supplier</TableHead>
-                <TableHead>Stock</TableHead>
+                <TableHead>Stock Level</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-center">Stock Actions</TableHead>
+                <TableHead className="text-center">Stock Movements</TableHead>
+                <TableHead className="text-right">Audit Trail</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -314,78 +202,68 @@ const StockManagement = () => {
                   <TableRow key={item._id} className="hover:bg-slate-50/50">
                     <TableCell className="font-medium">{item.itemName}</TableCell>
                     <TableCell>{item.category}</TableCell>
-                    <TableCell>{getSupplierName(item)}</TableCell>
                     <TableCell className="font-mono text-lg">{item.stock}</TableCell>
                     <TableCell>{calculateStockStatus(item)}</TableCell>
-                    <TableCell className="flex justify-center gap-2">
+                    
+                    {/* Stock Adjustment Buttons */}
+                    <TableCell className="text-center space-x-2">
                       <Button size="icon" variant="outline" onClick={() => setStockInItem(item)} title="Stock In">
                         <ArrowUp className="h-4 w-4 text-green-600"/>
                       </Button>
                       <Button size="icon" variant="outline" onClick={() => setStockOutItem(item)} title="Stock Out">
                         <ArrowDown className="h-4 w-4 text-red-600"/>
                       </Button>
+                    </TableCell>
+
+                    {/* Per-Product Actions (History & Delete) */}
+                    <TableCell className="text-right space-x-1">
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        onClick={() => setHistoryItem(item)} 
+                        title="View Product Logs"
+                        className="hover:bg-blue-50"
+                      >
+                        <History className="h-4 w-4 text-blue-500" />
+                      </Button>
                       <DeleteItemModal itemName={item.itemName} id={item._id} />
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
-                <TableRow><TableCell colSpan={6} className="text-center py-10">No items found.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center py-10 text-muted-foreground">No inventory records found.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
         </div>
-
-        {/* Log section */}
-        {showTransactions && (
-           <div className="mt-8 border rounded-lg bg-slate-50 p-4 animate-in slide-in-from-bottom-2 duration-300">
-             <h3 className="font-bold mb-4 flex items-center gap-2"><History size={18}/> Recent Activity</h3>
-             <Table>
-               <TableHeader>
-                 <TableRow>
-                   <TableHead>Date</TableHead>
-                   <TableHead>Item</TableHead>
-                   <TableHead>Type</TableHead>
-                   <TableHead>Qty</TableHead>
-                   <TableHead>Remarks</TableHead>
-                 </TableRow>
-               </TableHeader>
-               <TableBody>
-                 {transactions.length === 0 ? <TableRow><TableCell colSpan={5} className="text-center py-4 text-muted-foreground">No recent stock movements.</TableCell></TableRow> :
-                 transactions.map((t) => (
-                   <TableRow key={t.id}>
-                     <TableCell className="text-xs text-muted-foreground">{new Date(t.dateTime).toLocaleString()}</TableCell>
-                     <TableCell className="font-medium">{t.itemName}</TableCell>
-                     <TableCell>
-                       <span className={t.type === "IN" ? "text-green-600 font-bold" : "text-red-600 font-bold"}>
-                         {t.type}
-                       </span>
-                     </TableCell>
-                     <TableCell className="font-semibold">{t.quantity}</TableCell>
-                     <TableCell className="text-xs italic text-muted-foreground">{t.remarks || "—"}</TableCell>
-                   </TableRow>
-                 ))}
-               </TableBody>
-             </Table>
-           </div>
-         )}
       </CardContent>
 
-      {/* Modals */}
+      {/* Stock In Modal Overlay */}
       {stockInItem && (
         <StockInModal
           open={!!stockInItem}
           setOpen={() => setStockInItem(null)}
           item={stockInItem}
-          suppliers={currentSuppliers}
           onSave={handleStockInSave}
         />
       )}
+
+      {/* Stock Out Modal Overlay */}
       {stockOutItem && (
         <StockOutModal
           open={!!stockOutItem}
           setOpen={() => setStockOutItem(null)}
           item={stockOutItem}
           onSave={handleStockOutSave}
+        />
+      )}
+      
+      {/* Persistent History Modal Overlay (Fetches logs from DB) */}
+      {historyItem && (
+        <ProductHistoryModal
+          open={!!historyItem}
+          setOpen={() => setHistoryItem(null)}
+          itemName={historyItem.itemName}
         />
       )}
     </Card>
