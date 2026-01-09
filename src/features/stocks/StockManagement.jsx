@@ -189,7 +189,7 @@ const StockManagement = () => {
                 <TableHead>Category</TableHead>
                 <TableHead>Stock Level</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-center">Stock Movements</TableHead>
+                <TableHead className="text-center">Stock Control</TableHead>
                 <TableHead className="text-right">Audit Trail</TableHead>
               </TableRow>
             </TableHeader>
@@ -204,15 +204,30 @@ const StockManagement = () => {
                     <TableCell className="font-mono text-lg">{item.stock}</TableCell>
                     <TableCell>{calculateStockStatus(item)}</TableCell>
                     
-                    {/* Stock Adjustment Buttons */}
-                    <TableCell className="text-center space-x-2">
-                      <Button size="icon" variant="outline" onClick={() => setStockInItem(item)} title="Stock In">
-                        <ArrowUp className="h-4 w-4 text-green-600"/>
-                      </Button>
-                      <Button size="icon" variant="outline" onClick={() => setStockOutItem(item)} title="Stock Out">
-                        <ArrowDown className="h-4 w-4 text-red-600"/>
-                      </Button>
-                    </TableCell>
+                    {/* Stock Adjustment Buttons - Now with Text labels */}
+<TableCell className="text-center">
+  <div className="flex justify-center gap-2">
+    <Button 
+      size="sm" 
+      variant="outline" 
+      onClick={() => setStockInItem(item)} 
+      className="h-8 px-3 border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 font-bold text-[11px] uppercase tracking-wider"
+    >
+      <ArrowUp className="mr-1 h-3 w-3" />
+      In
+    </Button>
+    
+    <Button 
+      size="sm" 
+      variant="outline" 
+      onClick={() => setStockOutItem(item)} 
+      className="h-8 px-3 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800 font-bold text-[11px] uppercase tracking-wider"
+    >
+      <ArrowDown className="mr-1 h-3 w-3" />
+      Out
+    </Button>
+  </div>
+</TableCell>
 
                     {/* Per-Product Actions (History & Delete) */}
                     <TableCell className="text-right space-x-1">
