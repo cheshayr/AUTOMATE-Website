@@ -24,6 +24,12 @@ import AdminAnalytics from './features/analytics/AdminAnalytics.jsx';
 import Feedbacks from './features/Feedbacks.jsx';
 import { Toaster } from './components/ui/sonner.jsx';
 import Reports from './pages/reports/Reports.jsx';
+import SuppliersPage from "./features/suppliers/SuppliersPage.jsx";
+
+
+
+
+
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuthContext();
@@ -73,6 +79,15 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/suppliers"
+              element={
+                <ProtectedRoute>
+                  <SuppliersPage />
+                </ProtectedRoute>
+              }
+            />
+
             <Route
               path="/user"
               element={

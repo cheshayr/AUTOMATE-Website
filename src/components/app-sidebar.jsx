@@ -39,6 +39,8 @@ import {
 import { useAuthContext } from '@/context/AuthContext';
 import { NavLink } from 'react-router-dom';
 import { Nav } from 'react-day-picker';
+import { Truck } from "lucide-react";
+
 
 const data = {
   navSecondary: [
@@ -58,6 +60,7 @@ const data = {
     { url: '/appointments', icon: Calendar, name: 'Appointments' },
     { url: '/services', icon: Wrench, name: 'Services' },
     { url: '/inventory', icon: Package, name: 'Inventory' },
+    { url: "/suppliers", icon: Truck, name: "Suppliers" },
     { url: '/user', icon: Users, name: 'User Management' },
     { url: '/feedbacks', icon: MessageCircle, name: 'Feedbacks' },
     { url: '/analytics', icon: BarChart2, name: 'Analytics' },
