@@ -79,31 +79,30 @@ const StockManagement = () => {
 
   // Handler: STOCK IN (Updates Inventory + Saves Log to DB)
   const handleStockInSave = async (data) => {
-    if (!stockInItem) return;
-    try {
-      const addedQuantity = Number(data.quantity) || 0;
-      
-      // 1. Update the Main Inventory
-      await updateItemMutation({ 
-        id: stockInItem._id, 
-        stock: (Number(stockInItem.stock) || 0) + addedQuantity,
-        supplier: stockInItem.supplier?._id || stockInItem.supplier 
-      });
+  if (!stockInItem) return;
+  try {
+    const addedQuantity = Number(data.quantity) || 0;
+    
+    await updateItemMutation({ 
+      id: stockInItem._id, 
+      stock: (Number(stockInItem.stock) || 0) + addedQuantity,
+      supplier: stockInItem.supplier?._id || stockInItem.supplier 
+    });
 
-      // 2. Create Persistent Log in the Transactions Collection
-      await createTransaction({
-        itemName: stockInItem.itemName,
-        type: "IN",
-        quantity: addedQuantity,
-        remarks: data.remarks || "-",
-        dateTime: new Date(),
-      });
+    await createTransaction({
+      itemName: stockInItem.itemName,
+      type: "IN",
+      quantity: addedQuantity,
+      reason: "Restock",
+      remarks: data.remarks || "Stock In", 
+      dateTime: new Date(),
+    });
 
-      setStockInItem(null);
-    } catch (err) {
-      console.error("Stock In failed", err);
-    }
-  };
+    setStockInItem(null);
+  } catch (err) {
+    console.error("Stock In failed", err);
+  }
+};
 
   // Handler: STOCK OUT (Updates Inventory + Saves Log to DB)
   const handleStockOutSave = async (data) => {
@@ -128,7 +127,7 @@ const StockManagement = () => {
         itemName: stockOutItem.itemName,
         type: "OUT",
         quantity: removedQuantity,
-        reason: data.reason, // Sale, Damage, Expired, Return, Adjustment, Transfer
+        reason: data.reason, 
         remarks: data.remarks,
         dateTime: new Date(),
       });
