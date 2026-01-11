@@ -24,6 +24,7 @@ import {
   ArrowUp,
   ArrowDown,
   Search,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useDebounce } from "@uidotdev/usehooks";
@@ -33,6 +34,12 @@ import EditSupplierModal from "./EditSupplierModal";
 import { useFetchSuppliers } from "@/hooks/useSupplierQuery";
 import { useDeleteSupplier } from "@/hooks/useSupplierMutation";
 import LoadingSpinner from "@/components/LoadingSpinner";
+
+// 🔹 PDF EXPORT
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { format } from "date-fns";
+import logo from "@/assets/logo.png";
 
 const ITEMS_PER_PAGE = 8;
 const SORTABLE_COLUMNS = ["companyName", "contactPerson", "email"];
@@ -47,6 +54,8 @@ const SuppliersManagement = () => {
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [preparedBy, setPreparedBy] = useState("");
+  const [exportScope, setExportScope] = useState("page"); // page | all
 
   const [sortConfig, setSortConfig] = useState({
     key: "companyName",
@@ -124,7 +133,6 @@ const SuppliersManagement = () => {
     }));
   };
 
-  // SEARCH BUTTON → EMPTY = SHOW ALL
   const handleSearch = () => {
     setSearchQuery(searchInput.trim());
     setCurrentPage(1);
@@ -153,6 +161,67 @@ const SuppliersManagement = () => {
     );
   };
 
+  // =============================
+  // 🔹 EXPORT PDF
+  // =============================
+  const handleExportPDF = () => {
+    if (!preparedBy.trim()) {
+      toast.error('Please enter "Prepared By" before exporting.');
+      return;
+    }
+
+    const exportData =
+      exportScope === "all" ? sortedSuppliers : paginatedSuppliers;
+
+    if (exportData.length === 0) {
+      toast.error("No suppliers to export.");
+      return;
+    }
+
+    const doc = new jsPDF();
+    const exportedAt = format(new Date(), "MMM dd, yyyy • hh:mm a");
+
+    doc.addImage(logo, "PNG", 14, 5, 35, 35);
+
+    doc.setFontSize(16);
+    doc.text("Suppliers Report", 60, 22);
+
+    doc.setFontSize(10);
+    doc.text(`Prepared By: ${preparedBy}`, 14, 45);
+    doc.text(`Exported On: ${exportedAt}`, 14, 52);
+    doc.text(
+      `Scope: ${
+        exportScope === "all" ? "All Suppliers" : "Current Page"
+      }`,
+      14,
+      59
+    );
+
+    autoTable(doc, {
+      head: [
+        [
+          "Company Name",
+          "Contact Person",
+          "Email",
+          "Contact Number",
+          "Address",
+        ],
+      ],
+      body: exportData.map((s) => [
+        s.companyName || "N/A",
+        s.contactPerson || "N/A",
+        s.email || "N/A",
+        s.contactNumber || "N/A",
+        s.address || "N/A",
+      ]),
+      startY: 65,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [71, 85, 105] },
+    });
+
+    doc.save(`suppliers_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  };
+
   const SortIcon = ({ column }) =>
     sortConfig.key === column ? (
       sortConfig.direction === "asc" ? (
@@ -171,14 +240,14 @@ const SuppliersManagement = () => {
 
       <CardContent>
         {/* TOOLBAR */}
-        <div className="mb-6">
-          <div className="flex flex-col lg:flex-row gap-3 items-stretch max-w-4xl">
+        <div className="mb-6 flex flex-wrap justify-between items-end gap-4">
+          <div className="flex flex-1 gap-3 max-w-3xl">
             <Input
               placeholder="Search suppliers..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              className="h-10 flex-1"
+              className="h-10"
             />
 
             <Button onClick={handleSearch} className="h-10 px-4 flex gap-2">
@@ -193,6 +262,34 @@ const SuppliersManagement = () => {
               </Button>
             </AddSupplierModal>
           </div>
+
+          {/* EXPORT */}
+          <div className="flex items-end gap-2">
+            <Input
+              placeholder="Prepared By"
+              value={preparedBy}
+              onChange={(e) => setPreparedBy(e.target.value)}
+              className="h-10 w-48"
+            />
+
+            <select
+              value={exportScope}
+              onChange={(e) => setExportScope(e.target.value)}
+              className="h-10 px-2 border rounded-md bg-background text-sm"
+            >
+              <option value="page">Current Page</option>
+              <option value="all">All Filtered</option>
+            </select>
+
+            <Button
+              variant="outline"
+              onClick={handleExportPDF}
+              className="h-10 px-4"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export PDF
+            </Button>
+          </div>
         </div>
 
         {/* TABLE */}
@@ -200,22 +297,13 @@ const SuppliersManagement = () => {
           <Table>
             <TableHeader className="bg-slate-50">
               <TableRow>
-                <TableHead
-                  onClick={() => handleSort("companyName")}
-                  className="cursor-pointer"
-                >
+                <TableHead onClick={() => handleSort("companyName")} className="cursor-pointer">
                   Company Name <SortIcon column="companyName" />
                 </TableHead>
-                <TableHead
-                  onClick={() => handleSort("contactPerson")}
-                  className="cursor-pointer"
-                >
+                <TableHead onClick={() => handleSort("contactPerson")} className="cursor-pointer">
                   Contact Person <SortIcon column="contactPerson" />
                 </TableHead>
-                <TableHead
-                  onClick={() => handleSort("email")}
-                  className="cursor-pointer"
-                >
+                <TableHead onClick={() => handleSort("email")} className="cursor-pointer">
                   Email <SortIcon column="email" />
                 </TableHead>
                 <TableHead>Contact Number</TableHead>
@@ -268,10 +356,7 @@ const SuppliersManagement = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="py-16 text-center text-muted-foreground"
-                  >
+                  <TableCell colSpan={6} className="py-16 text-center text-muted-foreground">
                     No suppliers found.
                   </TableCell>
                 </TableRow>
