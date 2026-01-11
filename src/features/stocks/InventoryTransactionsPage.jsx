@@ -45,10 +45,16 @@ const formatDateTimePH = (date) =>
 const InventoryTransactionsPage = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize] = useState(10);
+
   const [dateFrom, setDateFrom] = useState(null);
   const [dateTo, setDateTo] = useState(null);
+
   const [dateFromOpen, setDateFromOpen] = useState(false);
+  const [dateToOpen, setDateToOpen] = useState(false);
+
+  const [preparedBy, setPreparedBy] = useState("");
+  const [exportScope, setExportScope] = useState("page"); // "page" or "all"
 
   const debouncedSearch = useDebounce(search, 400);
 
@@ -62,17 +68,14 @@ const InventoryTransactionsPage = () => {
   const filteredTransactions = useMemo(() => {
     return transactions.filter((tx) => {
       const txDate = new Date(tx.dateTime);
-
       if (dateFrom && txDate < dateFrom) return false;
       if (dateTo && txDate > dateTo) return false;
-
       return true;
     });
   }, [transactions, dateFrom, dateTo]);
 
   /* ================= PAGINATION ================= */
   const totalPages = Math.ceil(filteredTransactions.length / pageSize);
-
   const paginatedData = useMemo(() => {
     const start = (page - 1) * pageSize;
     return filteredTransactions.slice(start, start + pageSize);
@@ -80,6 +83,19 @@ const InventoryTransactionsPage = () => {
 
   /* ================= PDF EXPORT ================= */
   const handleExportPDF = () => {
+    if (!preparedBy.trim()) {
+      alert('Please enter "Prepared By" before exporting.');
+      return;
+    }
+
+    const dataToExport =
+      exportScope === "all" ? filteredTransactions : paginatedData;
+
+    if (!dataToExport.length) {
+      alert("No transactions available to export.");
+      return;
+    }
+
     const doc = new jsPDF();
     const exportedAt = format(new Date(), "MMM dd, yyyy • hh:mm a");
 
@@ -89,7 +105,13 @@ const InventoryTransactionsPage = () => {
     doc.text("Inventory Transaction History", 50, 20);
 
     doc.setFontSize(10);
-    doc.text(`Exported On: ${exportedAt}`, 14, 45);
+    doc.text(`Prepared By: ${preparedBy}`, 14, 45);
+    doc.text(`Exported On: ${exportedAt}`, 14, 52);
+    doc.text(
+      `Export Scope: ${exportScope === "all" ? "All Transactions" : "Current Page"}`,
+      14,
+      59
+    );
 
     if (dateFrom || dateTo) {
       doc.text(
@@ -97,12 +119,12 @@ const InventoryTransactionsPage = () => {
           dateFrom ? format(dateFrom, "MMM dd, yyyy") : ""
         } - ${dateTo ? format(dateTo, "MMM dd, yyyy") : ""}`,
         14,
-        52
+        66
       );
     }
 
     autoTable(doc, {
-      startY: 60,
+      startY: 75,
       head: [
         [
           "ID",
@@ -115,14 +137,11 @@ const InventoryTransactionsPage = () => {
           "Remarks",
         ],
       ],
-      body: filteredTransactions.map((tx) => [
+      body: dataToExport.map((tx) => [
         tx._id,
         formatDateTimePH(tx.dateTime),
         tx.itemName,
-        tx.supplier?.supplierName ||
-          tx.supplierName ||
-          tx.item?.supplier?.supplierName ||
-          "-",
+        tx.supplier?.supplierName || tx.supplierName || "-",
         tx.reason || "-",
         tx.type,
         tx.quantity,
@@ -149,11 +168,12 @@ const InventoryTransactionsPage = () => {
       </CardHeader>
 
       <CardContent>
-        {/* Filters */}
-        <div className="flex flex-wrap gap-4 mb-6 items-end">
+        {/* Filters & Export */}
+        <div className="flex flex-wrap gap-2 mb-6 items-end w-full">
+          {/* Search */}
           <Input
             placeholder="Search item, supplier, purpose..."
-            className="max-w-sm"
+            className="h-10 max-w-xs"
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -161,13 +181,11 @@ const InventoryTransactionsPage = () => {
             }}
           />
 
-          {/* Date Range */}
+          {/* Date From */}
           <Popover open={dateFromOpen} onOpenChange={setDateFromOpen}>
             <PopoverTrigger asChild>
-              <Button variant="outline">
-                {dateFrom
-                  ? format(dateFrom, "MMM dd, yyyy")
-                  : "Date From"}
+              <Button variant="outline" className="h-10">
+                {dateFrom ? format(dateFrom, "MMM dd, yyyy") : "Date From"}
                 <ChevronDown className="ml-2 h-4 w-4" />
               </Button>
             </PopoverTrigger>
@@ -183,15 +201,46 @@ const InventoryTransactionsPage = () => {
             </PopoverContent>
           </Popover>
 
-          <Button variant="outline" disabled>
-            {dateTo ? format(dateTo, "MMM dd, yyyy") : "Date To"}
-          </Button>
+          {/* Date To */}
+          <Popover open={dateToOpen} onOpenChange={setDateToOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="h-10">
+                {dateTo ? format(dateTo, "MMM dd, yyyy") : "Date To"}
+                <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0">
+              <Calendar
+                mode="single"
+                selected={dateTo}
+                onSelect={(date) => {
+                  setDateTo(date);
+                  setDateToOpen(false);
+                }}
+              />
+            </PopoverContent>
+          </Popover>
 
-          <Button
-            variant="outline"
-            onClick={handleExportPDF}
-            className="ml-auto"
+          {/* Prepared By */}
+          <Input
+            placeholder="Prepared By"
+            value={preparedBy}
+            onChange={(e) => setPreparedBy(e.target.value)}
+            className="h-10 w-36"
+          />
+
+          {/* Export Scope */}
+          <select
+            value={exportScope}
+            onChange={(e) => setExportScope(e.target.value)}
+            className="h-10 px-3 border rounded-md text-sm bg-background"
           >
+            <option value="page">Current Page</option>
+            <option value="all">All Transactions</option>
+          </select>
+
+          {/* Export Button */}
+          <Button variant="outline" onClick={handleExportPDF} className="h-10">
             <Download className="h-4 w-4 mr-2" />
             Export PDF
           </Button>
@@ -226,18 +275,10 @@ const InventoryTransactionsPage = () => {
                     key={tx._id}
                     className={i % 2 === 0 ? "bg-slate-50/40" : ""}
                   >
-                    <TableCell className="font-mono text-xs">
-                      {tx._id}
-                    </TableCell>
+                    <TableCell className="font-mono text-xs">{tx._id}</TableCell>
                     <TableCell>{formatDateTimePH(tx.dateTime)}</TableCell>
-                    <TableCell className="font-medium">
-                      {tx.itemName}
-                    </TableCell>
-                    <TableCell>
-                      {tx.supplier?.supplierName ||
-                        tx.supplierName ||
-                        "-"}
-                    </TableCell>
+                    <TableCell className="font-medium">{tx.itemName}</TableCell>
+                    <TableCell>{tx.supplier?.supplierName || tx.supplierName || "-"}</TableCell>
                     <TableCell>{tx.reason || "-"}</TableCell>
                     <TableCell className="text-center">
                       <Badge
@@ -250,9 +291,7 @@ const InventoryTransactionsPage = () => {
                         {tx.type}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-center font-mono">
-                      {tx.quantity}
-                    </TableCell>
+                    <TableCell className="text-center font-mono">{tx.quantity}</TableCell>
                     <TableCell>{tx.remarks || "-"}</TableCell>
                   </TableRow>
                 ))
