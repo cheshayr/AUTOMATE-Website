@@ -25,6 +25,7 @@ import Feedbacks from './features/Feedbacks.jsx';
 import { Toaster } from './components/ui/sonner.jsx';
 import Reports from './pages/reports/Reports.jsx';
 import SuppliersPage from "./features/suppliers/SuppliersPage.jsx";
+import InventoryTransactionsPage from "./features/stocks/InventoryTransactionsPage.jsx";
 
 
 
@@ -120,6 +121,15 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/inventory/transactions"
+              element={
+                <ProtectedRoute>
+                  <InventoryTransactionsPage />
+                </ProtectedRoute>
+              }
+            />
+
             <Route
               path="/activities"
               element={
