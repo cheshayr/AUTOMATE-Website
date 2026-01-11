@@ -206,11 +206,12 @@ const UserManagement = () => {
             <select
               value={exportScope}
               onChange={(e) => setExportScope(e.target.value)}
-              className="border rounded-md px-2 py-1 text-sm"
+              className="h-9 px-3 border rounded-md text-sm bg-background"
             >
               <option value="page">Current Page</option>
               <option value="all">All Users</option>
             </select>
+
 
             <Button variant="outline" onClick={handleExportUsersPDF}>
               <Download className="h-4 w-4 mr-2" />
