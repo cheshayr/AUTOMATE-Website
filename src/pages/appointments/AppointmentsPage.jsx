@@ -26,6 +26,7 @@ import {
   Table,
   Timer,
   Upload,
+  Download,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -35,6 +36,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  
 } from '@/components/ui/dropdown-menu';
 import AppointmentsDataTable from './components/DataTable';
 import { useAppointments, useGetAppointmentSummary } from '@/hooks/useAppointments.query';
@@ -57,6 +59,20 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import AppointmentSheet from './components/AppointmentSheet';
 import { toast } from 'sonner';
 import UploadInvoice from './components/UploadInvoice';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { format } from 'date-fns';
+import logoImage from '../../assets/logo.png'; // <-- adjust path to your logo
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'; // <-- THIS IS MISSING
+ // <--- THIS WAS MISSING
+
 
 const status = ['Pending Visit', 'Ongoing Repair', 'Billing', 'Completed', 'Cancelled'];
 
@@ -87,13 +103,25 @@ const AppointmentsPage = () => {
   const { data: users } = useFetchUsers('', 'staff');
   const isAdmin = user?.role === 'admin';
   const appointments = data?.appointments || [];
-  const staff = users?.data || [];
+const [statusFilter, setStatusFilter] = useState('All'); 
+const [preparedBy, setPreparedBy] = useState(''); // For PDF report
+// <-- move this up BEFORE filteredAppointments
+
+const filteredAppointments =
+  statusFilter === 'All'
+    ? appointments
+    : appointments.filter((a) => a.status === statusFilter);
+
+const staff = users?.data || [];
+
   console.log({ user });
   const [date, setDate] = useState(new Date());
   const [staffList, setStaffList] = useState([]); // Initialize as empty array
   const [vehicleList, setVehicleList] = useState([appointments?.vehicle]);
   const [loading, setLoading] = useState(true);
   const [invoiceFile, setInvoiceFile] = useState(null); // No type annotation
+
+
 
   useEffect(() => {
     if (users?.data) {
@@ -228,6 +256,51 @@ const AppointmentsPage = () => {
 
     await uploadInvoiceMutation({ id: selectedAppointment, updatedData: formData });
   };
+
+  const handleExportPDF = () => {
+    if (!preparedBy.trim()) {
+      toast.error('Please enter who prepared the report.');
+      return;
+    }
+  
+    const doc = new jsPDF();
+    const exportedAt = format(new Date(), 'MMM dd, yyyy • hh:mm a');
+  
+    // --- ADD LOGO ---
+    doc.addImage(logoImage, 'PNG', 14, 10, 40, 40); // x=14, y=10, width=40, height=40
+    // ----------------
+  
+    // Title next to logo
+    doc.setFontSize(16);
+    doc.text('Appointments Report', 60, 25); // Adjust X/Y so it sits nicely next to logo
+  
+    doc.setFontSize(10);
+    doc.text(`Status Filter: ${statusFilter}`, 14, 55);
+    doc.text(`Prepared By: ${preparedBy}`, 14, 62);
+    doc.text(`Exported On: ${exportedAt}`, 14, 68);
+  
+    autoTable(doc, {
+      startY: 75, // start below the logo
+      head: [['Ref #', 'Customer', 'Vehicle', 'Services', 'Status', 'Scheduled Time']],
+      body: filteredAppointments.map((a) => [
+        a.refNo || '-',
+        a.name || '-',
+        a.vehicle
+          ? `${a.vehicle?.brand || '-'} ${a.vehicle?.model || '-'} (${a.vehicle?.year || '-'})`
+          : '-',
+        a.services?.map((s) => s?.service?.name || '-').join(', ') || '-',
+        a.status || '-',
+        a.scheduledTime ? new Date(a.scheduledTime).toLocaleString() : '-',
+      ]),
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [71, 85, 105] },
+    });
+  
+    doc.save(`appointments_report_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+    toast.success('Appointments report exported successfully');
+  };
+  
+  
 
   const columns = [
     {
@@ -403,6 +476,51 @@ const AppointmentsPage = () => {
             <CardDescription className="line-clamp-3">
               Manage your appointments efficiently. You can view, edit, or delete existing appointments as needed.
             </CardDescription>
+            <div className="flex items-end gap-4 mt-4">
+            {/* LEFT: Status Filter and Prepared By */}
+            <div className="flex items-end gap-2">
+              {/* Status Filter */}
+              <div>
+                <Label>Status Filter</Label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="h-9 w-[140px]">
+                    <SelectValue placeholder="Select Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="All">All Status</SelectItem>
+                      {status.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Prepared By */}
+              <div>
+                <Label>Prepared By</Label>
+                <Input
+                  value={preparedBy}
+                  onChange={(e) => setPreparedBy(e.target.value)}
+                  placeholder="Enter your name"
+                  className="h-9 w-[180px]"
+                />
+              </div>
+            </div>
+
+            {/* RIGHT: Export Button */}
+            <Button variant="outline" onClick={handleExportPDF} className="h-9 px-4">
+              <Download className="h-4 w-4 mr-2" />
+              Export to PDF
+            </Button>
+          </div>
+
+
+
+
             <CardAction>
               <TabsList>
                 <TabsTrigger value="table">
@@ -421,7 +539,7 @@ const AppointmentsPage = () => {
               ))}
             </div>
             <TabsContent value="table">
-              <DataTable columns={columns} data={appointments} className="flex-1" />
+              <DataTable columns={columns} data={filteredAppointments} className="flex-1" />
             </TabsContent>
             <TabsContent value="calendar">
               <Appointments />
