@@ -61,9 +61,16 @@ const data = {
     { url: '/dashboard', icon: Home, name: 'Dashboard' },
     { url: '/appointments', icon: Calendar, name: 'Appointments' },
     { url: '/services', icon: Wrench, name: 'Services' },
-    { url: '/inventory', icon: Package, name: 'Inventory' },
-    { url: '/inventory/transactions', icon: History, name: 'Transactions' },
-    { url: "/suppliers", icon: Truck, name: "Suppliers" },
+    {
+      name: 'Stock Management',
+      icon: Package,
+      children: [
+        { url: '/inventory', name: 'Inventory', icon: Package },
+        { url: '/inventory/transactions', name: 'Transactions', icon: History },
+        { url: '/suppliers', name: 'Suppliers', icon: Truck },
+      ],
+    },
+    
     { url: '/user', icon: Users, name: 'User Management' },
     { url: '/feedbacks', icon: MessageCircle, name: 'Feedbacks' },
     { url: '/analytics', icon: BarChart2, name: 'Analytics' },
