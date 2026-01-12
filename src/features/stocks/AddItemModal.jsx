@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAddItem } from "@/hooks/useInventoryMutation";
+import { useCreateTransaction } from "@/hooks/useTransactionMutation"; // IMPORTANT: Add this hook
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { toast } from "sonner";
 
@@ -28,9 +29,8 @@ function AddItemModal({ itemCategories, suppliers }) {
   const [itemDetails, setItemDetails] = useState({
     itemName: "",
     category: "",
-    supplier: "",
+    supplier: "", // This stores the ID from the dropdown
     stock: 0,
-    price: 0,
     lowStockThreshold: 10,
   });
 
@@ -43,6 +43,8 @@ function AddItemModal({ itemCategories, suppliers }) {
     reset: resetAddItemMutation 
   } = useAddItem();
 
+  const { mutateAsync: createTransaction } = useCreateTransaction();
+
   useEffect(() => {
     if (addItemMutationSuccess) {
       setIsOpen(false);
@@ -51,10 +53,8 @@ function AddItemModal({ itemCategories, suppliers }) {
         category: "",
         supplier: "",
         stock: 0,
-        price: 0,
         lowStockThreshold: 10,
       });
-      toast.success("Item added successfully!");
       resetAddItemMutation();
     }
   }, [addItemMutationSuccess, resetAddItemMutation]);
@@ -66,12 +66,36 @@ function AddItemModal({ itemCategories, suppliers }) {
       return;
     }
 
-    await addItemMutation({
-      ...itemDetails,
-      stock: Number(itemDetails.stock),
-      price: Number(itemDetails.price),
-      lowStockThreshold: Number(itemDetails.lowStockThreshold),
-    });
+    try {
+      // 1. Find the Actual Company Name from the suppliers list using the ID
+      const selectedSupplier = suppliers?.find(s => s._id === itemDetails.supplier);
+      const companyName = selectedSupplier ? selectedSupplier.companyName : "Unknown";
+
+      // 2. Add the Item to Inventory
+      await addItemMutation({
+        ...itemDetails,
+        stock: Number(itemDetails.stock),
+        lowStockThreshold: Number(itemDetails.lowStockThreshold),
+      });
+
+      // 3. Create the Transaction (This makes it show up in the History Modal)
+      if (Number(itemDetails.stock) > 0) {
+        await createTransaction({
+          itemName: itemDetails.itemName,
+          supplierName: companyName, // Sending the string name, not the ID
+          type: "IN",
+          quantity: Number(itemDetails.stock),
+          reason: "Initial Stock",
+          remarks: "Product Registration",
+          dateTime: new Date(),
+        });
+      }
+      
+      toast.success("Item added and transaction recorded!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Error saving product.");
+    }
   };
 
   return (
@@ -87,8 +111,6 @@ function AddItemModal({ itemCategories, suppliers }) {
         </DialogHeader>
         <form onSubmit={handleSave}>
           <div className="grid gap-4 mb-4 pt-4">
-            
-            {/* ITEM NAME */}
             <div className="grid gap-2">
               <Label htmlFor="name">Item Name</Label>
               <Input
@@ -99,38 +121,28 @@ function AddItemModal({ itemCategories, suppliers }) {
               />
             </div>
 
-            {/* Category Dropdown */}
-<div className="grid gap-2">
-  <Label htmlFor="category">Category</Label>
-  <Select
-    value={itemDetails.category}
-    onValueChange={(val) => setItemDetails({ ...itemDetails, category: val })}
-    required
-  >
-    <SelectTrigger className="w-full">
-      <SelectValue placeholder="Select a category" />
-    </SelectTrigger>
-    <SelectContent>
-      <SelectGroup>
-        {/* We check if it's an array and has items */}
-        {Array.isArray(itemCategories) && itemCategories.length > 0 ? (
-          itemCategories.map((cat) => (
-            <SelectItem key={cat._id || cat.id} value={cat.categoryName}>
-              {cat.categoryName}
-            </SelectItem>
-          ))
-        ) : (
-          <SelectItem disabled value="none">
-            {/* If you see this, the data isn't reaching the modal */}
-            No categories found in system
-          </SelectItem>
-        )}
-      </SelectGroup>
-    </SelectContent>
-  </Select>
-</div>
+            <div className="grid gap-2">
+              <Label htmlFor="category">Category</Label>
+              <Select
+                value={itemDetails.category}
+                onValueChange={(val) => setItemDetails({ ...itemDetails, category: val })}
+                required
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {itemCategories?.map((cat) => (
+                      <SelectItem key={cat._id} value={cat.categoryName}>
+                        {cat.categoryName}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
 
-            {/* SUPPLIER DROPDOWN */}
             <div className="grid gap-2">
               <Label htmlFor="supplier">Supplier</Label>
               <Select
@@ -153,7 +165,6 @@ function AddItemModal({ itemCategories, suppliers }) {
               </Select>
             </div>
 
-            {/* STOCK & PRICE */}
             <div className="grid gap-2">
               <Label htmlFor="stock">Initial Stock</Label>
               <Input
@@ -161,17 +172,6 @@ function AddItemModal({ itemCategories, suppliers }) {
                 type="number"
                 value={itemDetails.stock}
                 onChange={(e) => setItemDetails({ ...itemDetails, stock: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="price">Price</Label>
-              <Input
-                id="price"
-                type="number"
-                value={itemDetails.price}
-                onChange={(e) => setItemDetails({ ...itemDetails, price: e.target.value })}
                 required
               />
             </div>

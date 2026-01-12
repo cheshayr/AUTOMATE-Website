@@ -20,14 +20,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Calendar, Clock, FilterX } from "lucide-react";
+import { Calendar, Clock, FilterX, ArrowRight, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFetchTransactions } from "@/hooks/useTransactionQuery";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
-const ProductHistoryModal = ({ open, setOpen, itemName }) => {
-  const { data: transactionData, isLoading } = useFetchTransactions(itemName);
+const ProductHistoryModal = ({ open, setOpen, itemName, supplierName }) => {
+  // FIXED: Passing itemName inside an object to match your hook's requirements
+  const { data: transactionData, isLoading } = useFetchTransactions({ itemName });
   
   const logs = useMemo(() => {
     if (Array.isArray(transactionData)) return transactionData;
@@ -36,89 +36,84 @@ const ProductHistoryModal = ({ open, setOpen, itemName }) => {
   }, [transactionData]);
 
   const [selectedReason, setSelectedReason] = useState("All");
-  const [selectedDate, setSelectedDate] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
-  // Reasons list: Removed "Stock Replenishment", added "Restock"
   const reasonsList = ["Sale", "Damage", "Adjustment", "Expired", "Restock"];
 
+  const resolvedCompanyName = useMemo(() => {
+    if (supplierName) return supplierName;
+    const firstLog = logs[0];
+    return (
+      firstLog?.supplierName || 
+      firstLog?.companyName || 
+      firstLog?.supplier?.companyName || 
+      "N/A"
+    );
+  }, [supplierName, logs]);
+
   const filteredLogs = useMemo(() => {
-  return logs.filter((log) => {
-    // Reason Filter Logic
-    const matchesReason = selectedReason === "All" 
-      ? true 
-      : (
-          log.reason === selectedReason || 
-          log.remarks === selectedReason ||
-          (selectedReason === "Restock" && log.type === "IN") 
-        );
+    return logs.filter((log) => {
+      const matchesReason = selectedReason === "All" 
+        ? true 
+        : (log.reason === selectedReason || (selectedReason === "Restock" && log.type === "IN"));
 
-    // Date Filter Logic
-    const logDate = log.dateTime ? new Date(log.dateTime).toISOString().split('T')[0] : "";
-    const matchesDate = selectedDate ? logDate === selectedDate : true;
+      const logDate = log.dateTime ? new Date(log.dateTime).toISOString().split('T')[0] : "";
+      let matchesDate = true;
+      if (dateFrom && logDate < dateFrom) matchesDate = false;
+      if (dateTo && logDate > dateTo) matchesDate = false;
 
-    return matchesReason && matchesDate;
-  });
-}, [logs, selectedReason, selectedDate]);
+      return matchesReason && matchesDate;
+    });
+  }, [logs, selectedReason, dateFrom, dateTo]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-5xl max-h-[85vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl font-bold border-b pb-4">
+        <DialogHeader className="border-b pb-4">
+          <DialogTitle className="flex items-center gap-2 text-xl font-bold">
             <Clock className="h-5 w-5 text-blue-600" />
-            Audit Trail: <span className="text-blue-600 font-mono">{itemName}</span>
+            Audit Trail: <span className="text-slate-700 font-normal ml-1">{itemName}</span>
           </DialogTitle>
+          
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1 ml-7">
+            <Building2 className="h-3.5 w-3.5 text-blue-500" />
+            <span className="font-semibold">Supplier/Company:</span>
+            <span className="text-slate-600">{resolvedCompanyName}</span>
+          </div>
         </DialogHeader>
 
-        <div className="flex flex-col md:flex-row gap-4 my-4">
-          <div className="flex-1">
+        <div className="flex flex-col md:flex-row items-end gap-4 my-4">
+          <div className="flex-1 w-full">
+            <label className="text-[10px] font-bold uppercase text-slate-500 ml-1 mb-1 block">Filter by Reason</label>
             <Select value={selectedReason} onValueChange={setSelectedReason}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Reason" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="All">All Reasons</SelectItem>
-                {reasonsList.map((reason) => (
-                  <SelectItem key={reason} value={reason}>{reason}</SelectItem>
-                ))}
+                {reasonsList.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <input
-                type="date"
-                className="flex h-10 w-full md:w-[180px] rounded-md border border-input bg-background px-9 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-              />
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-bold uppercase text-slate-500 ml-1 block">Date Range</label>
+            <div className="flex items-center gap-2">
+              <input type="date" className="h-10 rounded-md border px-3 text-xs" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+              <ArrowRight className="h-4 w-4 text-slate-400" />
+              <input type="date" className="h-10 rounded-md border px-3 text-xs" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
             </div>
-
-            {(selectedReason !== "All" || selectedDate) && (
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={() => { setSelectedReason("All"); setSelectedDate(""); }}
-                className="text-red-500 border-red-200 hover:bg-red-50"
-                title="Clear Filters"
-              >
-                <FilterX className="h-4 w-4" />
-              </Button>
-            )}
           </div>
         </div>
 
-        <div className="flex-1 border rounded-lg overflow-hidden bg-white shadow-inner">
+        <div className="flex-1 border rounded-lg overflow-hidden bg-white">
           <div className="overflow-y-auto max-h-[50vh]">
-            {isLoading ? (
-              <div className="p-20 flex justify-center"><LoadingSpinner /></div>
-            ) : (
+            {isLoading ? <div className="p-20 flex justify-center"><LoadingSpinner /></div> : (
               <Table>
-                <TableHeader className="bg-slate-50 sticky top-0 z-10 shadow-sm text-xs text-nowrap">
+                <TableHeader className="bg-slate-50 sticky top-0 z-10">
                   <TableRow>
-                    <TableHead className="w-[180px]">Date & Time</TableHead>
+                    <TableHead>Date & Time</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Qty</TableHead>
                     <TableHead>Reason</TableHead>
@@ -128,36 +123,22 @@ const ProductHistoryModal = ({ open, setOpen, itemName }) => {
                 <TableBody>
                   {filteredLogs.length > 0 ? (
                     filteredLogs.map((log) => (
-                      <TableRow key={log._id} className="hover:bg-slate-50/50">
-                        <TableCell className="text-[11px] text-slate-500 font-medium">
-                          {new Date(log.dateTime).toLocaleString(undefined, {
-                            dateStyle: 'medium',
-                            timeStyle: 'short'
-                          })}
-                        </TableCell>
+                      <TableRow key={log._id} className="text-xs hover:bg-slate-50/50">
+                        <TableCell>{new Date(log.dateTime).toLocaleString()}</TableCell>
                         <TableCell>
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            log.type === "IN" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                          }`}>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${log.type === "IN" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
                             {log.type}
                           </span>
                         </TableCell>
-                        <TableCell className="font-mono font-bold text-sm">
-                          {log.quantity}
-                        </TableCell>
-                        <TableCell className="text-xs font-semibold text-slate-700">
-                          {/* Display Restock for IN types if reason is empty */}
-                          {log.reason || (log.type === "IN" ? "Restock" : "Adjustment")}
-                        </TableCell>
-                        <TableCell className="text-xs italic text-muted-foreground">
-                          {log.remarks || "-"}
-                        </TableCell>
+                        <TableCell className="font-mono font-bold">{log.quantity}</TableCell>
+                        <TableCell className="font-medium">{log.reason || (log.type === "IN" ? "Restock" : "Adjustment")}</TableCell>
+                        <TableCell className="italic text-muted-foreground">{log.remarks || "-"}</TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center py-20 text-muted-foreground italic">
-                        No transactions found for the selected criteria.
+                        No transactions found for this item.
                       </TableCell>
                     </TableRow>
                   )}
@@ -165,11 +146,6 @@ const ProductHistoryModal = ({ open, setOpen, itemName }) => {
               </Table>
             )}
           </div>
-        </div>
-
-        <div className="mt-4 flex justify-between items-center text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
-          <span>{itemName} Inventory Report</span>
-          <span>Showing {filteredLogs.length} Records</span>
         </div>
       </DialogContent>
     </Dialog>
