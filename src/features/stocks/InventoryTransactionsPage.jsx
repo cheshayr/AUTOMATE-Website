@@ -68,8 +68,12 @@ const InventoryTransactionsPage = () => {
   const filteredTransactions = useMemo(() => {
     return transactions.filter((tx) => {
       const txDate = new Date(tx.dateTime);
-      if (dateFrom && txDate < dateFrom) return false;
-      if (dateTo && txDate > dateTo) return false;
+      // include entire day for dateTo
+      const dateFromTime = dateFrom ? new Date(dateFrom.setHours(0, 0, 0, 0)) : null;
+      const dateToTime = dateTo ? new Date(dateTo.setHours(23, 59, 59, 999)) : null;
+
+      if (dateFromTime && txDate < dateFromTime) return false;
+      if (dateToTime && txDate > dateToTime) return false;
       return true;
     });
   }, [transactions, dateFrom, dateTo]);
@@ -247,8 +251,8 @@ const InventoryTransactionsPage = () => {
         </div>
 
         {/* Table */}
-        <div className="border rounded-xl bg-white overflow-hidden">
-          <Table>
+        <div className="border rounded-xl bg-white overflow-auto max-h-[60vh]">
+          <Table className="min-w-full">
             <TableHeader className="bg-slate-100 sticky top-0 z-10">
               <TableRow>
                 <TableHead>ID</TableHead>
