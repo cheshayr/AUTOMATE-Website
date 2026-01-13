@@ -74,7 +74,7 @@ import {
  // <--- THIS WAS MISSING
 
 
-const status = ['Pending Visit', 'Ongoing Repair', 'Billing', 'Completed', 'Cancelled'];
+const status = [ 'Ongoing Repair', 'Completed', 'Cancelled'];
 
 const events = [
   {
