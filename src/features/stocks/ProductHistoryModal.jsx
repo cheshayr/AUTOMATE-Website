@@ -168,7 +168,7 @@ const ProductHistoryModal = ({ open, setOpen, itemName, supplierName }) => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-6xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-6xl max-h-[95vh] flex flex-col">
         <DialogHeader className="border-b pb-4">
           <div className="flex justify-between items-start">
             <div>
@@ -287,15 +287,15 @@ const ProductHistoryModal = ({ open, setOpen, itemName, supplierName }) => {
         </div>
 
         {/* TABLE */}
-        <div className="flex-1 border rounded-lg overflow-hidden">
-          <div className="overflow-y-auto max-h-[40vh]">
+        <div className="flex-1 border rounded-lg overflow-hidden flex flex-col">
+          <div className="overflow-y-auto flex-1">
             {isLoading ? (
               <div className="p-20 flex justify-center">
                 <LoadingSpinner />
               </div>
             ) : (
-              <Table>
-                <TableHeader className="bg-slate-50 sticky top-0">
+              <Table className="min-w-full">
+                <TableHeader className="bg-slate-50 sticky top-0 z-10">
                   <TableRow>
                     <TableHead>Date & Time</TableHead>
                     <TableHead>Type</TableHead>
