@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, ArrowUp, ArrowDown, History } from "lucide-react";
+import { Plus, ArrowUp, ArrowDown, History, Download } from "lucide-react";
 import { useDebounce } from "@uidotdev/usehooks";
 import { toast } from "sonner";
 
@@ -43,10 +43,18 @@ import { useFetchSuppliers } from "@/hooks/useSupplierQuery";
 import { useCreateTransaction } from "@/hooks/useTransactionMutation"; 
 import LoadingSpinner from "@/components/LoadingSpinner";
 
+// PDF
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import logo from "@/assets/logo.png";
+import { format } from "date-fns";
+
 const StockManagement = () => {
   const [itemCategory, setItemCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-  
+  const [preparedBy, setPreparedBy] = useState("");
+  const [exportScope, setExportScope] = useState("current"); // new: export page or all
+
   // Pagination State
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -72,7 +80,6 @@ const StockManagement = () => {
 
   /* ================= PAGINATION LOGIC ================= */
   const rawInventory = inventoryData?.data || [];
-  
   const totalPages = Math.ceil(rawInventory.length / pageSize);
   
   const paginatedData = useMemo(() => {
@@ -132,6 +139,46 @@ const StockManagement = () => {
     } catch (err) { console.error(err); }
   };
 
+  /* ================= PDF EXPORT ================= */
+  const handleExportPDF = () => {
+    if (!preparedBy.trim()) {
+      toast.error("Please enter who prepared the report.");
+      return;
+    }
+
+    const dataToExport = exportScope === "all" ? rawInventory : paginatedData;
+
+    const doc = new jsPDF();
+    const exportedAt = format(new Date(), "MMM dd, yyyy • hh:mm a");
+
+    doc.addImage(logo, "PNG", 14, 10, 30, 30);
+    doc.setFontSize(16);
+    doc.text("Inventory Report", 55, 20);
+
+    doc.setFontSize(10);
+    doc.text(`Category Filter: ${itemCategory}`, 14, 45);
+    doc.text(`Prepared By: ${preparedBy}`, 14, 52);
+    doc.text(`Exported On: ${exportedAt}`, 14, 58);
+    doc.text(`Scope: ${exportScope === "all" ? "All Pages" : "Current Page"}`, 14, 65);
+
+    autoTable(doc, {
+      head: [["Item Name", "Category", "Supplier", "Stock", "Status"]],
+      body: dataToExport.map((item) => [
+        item.itemName,
+        item.category,
+        item.supplier?.companyName || item.companyName || "No Supplier",
+        item.stock,
+        item.stock <= 0 ? "Out of Stock" : item.stock <= 10 ? "Low Stock" : "In Stock",
+      ]),
+      startY: 75,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [71, 85, 105] },
+    });
+
+    doc.save(`inventory_report_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    toast.success("Inventory exported successfully!");
+  };
+
   return (
     <Card className="w-full bg-transparent shadow-none border-0">
       <CardHeader className="px-0">
@@ -140,6 +187,7 @@ const StockManagement = () => {
       </CardHeader>
 
       <CardContent className="px-0">
+        {/* Search + Filter */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <Input 
             placeholder="Search items..." 
@@ -147,38 +195,49 @@ const StockManagement = () => {
             value={searchQuery} 
             onChange={(e) => {
               setSearchQuery(e.target.value);
-              setPage(1); // Reset to page 1 on search
+              setPage(1);
             }} 
           />
           <div className="min-w-[200px]">
-            <Select 
-              value={itemCategory} 
-              onValueChange={(val) => {
-                setItemCategory(val);
-                setPage(1); // Reset to page 1 on filter change
-              }}
-            >
+            <Select value={itemCategory} onValueChange={(val) => { setItemCategory(val); setPage(1); }}>
               <SelectTrigger><SelectValue placeholder="Category" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="All">All Categories</SelectItem>
-                {currentCategories.map((c) => (
-                  <SelectItem key={c._id} value={c.categoryName}>{c.categoryName}</SelectItem>
-                ))}
+                {currentCategories.map((c) => <SelectItem key={c._id} value={c.categoryName}>{c.categoryName}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-3 mb-8">
+        {/* Add buttons + Export */}
+        <div className="flex flex-wrap gap-3 mb-8 items-end">
           <AddItemModal itemCategories={currentCategories} suppliers={currentSuppliers}>
             <Button className="bg-blue-600 hover:bg-blue-700"><Plus className="mr-2 h-4 w-4" /> Add Product</Button>
           </AddItemModal>
           <AddCategoryModal><Button variant="outline">Add Category</Button></AddCategoryModal>
-          <DeleteCategoryModal itemCategories={currentCategories}>
-            <Button variant="ghost" className="text-destructive">Delete Category</Button>
-          </DeleteCategoryModal>
+          <DeleteCategoryModal itemCategories={currentCategories}><Button variant="ghost" className="text-destructive">Delete Category</Button></DeleteCategoryModal>
+
+          <Input
+            placeholder="Prepared by"
+            value={preparedBy}
+            onChange={(e) => setPreparedBy(e.target.value)}
+            className="h-9 w-[200px]"
+          />
+
+          <Select value={exportScope} onValueChange={setExportScope} className="h-9 w-[160px]">
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="current">Current Page</SelectItem>
+              <SelectItem value="all">All Pages</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button variant="outline" onClick={handleExportPDF} className="h-9 px-4">
+            <Download className="h-4 w-4 mr-2" /> Export PDF
+          </Button>
         </div>
 
+        {/* Table */}
         <div className="border rounded-lg bg-white overflow-hidden shadow-sm">
           <Table>
             <TableHeader className="bg-slate-50">
@@ -200,25 +259,17 @@ const StockManagement = () => {
                   <TableRow key={item._id} className="hover:bg-slate-50/50">
                     <TableCell className="font-semibold text-slate-900">{item.itemName}</TableCell>
                     <TableCell className="text-slate-600">{item.category}</TableCell>
-                    <TableCell className="text-xs text-slate-600 font-medium">
-                      {item.supplier?.companyName || item.companyName || "No Supplier"}
-                    </TableCell>
+                    <TableCell className="text-xs text-slate-600 font-medium">{item.supplier?.companyName || item.companyName || "No Supplier"}</TableCell>
                     <TableCell className="font-mono font-bold text-blue-600">{item.stock}</TableCell>
                     <TableCell>{calculateStockStatus(item)}</TableCell>
                     <TableCell className="text-center">
                       <div className="flex justify-center gap-2">
-                        <Button size="sm" variant="outline" onClick={() => setStockInItem(item)} className="h-7 px-3 border-green-200 text-green-700 text-[10px] font-bold hover:bg-green-50">
-                          <ArrowUp className="mr-1 h-3 w-3" /> IN
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => setStockOutItem(item)} className="h-7 px-3 border-red-200 text-red-700 text-[10px] font-bold hover:bg-red-50">
-                          <ArrowDown className="mr-1 h-3 w-3" /> OUT
-                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setStockInItem(item)} className="h-7 px-3 border-green-200 text-green-700 text-[10px] font-bold hover:bg-green-50"><ArrowUp className="mr-1 h-3 w-3" /> IN</Button>
+                        <Button size="sm" variant="outline" onClick={() => setStockOutItem(item)} className="h-7 px-3 border-red-200 text-red-700 text-[10px] font-bold hover:bg-red-50"><ArrowDown className="mr-1 h-3 w-3" /> OUT</Button>
                       </div>
                     </TableCell>
                     <TableCell className="text-right space-x-1">
-                      <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-blue-50" onClick={() => setHistoryItem(item)}>
-                        <History className="h-4 w-4 text-blue-500" />
-                      </Button>
+                      <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-blue-50" onClick={() => setHistoryItem(item)}><History className="h-4 w-4 text-blue-500" /></Button>
                       <DeleteItemModal itemName={item.itemName} id={item._id} />
                     </TableCell>
                   </TableRow>
@@ -230,32 +281,13 @@ const StockManagement = () => {
           </Table>
         </div>
 
-        {/* PAGINATION CONTROLS */}
+        {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex justify-between items-center mt-6 px-2">
-            <span className="text-sm text-muted-foreground font-medium">
-              Showing {Math.min(paginatedData.length, pageSize)} of {rawInventory.length} items (Page {page} of {totalPages})
-            </span>
-
+            <span className="text-sm text-muted-foreground font-medium">Showing {Math.min(paginatedData.length, pageSize)} of {rawInventory.length} items (Page {page} of {totalPages})</span>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page === 1}
-                onClick={() => setPage((p) => p - 1)}
-                className="h-8 px-4"
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page === totalPages}
-                onClick={() => setPage((p) => p + 1)}
-                className="h-8 px-4"
-              >
-                Next
-              </Button>
+              <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage((p) => p - 1)} className="h-8 px-4">Previous</Button>
+              <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage((p) => p + 1)} className="h-8 px-4">Next</Button>
             </div>
           </div>
         )}
@@ -263,15 +295,7 @@ const StockManagement = () => {
 
       {stockInItem && <StockInModal open={!!stockInItem} setOpen={() => setStockInItem(null)} item={stockInItem} onSave={handleStockInSave} />}
       {stockOutItem && <StockOutModal open={!!stockOutItem} setOpen={() => setStockOutItem(null)} item={stockOutItem} onSave={handleStockOutSave} />}
-      
-      {historyItem && (
-  <ProductHistoryModal 
-    open={!!historyItem} 
-    setOpen={() => setHistoryItem(null)} 
-    itemName={historyItem.itemName} 
-    supplierName={historyItem.supplier?.companyName || historyItem.companyName} 
-  />
-)}
+      {historyItem && <ProductHistoryModal open={!!historyItem} setOpen={() => setHistoryItem(null)} itemName={historyItem.itemName} supplierName={historyItem.supplier?.companyName || historyItem.companyName} />}
     </Card>
   );
 };
