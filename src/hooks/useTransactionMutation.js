@@ -7,17 +7,15 @@ export const useCreateTransaction = () => {
 
   return useMutation({
     mutationFn: async (data) => {
-     
-      const response = await authenticatedApi.post('/transactions', data);
-      return response.data;
+      const res = await authenticatedApi.post('/transactions', data);
+      return res.data;
     },
     onSuccess: () => {
-    
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      toast.success('Transaction recorded successfully');
     },
     onError: (error) => {
-      const message = getAxiosErrorMessage(error) || 'Failed to record transaction';
-      toast.error(message);
+      toast.error(getAxiosErrorMessage(error) || 'Failed to record transaction');
     },
   });
 };

@@ -22,7 +22,9 @@ import { Calendar } from "@/components/ui/calendar";
 import { ChevronDown, Download } from "lucide-react";
 import { useDebounce } from "@uidotdev/usehooks";
 import LoadingSpinner from "@/components/LoadingSpinner";
+
 import { useFetchTransactions } from "@/hooks/useTransactionQuery";
+import { useCreateTransaction } from "@/hooks/useTransactionMutation"; 
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -53,8 +55,9 @@ const InventoryTransactionsPage = () => {
   const [dateFromOpen, setDateFromOpen] = useState(false);
   const [dateToOpen, setDateToOpen] = useState(false);
 
+  const [typeFilter, setTypeFilter] = useState("ALL");
   const [preparedBy, setPreparedBy] = useState("");
-  const [exportScope, setExportScope] = useState("page"); // "page" or "all"
+  const [exportScope, setExportScope] = useState("page");
 
   const debouncedSearch = useDebounce(search, 400);
 
@@ -63,37 +66,45 @@ const InventoryTransactionsPage = () => {
   });
 
   const transactions = data?.data || [];
+  const createTransaction = useCreateTransaction();
 
-  /* ================= FILTERS ================= */
   const filteredTransactions = useMemo(() => {
     return transactions.filter((tx) => {
       const txDate = new Date(tx.dateTime);
-      // include entire day for dateTo
       const dateFromTime = dateFrom ? new Date(dateFrom.setHours(0, 0, 0, 0)) : null;
       const dateToTime = dateTo ? new Date(dateTo.setHours(23, 59, 59, 999)) : null;
 
       if (dateFromTime && txDate < dateFromTime) return false;
       if (dateToTime && txDate > dateToTime) return false;
+      if (typeFilter !== "ALL" && tx.type !== typeFilter) return false;
+
+      const searchLower = debouncedSearch.toLowerCase();
+      if (searchLower) {
+        const item = tx.itemName?.toLowerCase() || "";
+        const supplier = tx.supplier?.supplierName?.toLowerCase() || tx.supplierName?.toLowerCase() || "";
+        const reason = tx.reason?.toLowerCase() || "";
+        if (!item.includes(searchLower) && !supplier.includes(searchLower) && !reason.includes(searchLower)) {
+          return false;
+        }
+      }
+
       return true;
     });
-  }, [transactions, dateFrom, dateTo]);
+  }, [transactions, dateFrom, dateTo, typeFilter, debouncedSearch]);
 
-  /* ================= PAGINATION ================= */
   const totalPages = Math.ceil(filteredTransactions.length / pageSize);
   const paginatedData = useMemo(() => {
     const start = (page - 1) * pageSize;
     return filteredTransactions.slice(start, start + pageSize);
   }, [filteredTransactions, page, pageSize]);
 
-  /* ================= PDF EXPORT ================= */
   const handleExportPDF = () => {
     if (!preparedBy.trim()) {
       alert('Please enter "Prepared By" before exporting.');
       return;
     }
 
-    const dataToExport =
-      exportScope === "all" ? filteredTransactions : paginatedData;
+    const dataToExport = exportScope === "all" ? filteredTransactions : paginatedData;
 
     if (!dataToExport.length) {
       alert("No transactions available to export.");
@@ -104,7 +115,6 @@ const InventoryTransactionsPage = () => {
     const exportedAt = format(new Date(), "MMM dd, yyyy • hh:mm a");
 
     doc.addImage(logo, "PNG", 14, 8, 30, 30);
-
     doc.setFontSize(16);
     doc.text("Inventory Transaction History", 50, 20);
 
@@ -130,16 +140,7 @@ const InventoryTransactionsPage = () => {
     autoTable(doc, {
       startY: 75,
       head: [
-        [
-          "ID",
-          "Date & Time",
-          "Item",
-          "Supplier",
-          "Purpose",
-          "Type",
-          "Qty",
-          "Remarks",
-        ],
+        ["ID", "Date & Time", "Item", "Supplier", "Purpose", "Type", "Qty", "Remarks"],
       ],
       body: dataToExport.map((tx) => [
         tx._id,
@@ -155,9 +156,16 @@ const InventoryTransactionsPage = () => {
       headStyles: { fillColor: [71, 85, 105] },
     });
 
-    doc.save(
-      `inventory_transactions_${format(new Date(), "yyyy-MM-dd")}.pdf`
-    );
+    doc.save(`inventory_transactions_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+
+    createTransaction.mutate({
+      type: "SYSTEM",
+      itemName: "EXPORT",
+      quantity: dataToExport.length,
+      reason: `Exported by ${preparedBy}`,
+      remarks: `Exported ${exportScope === "all" ? "all transactions" : "current page"}`,
+      dateTime: new Date().toISOString(),
+    });
   };
 
   return (
@@ -167,25 +175,32 @@ const InventoryTransactionsPage = () => {
           Inventory Transaction History
         </CardTitle>
         <CardDescription>
-          Complete log of all stock-in and stock-out movements.
+          Complete log of all stock-in, stock-out, item/category changes, and system activities.
         </CardDescription>
       </CardHeader>
 
       <CardContent>
-        {/* Filters & Export */}
         <div className="flex flex-wrap gap-2 mb-6 items-end w-full">
-          {/* Search */}
           <Input
             placeholder="Search item, supplier, purpose..."
             className="h-10 max-w-xs"
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           />
+          <select
+            value={typeFilter}
+            onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}
+            className="h-10 px-3 border rounded-md text-sm bg-background"
+          >
+            <option value="ALL">All Types</option>
+            <option value="IN">Stock In</option>
+            <option value="OUT">Stock Out</option>
+            <option value="ITEM">Item</option>
+            <option value="CATEGORY">Category</option>
+            <option value="SUPPLIER">Supplier</option>
+            <option value="SYSTEM">System</option>
+          </select>
 
-          {/* Date From */}
           <Popover open={dateFromOpen} onOpenChange={setDateFromOpen}>
             <PopoverTrigger asChild>
               <Button variant="outline" className="h-10">
@@ -194,18 +209,10 @@ const InventoryTransactionsPage = () => {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="p-0">
-              <Calendar
-                mode="single"
-                selected={dateFrom}
-                onSelect={(date) => {
-                  setDateFrom(date);
-                  setDateFromOpen(false);
-                }}
-              />
+              <Calendar mode="single" selected={dateFrom} onSelect={(date) => { setDateFrom(date); setDateFromOpen(false); }} />
             </PopoverContent>
           </Popover>
 
-          {/* Date To */}
           <Popover open={dateToOpen} onOpenChange={setDateToOpen}>
             <PopoverTrigger asChild>
               <Button variant="outline" className="h-10">
@@ -214,18 +221,10 @@ const InventoryTransactionsPage = () => {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="p-0">
-              <Calendar
-                mode="single"
-                selected={dateTo}
-                onSelect={(date) => {
-                  setDateTo(date);
-                  setDateToOpen(false);
-                }}
-              />
+              <Calendar mode="single" selected={dateTo} onSelect={(date) => { setDateTo(date); setDateToOpen(false); }} />
             </PopoverContent>
           </Popover>
 
-          {/* Prepared By */}
           <Input
             placeholder="Prepared By"
             value={preparedBy}
@@ -233,7 +232,6 @@ const InventoryTransactionsPage = () => {
             className="h-10 w-36"
           />
 
-          {/* Export Scope */}
           <select
             value={exportScope}
             onChange={(e) => setExportScope(e.target.value)}
@@ -243,14 +241,11 @@ const InventoryTransactionsPage = () => {
             <option value="all">All Transactions</option>
           </select>
 
-          {/* Export Button */}
           <Button variant="outline" onClick={handleExportPDF} className="h-10">
-            <Download className="h-4 w-4 mr-2" />
-            Export PDF
+            <Download className="h-4 w-4 mr-2" /> Export PDF
           </Button>
         </div>
 
-        {/* Table */}
         <div className="border rounded-xl bg-white overflow-auto max-h-[60vh]">
           <Table className="min-w-full">
             <TableHeader className="bg-slate-100 sticky top-0 z-10">
@@ -265,78 +260,45 @@ const InventoryTransactionsPage = () => {
                 <TableHead>Remarks</TableHead>
               </TableRow>
             </TableHeader>
-
             <TableBody>
               {isPending ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="py-12 text-center">
-                    <LoadingSpinner />
-                  </TableCell>
-                </TableRow>
+                <TableRow><TableCell colSpan={8} className="py-12 text-center"><LoadingSpinner/></TableCell></TableRow>
               ) : paginatedData.length ? (
-                paginatedData.map((tx, i) => (
-                  <TableRow
-                    key={tx._id}
-                    className={i % 2 === 0 ? "bg-slate-50/40" : ""}
-                  >
+                paginatedData.map((tx,i)=>(
+                  <TableRow key={tx._id} className={i%2===0?"bg-slate-50/40":""}>
                     <TableCell className="font-mono text-xs">{tx._id}</TableCell>
                     <TableCell>{formatDateTimePH(tx.dateTime)}</TableCell>
-                    <TableCell className="font-medium">{tx.itemName}</TableCell>
+                    <TableCell>{tx.itemName || "-"}</TableCell>
                     <TableCell>{tx.supplier?.supplierName || tx.supplierName || "-"}</TableCell>
                     <TableCell>{tx.reason || "-"}</TableCell>
                     <TableCell className="text-center">
-                      <Badge
-                        className={
-                          tx.type === "IN"
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-rose-100 text-rose-700"
-                        }
-                      >
-                        {tx.type}
-                      </Badge>
+                      <Badge className={
+                        tx.type==="IN"?"bg-emerald-100 text-emerald-700":
+                        tx.type==="OUT"?"bg-rose-100 text-rose-700":
+                        "bg-slate-100 text-slate-700"
+                      }>{tx.type}</Badge>
                     </TableCell>
                     <TableCell className="text-center font-mono">{tx.quantity}</TableCell>
                     <TableCell>{tx.remarks || "-"}</TableCell>
                   </TableRow>
                 ))
               ) : (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-12">
-                    No transactions found.
-                  </TableCell>
-                </TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center py-12">No transactions found.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
         </div>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
+        {totalPages>1 && (
           <div className="flex justify-between items-center mt-6">
-            <span className="text-sm text-muted-foreground">
-              Page {page} of {totalPages}
-            </span>
-
+            <span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page === 1}
-                onClick={() => setPage((p) => p - 1)}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page === totalPages}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                Next
-              </Button>
+              <Button variant="outline" size="sm" disabled={page===1} onClick={()=>setPage(p=>p-1)}>Previous</Button>
+              <Button variant="outline" size="sm" disabled={page===totalPages} onClick={()=>setPage(p=>p+1)}>Next</Button>
             </div>
           </div>
         )}
+
       </CardContent>
     </Card>
   );
