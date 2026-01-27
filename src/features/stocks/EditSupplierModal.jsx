@@ -19,7 +19,6 @@ const EditSupplierModal = ({ supplier, onSupplierUpdated, children }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [supplierDetails, setSupplierDetails] = useState({
     companyName: "",
-    contactPerson: "",
     email: "",
     contactNumber: "",
     address: "",
@@ -31,7 +30,6 @@ const EditSupplierModal = ({ supplier, onSupplierUpdated, children }) => {
     if (supplier && isOpen) {
       setSupplierDetails({
         companyName: supplier.companyName || "",
-        contactPerson: supplier.contactPerson || "",
         email: supplier.email || "",
         contactNumber: supplier.contactNumber || "",
         address: supplier.address || "",
@@ -42,7 +40,7 @@ const EditSupplierModal = ({ supplier, onSupplierUpdated, children }) => {
   const handleSave = async (e) => {
     e.preventDefault();
 
-    // CRITICAL FIX: Ensure we have a valid ID before sending the request
+    // Ensure we have a valid ID before sending the request
     const supplierId = supplier?._id || supplier?.id;
 
     if (!supplierId || supplierId === "undefined") {
@@ -51,10 +49,15 @@ const EditSupplierModal = ({ supplier, onSupplierUpdated, children }) => {
       return;
     }
 
+    // Validation check for required fields
+    if (!supplierDetails.companyName || !supplierDetails.contactNumber || !supplierDetails.address) {
+      toast.error("Company Name, Contact Number, and Address are required.");
+      return;
+    }
+
     setIsSaving(true);
 
     try {
-      // FIX: Correct Path and Method
       const response = await authenticatedApi.patch(
         `/inventory/suppliers/${supplierId}`,
         supplierDetails
@@ -98,40 +101,33 @@ const EditSupplierModal = ({ supplier, onSupplierUpdated, children }) => {
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="contactPerson">Contact Person *</Label>
-            <Input
-              id="contactPerson"
-              value={supplierDetails.contactPerson}
-              onChange={(e) => setSupplierDetails({ ...supplierDetails, contactPerson: e.target.value })}
-              required
-            />
-          </div>
-
-          <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
+              placeholder="optional@email.com"
               value={supplierDetails.email}
               onChange={(e) => setSupplierDetails({ ...supplierDetails, email: e.target.value })}
             />
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="contactNumber">Contact Number</Label>
+            <Label htmlFor="contactNumber">Contact Number *</Label>
             <Input
               id="contactNumber"
               value={supplierDetails.contactNumber}
               onChange={(e) => setSupplierDetails({ ...supplierDetails, contactNumber: e.target.value })}
+              required
             />
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="address">Address</Label>
+            <Label htmlFor="address">Address *</Label>
             <Input
               id="address"
               value={supplierDetails.address}
               onChange={(e) => setSupplierDetails({ ...supplierDetails, address: e.target.value })}
+              required
             />
           </div>
 
@@ -140,7 +136,13 @@ const EditSupplierModal = ({ supplier, onSupplierUpdated, children }) => {
               <Button variant="outline" type="button" disabled={isSaving}>Cancel</Button>
             </DialogClose>
             <Button type="submit" disabled={isSaving}>
-              {isSaving ? <><LoadingSpinner className="mr-2" /> Saving...</> : "Save Changes"}
+              {isSaving ? (
+                <span className="flex items-center gap-2">
+                  <LoadingSpinner /> Saving...
+                </span>
+              ) : (
+                "Save Changes"
+              )}
             </Button>
           </DialogFooter>
         </form>
