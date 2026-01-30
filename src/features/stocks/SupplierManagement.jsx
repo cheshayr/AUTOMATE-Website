@@ -215,7 +215,7 @@ const SuppliersManagement = () => {
               className="h-10 px-2 border rounded-md bg-background text-sm"
             >
               <option value="page">Current Page</option>
-              <option value="all">All Filtered</option>
+              <option value="all">All Pages</option>
             </select>
             <Button variant="outline" onClick={handleExportPDF} className="h-10 px-4">
               <Download className="h-4 w-4 mr-2" /> Export PDF
