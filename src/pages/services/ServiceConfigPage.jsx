@@ -18,6 +18,8 @@ import { Plus, Search } from 'lucide-react';
 const ServiceConfigPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [serviceToEdit, setServiceToEdit] = useState(null);
+  
+  // Keep 'search' for the input typing, 'searchTrigger' for the actual filter
   const [search, setSearch] = useState("");
   const [searchTrigger, setSearchTrigger] = useState("");
 
@@ -44,10 +46,13 @@ const ServiceConfigPage = () => {
     });
   };
 
-  const handleSearch = () => {
+  // Trigger the filter based on current input value
+  const handleSearch = (e) => {
+    if (e) e.preventDefault(); // Prevents page reload if called from form onSubmit
     setSearchTrigger(search);
   };
 
+  // This established function stays the same, just reacting to searchTrigger
   const filteredServices = data?.data?.filter((service) =>
     service?.name?.toLowerCase().includes(searchTrigger.toLowerCase())
   );
@@ -63,24 +68,30 @@ const ServiceConfigPage = () => {
       <AlertDialogProvider>
         <Card className="w-full bg-transparent shadow-none border-0">
 
-          {/* 🔍 SEARCH BAR ABOVE TITLE */}
-          <form onSubmit={(e) => e.preventDefault()} className="flex items-center gap-3 mb-6">
-            <input
-              type="text"
-              placeholder="Search services..."
-              className="border rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+          {/* 🔍 SEARCH BAR SECTION */}
+          <form 
+            onSubmit={handleSearch} 
+            className="flex items-center gap-3 mb-6"
+          >
+            <div className="relative w-full">
+              <input
+                type="text"
+                placeholder="Search services..."
+                className="border rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                autoFocus // Ensures focus stays if a re-render occurs
+              />
+            </div>
 
-            <Button type="button" onClick={handleSearch} className="flex gap-2">
+            <Button type="submit" className="flex gap-2">
               <Search size={18} />
               Search
             </Button>
 
             <div className="flex items-center">
               <Button type="button" onClick={handleAddServiceClick}>
-                <Plus />
+                <Plus size={18} />
                 Add Service
               </Button>
             </div>
@@ -99,14 +110,24 @@ const ServiceConfigPage = () => {
             {error && <p className="text-red-500">Error loading services: {error.message}</p>}
 
             {!isLoading && filteredServices?.length === 0 && (
-              <p>No services found.</p>
+              <div className="text-center py-10">
+                <p className="text-gray-500">No services found for "{searchTrigger}"</p>
+                {searchTrigger && (
+                  <Button 
+                    variant="link" 
+                    onClick={() => {setSearch(""); setSearchTrigger("");}}
+                  >
+                    Clear search
+                  </Button>
+                )}
+              </div>
             )}
 
             {filteredServices?.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {filteredServices.map((service) => (
                   <ServiceCard
-                    key={service._id}
+                    key={service._id || service.id} // Added fallback key
                     data={service}
                     handleDelete={() => handleDelete(service._id)}
                     handleEdit={() => handleEditServiceClick(service)}
