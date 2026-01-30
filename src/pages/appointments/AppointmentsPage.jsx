@@ -488,7 +488,7 @@ const staff = users?.data || [];
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      <SelectItem value="All">All Status</SelectItem>
+                      <SelectItem value="All">All Appointments</SelectItem>
                       {status.map((s) => (
                         <SelectItem key={s} value={s}>
                           {s}
