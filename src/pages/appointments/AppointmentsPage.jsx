@@ -74,7 +74,16 @@ import {
  // <--- THIS WAS MISSING
 
 
-const status = [ 'Ongoing Repair', 'Completed', 'Cancelled'];
+const status = [
+  'Pending',
+  'Booked',
+  'Vehicle Arrived',
+  'Assessment',
+  'In Progress',
+  'Completed',
+  'Canceled',
+];
+
 
 const events = [
   {
@@ -258,47 +267,53 @@ const staff = users?.data || [];
   };
 
   const handleExportPDF = () => {
-    if (!preparedBy.trim()) {
-      toast.error('Please enter who prepared the report.');
-      return;
-    }
-  
-    const doc = new jsPDF();
-    const exportedAt = format(new Date(), 'MMM dd, yyyy • hh:mm a');
-  
-    // --- ADD LOGO ---
-    doc.addImage(logoImage, 'PNG', 14, 10, 40, 40); // x=14, y=10, width=40, height=40
-    // ----------------
-  
-    // Title next to logo
-    doc.setFontSize(16);
-    doc.text('Appointments Report', 60, 25); // Adjust X/Y so it sits nicely next to logo
-  
-    doc.setFontSize(10);
-    doc.text(`Status Filter: ${statusFilter}`, 14, 55);
-    doc.text(`Prepared By: ${preparedBy}`, 14, 62);
-    doc.text(`Exported On: ${exportedAt}`, 14, 68);
-  
-    autoTable(doc, {
-      startY: 75, // start below the logo
-      head: [['Ref #', 'Customer', 'Vehicle', 'Services', 'Status', 'Scheduled Time']],
-      body: filteredAppointments.map((a) => [
-        a.refNo || '-',
-        a.name || '-',
-        a.vehicle
-          ? `${a.vehicle?.brand || '-'} ${a.vehicle?.model || '-'} (${a.vehicle?.year || '-'})`
-          : '-',
-        a.services?.map((s) => s?.service?.name || '-').join(', ') || '-',
-        a.status || '-',
-        a.scheduledTime ? new Date(a.scheduledTime).toLocaleString() : '-',
-      ]),
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [71, 85, 105] },
-    });
-  
-    doc.save(`appointments_report_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-    toast.success('Appointments report exported successfully');
-  };
+  // 1. Prepared By validation
+  if (!preparedBy.trim()) {
+    toast.error('Please enter who prepared the report.');
+    return;
+  }
+
+  // 2. Status filter validation (NO DATA)
+  if (!filteredAppointments || filteredAppointments.length === 0) {
+    toast.error(`No appointments found for status "${statusFilter}".`);
+    return;
+  }
+
+  const doc = new jsPDF();
+  const exportedAt = format(new Date(), 'MMM dd, yyyy • hh:mm a');
+
+  // --- ADD LOGO ---
+  doc.addImage(logoImage, 'PNG', 14, 10, 40, 40);
+  // ----------------
+
+  doc.setFontSize(16);
+  doc.text('Appointments Report', 60, 25);
+
+  doc.setFontSize(10);
+  doc.text(`Status Filter: ${statusFilter}`, 14, 55);
+  doc.text(`Prepared By: ${preparedBy}`, 14, 62);
+  doc.text(`Exported On: ${exportedAt}`, 14, 68);
+
+  autoTable(doc, {
+    startY: 75,
+    head: [['Ref #', 'Customer', 'Vehicle', 'Services', 'Status', 'Scheduled Time']],
+    body: filteredAppointments.map((a) => [
+      a.refNo || '-',
+      a.name || '-',
+      a.vehicle
+        ? `${a.vehicle?.brand || '-'} ${a.vehicle?.model || '-'} (${a.vehicle?.year || '-'})`
+        : '-',
+      a.services?.map((s) => s?.service?.name || '-').join(', ') || '-',
+      a.status || '-',
+      a.scheduledTime ? new Date(a.scheduledTime).toLocaleString() : '-',
+    ]),
+    styles: { fontSize: 9 },
+    headStyles: { fillColor: [71, 85, 105] },
+  });
+
+  doc.save(`appointments_report_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+  toast.success('Appointments report exported successfully');
+};
   
   
 

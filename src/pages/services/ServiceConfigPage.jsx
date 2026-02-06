@@ -18,14 +18,13 @@ import { Plus, Search } from 'lucide-react';
 const ServiceConfigPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [serviceToEdit, setServiceToEdit] = useState(null);
-  
-  // Keep 'search' for the input typing, 'searchTrigger' for the actual filter
-  const [search, setSearch] = useState("");
-  const [searchTrigger, setSearchTrigger] = useState("");
+
+  // 🔍 Single search state (focus-safe)
+  const [search, setSearch] = useState('');
 
   const { data, error, isLoading } = useServicesQuery();
   const { mutate } = useDeleteService();
-  const { showConfirm, AlertDialogProvider } = useAlert();
+  const { showConfirm } = useAlert(); // ❗ Provider REMOVED from here
 
   const handleAddServiceClick = () => {
     setServiceToEdit(null);
@@ -46,15 +45,9 @@ const ServiceConfigPage = () => {
     });
   };
 
-  // Trigger the filter based on current input value
-  const handleSearch = (e) => {
-    if (e) e.preventDefault(); // Prevents page reload if called from form onSubmit
-    setSearchTrigger(search);
-  };
-
-  // This established function stays the same, just reacting to searchTrigger
+  // ✅ Live filtering (no submit, no remount)
   const filteredServices = data?.data?.filter((service) =>
-    service?.name?.toLowerCase().includes(searchTrigger.toLowerCase())
+    service?.name?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -65,81 +58,76 @@ const ServiceConfigPage = () => {
         currentData={serviceToEdit}
       />
 
-      <AlertDialogProvider>
-        <Card className="w-full bg-transparent shadow-none border-0">
+      <Card className="w-full bg-transparent shadow-none border-0">
+        {/* 🔍 SEARCH BAR */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="relative w-full">
+            <input
+              type="text"
+              placeholder="Search services..."
+              className="border rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              autoFocus
+            />
+          </div>
 
-          {/* 🔍 SEARCH BAR SECTION */}
-          <form 
-            onSubmit={handleSearch} 
-            className="flex items-center gap-3 mb-6"
+          <Button type="button" className="flex gap-2">
+            <Search size={18} />
+            Search
+          </Button>
+
+          <Button
+            type="button"
+            onClick={handleAddServiceClick}
+            className="flex gap-2"
           >
-            <div className="relative w-full">
-              <input
-                type="text"
-                placeholder="Search services..."
-                className="border rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                autoFocus // Ensures focus stays if a re-render occurs
-              />
+            <Plus size={18} />
+            Add Service
+          </Button>
+        </div>
+
+        <CardHeader>
+          <CardTitle className="text-2xl font-semibold">Services</CardTitle>
+          <CardDescription>
+            Maintain your services here. You can add, edit, or delete services as needed.
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          {isLoading && <p>Loading services...</p>}
+          {error && <p className="text-red-500">Error loading services: {error.message}</p>}
+
+          {!isLoading && filteredServices?.length === 0 && (
+            <div className="text-center py-10">
+              <p className="text-gray-500">
+                No services found{search && ` for "${search}"`}
+              </p>
+              {search && (
+                <Button variant="link" onClick={() => setSearch('')}>
+                  Clear search
+                </Button>
+              )}
             </div>
+          )}
 
-            <Button type="submit" className="flex gap-2">
-              <Search size={18} />
-              Search
-            </Button>
-
-            <div className="flex items-center">
-              <Button type="button" onClick={handleAddServiceClick}>
-                <Plus size={18} />
-                Add Service
-              </Button>
+          {filteredServices?.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {filteredServices.map((service) => (
+                <ServiceCard
+                  key={service._id || service.id}
+                  data={service}
+                  handleDelete={() => handleDelete(service._id)}
+                  handleEdit={() => handleEditServiceClick(service)}
+                />
+              ))}
             </div>
-          </form>
-
-
-          <CardHeader>
-            <CardTitle className="text-2xl font-semibold">Services</CardTitle>
-            <CardDescription className="line-clamp-3">
-              Maintain your services here. You can add, edit, or delete services as needed.
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent>
-            {isLoading && <p>Loading services...</p>}
-            {error && <p className="text-red-500">Error loading services: {error.message}</p>}
-
-            {!isLoading && filteredServices?.length === 0 && (
-              <div className="text-center py-10">
-                <p className="text-gray-500">No services found for "{searchTrigger}"</p>
-                {searchTrigger && (
-                  <Button 
-                    variant="link" 
-                    onClick={() => {setSearch(""); setSearchTrigger("");}}
-                  >
-                    Clear search
-                  </Button>
-                )}
-              </div>
-            )}
-
-            {filteredServices?.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {filteredServices.map((service) => (
-                  <ServiceCard
-                    key={service._id || service.id} // Added fallback key
-                    data={service}
-                    handleDelete={() => handleDelete(service._id)}
-                    handleEdit={() => handleEditServiceClick(service)}
-                  />
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </AlertDialogProvider>
+          )}
+        </CardContent>
+      </Card>
     </>
   );
 };
 
 export default ServiceConfigPage;
+
