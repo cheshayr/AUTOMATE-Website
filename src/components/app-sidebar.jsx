@@ -74,7 +74,7 @@ const data = {
     { url: '/user', icon: Users, name: 'User Management' },
     { url: '/feedbacks', icon: MessageCircle, name: 'Feedbacks' },
     { url: '/analytics', icon: BarChart2, name: 'Analytics' },
-    { url: '/reports', icon: FileText, name: 'Reports' },
+    { url: '/reports', icon: FileText, name: 'Performance Report' },
   ],
 
   staff: [
@@ -85,7 +85,7 @@ const data = {
     { url: '/feedbacks', icon: MessageCircle, name: 'Feedbacks' },
     //{ url: '/activities', icon: Frame, name: 'Activity Logs' },
     { url: '/analytics', icon: BarChart2, name: 'Analytics' },
-    { url: '/reports', icon: FileText, name: 'Reports' },
+    { url: '/reports', icon: FileText, name: 'Performance Report' },
 
     // { to: '/dashboard', icon: <Home size={24} />, label: 'Dashboard' },
     //   { to: '/appointments', icon: <Calendar size={24} />, label: 'Appointments' },
