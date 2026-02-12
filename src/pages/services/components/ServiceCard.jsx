@@ -10,17 +10,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Pencil, Trash2 } from 'lucide-react';
 import { formatToPHP } from '@/utils/formatters';
-import { useDeleteService } from '@/hooks/useServices.mutation';
 
-export function ServiceCard({ data, handleEdit }) {
-  const deleteServiceMutation = useDeleteService();
-
-  const handleDelete = () => {
-    if (window.confirm(`Delete service "${data.name}"?`)) {
-      deleteServiceMutation.mutate(data._id);
-    }
-  };
-
+export function ServiceCard({ data, handleEdit, handleDelete }) {
   return (
     <Card className="w-full max-w-sm">
       <CardHeader className="flex flex-col">
@@ -48,8 +39,8 @@ export function ServiceCard({ data, handleEdit }) {
         <Button variant="outline" onClick={handleEdit}>
           <Pencil /> Edit
         </Button>
-        <Button variant="destructive" type="button" onClick={handleDelete}>
-          <Trash2 /> Delete
+        <Button variant="destructive" onClick={handleDelete}>
+          <Trash2 />
         </Button>
       </CardFooter>
     </Card>
