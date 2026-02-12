@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import {
@@ -38,7 +40,10 @@ const Feedbacks = () => {
   const [filter, setFilter] = useState('All');
   const [preparedBy, setPreparedBy] = useState('');
 
-  const { data, isPending } = useAppointments(filter);
+  // ✅ FIX: convert filter
+  const ratingFilter = filter === 'All' ? null : Number(filter);
+  const { data, isPending } = useAppointments(ratingFilter);
+
   const appointments = data?.appointments || [];
 
   const handleExportPDF = () => {
@@ -63,7 +68,10 @@ const Feedbacks = () => {
       head: [['Customer', 'Service', 'Feedback', 'Rating', 'Date']],
       body: appointments.map((a) => [
         a.name || '-',
-        a.services?.map((s) => s.service.name).join(', ') || '-',
+        a.services
+          ?.map((s) => s?.service?.name)
+          ?.filter(Boolean)
+          ?.join(', ') || '-',
         a.feedback?.comment || '-',
         a.feedback?.rating || '-',
         a.feedback?.createdAt && isValid(parseISO(a.feedback.createdAt))
@@ -88,50 +96,43 @@ const Feedbacks = () => {
 
       <CardContent className="space-y-6">
         {/* FILTERS */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        {/* LEFT */}
-        <div className="space-y-2 min-w-[160px]">
-          <Label>Rating Filter</Label>
-          <Select value={filter} onValueChange={setFilter}>
-            <SelectTrigger className="h-9">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value="All">All</SelectItem>
-                <SelectItem value="1">1 Star</SelectItem>
-                <SelectItem value="2">2 Star</SelectItem>
-                <SelectItem value="3">3 Star</SelectItem>
-                <SelectItem value="4">4 Star</SelectItem>
-                <SelectItem value="5">5 Star</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* RIGHT */}
-        <div className="flex items-end gap-2">
-          <div className="space-y-2">
-            <Label>Prepared By</Label>
-            <Input
-              value={preparedBy}
-              onChange={(e) => setPreparedBy(e.target.value)}
-              placeholder="Enter your name"
-              className="h-9 w-[200px]"
-            />
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="space-y-2 min-w-[160px]">
+            <Label>Rating Filter</Label>
+            <Select value={filter} onValueChange={setFilter}>
+              <SelectTrigger className="h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="All">All</SelectItem>
+                  <SelectItem value="1">1 Star</SelectItem>
+                  <SelectItem value="2">2 Star</SelectItem>
+                  <SelectItem value="3">3 Star</SelectItem>
+                  <SelectItem value="4">4 Star</SelectItem>
+                  <SelectItem value="5">5 Star</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
 
-          <Button
-            variant="outline"
-            onClick={handleExportPDF}
-            className="h-9 px-4"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Export to PDF
-          </Button>
-        </div>
-      </div>
+          <div className="flex items-end gap-2">
+            <div className="space-y-2">
+              <Label>Prepared By</Label>
+              <Input
+                value={preparedBy}
+                onChange={(e) => setPreparedBy(e.target.value)}
+                placeholder="Enter your name"
+                className="h-9 w-[200px]"
+              />
+            </div>
 
+            <Button variant="outline" onClick={handleExportPDF} className="h-9 px-4">
+              <Download className="h-4 w-4 mr-2" />
+              Export to PDF
+            </Button>
+          </div>
+        </div>
 
         {/* TABLE */}
         <div className="rounded-lg border bg-card overflow-hidden">
@@ -164,7 +165,10 @@ const Feedbacks = () => {
                   <TableRow key={appointment._id}>
                     <TableCell className="font-medium">{appointment.name}</TableCell>
                     <TableCell>
-                      {appointment.services?.map((s) => s.service.name).join(', ') || 'N/A'}
+                      {appointment.services
+                        ?.map((s) => s?.service?.name)
+                        ?.filter(Boolean)
+                        ?.join(', ') || 'N/A'}
                     </TableCell>
                     <TableCell>{appointment.feedback?.comment || '-'}</TableCell>
                     <TableCell>
