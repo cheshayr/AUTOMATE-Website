@@ -387,7 +387,16 @@ const staff = users?.data || [];
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }) => <div className="pl-4">{new Date(row.getValue('scheduledTime')).toLocaleString()}</div>,
+      cell: ({ row }) => {
+  const value = row.getValue('scheduledTime');
+  if (!value) return <div className="pl-4">-</div>;
+
+  return (
+    <div className="pl-4">
+      {format(new Date(value), 'MMM dd, yyyy • hh:mm a')}
+    </div>
+  );
+},
     },
     {
       accessorKey: 'status',
@@ -636,3 +645,4 @@ const staff = users?.data || [];
 };
 
 export default AppointmentsPage;
+
