@@ -331,25 +331,53 @@ const staff = users?.data || [];
     {
       accessorKey: 'vehicle',
       header: 'Vehicle',
-      cell: ({ row }) => (
-        <div>
-          <div>{`${row.original.vehicle.brand} ${row.original.vehicle.model} (${row.original.vehicle.year})`}</div>
-          <div className="text-muted-foreground text-xs">{row.original.vehicle.licensePlate}</div>
-        </div>
-      ),
+      cell: ({ row }) => {
+        const vehicle = row.original.vehicle;
+
+        if (!vehicle) {
+          return (
+            <div className="text-muted-foreground text-xs">
+              No vehicle assigned
+            </div>
+          );
+        }
+
+        return (
+          <div>
+            <div>
+              {`${vehicle?.brand || '-'} ${vehicle?.model || '-'} (${vehicle?.year || '-'})`}
+            </div>
+            <div className="text-muted-foreground text-xs">
+              {vehicle?.licensePlate || '-'}
+            </div>
+          </div>
+        );
+      },
     },
     {
       accessorKey: 'services',
       header: 'Services',
-      cell: ({ row }) => (
-        <div>
-          {row.original.services && row.original.services.length > 0 ? (
-            row.original.services.map((service, index) => <div key={index}>{service.service.name}</div>)
-          ) : (
-            <div className="text-muted-foreground text-xs">No services listed</div>
-          )}
-        </div>
-      ),
+      cell: ({ row }) => {
+        const services = row.original.services;
+
+        if (!services || services.length === 0) {
+          return (
+            <div className="text-muted-foreground text-xs">
+              No services listed
+            </div>
+          );
+        }
+
+        return (
+          <div>
+            {services.map((service, index) => (
+              <div key={index}>
+                {service?.service?.name || 'Unnamed Service'}
+              </div>
+            ))}
+          </div>
+        );
+      },
     },
     {
       accessorKey: 'scheduledTime',
