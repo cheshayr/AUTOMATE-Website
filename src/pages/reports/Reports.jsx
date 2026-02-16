@@ -3,8 +3,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { topAvailedServicesData, customerFeedbackData, vehicleHistoryData, revenueData } from './mockReports.js';
-import { FileText, TrendingUp, Users, DollarSign, Calendar as CalendarIcon, ChevronDownIcon } from 'lucide-react';
+import {
+  topAvailedServicesData,
+  customerFeedbackData,
+  vehicleHistoryData,
+  revenueData
+} from './mockReports.js';
+import { FileText, TrendingUp, Users, Calendar as CalendarIcon, ChevronDownIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button.jsx';
 import { Switch } from '@/components/ui/switch.jsx';
 import { useGenerateReportQuery } from '@/hooks/useReports.query.js';
@@ -12,6 +17,29 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar.jsx';
 import { subDays } from 'date-fns';
 import { ReportsTable } from './ReportsTable.jsx';
+
+// ------------------- NEW MOCK DATA -------------------
+const serviceTurnaroundData = [
+  { serviceName: 'Oil Change', avgTime: '35 mins', fastest: '25 mins', slowest: '50 mins' },
+  { serviceName: 'Brake Replacement', avgTime: '60 mins', fastest: '45 mins', slowest: '75 mins' },
+];
+
+const technicianPerformanceData = [
+  { technicianName: 'John Doe', servicesCompleted: 12, avgTime: '40 mins', rating: 5 },
+  { technicianName: 'Jane Smith', servicesCompleted: 8, avgTime: '45 mins', rating: 4.5 },
+];
+
+const partsUsageData = [
+  { partName: 'Brake Pads', usedQuantity: 25, totalCost: 500 },
+  { partName: 'Oil Filter', usedQuantity: 40, totalCost: 320 },
+];
+
+// ------------------- PESO FORMAT FUNCTION -------------------
+const formatPeso = (amount) => {
+  if (!amount) return '₱0.00';
+  if (typeof amount === 'string' && amount.startsWith('₱')) return amount; // already formatted
+  return `₱${Number(amount).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
 
 const Reports = () => {
   const [reportType, setReportType] = useState('top-services');
@@ -25,8 +53,6 @@ const Reports = () => {
   const [isMockData, setIsMockData] = useState(false);
   const [preparedBy, setPreparedBy] = useState('');
 
-  // const [reportConfig, setReportConfig] = useState({});
-
   const {
     data: reportData,
     isLoading: reportIsLoading,
@@ -35,20 +61,14 @@ const Reports = () => {
     refetch: refetchReport,
   } = useGenerateReportQuery({ reportType, dateFrom, dateTo });
 
-  console.log({ reportData });
   const handleExportPDF = () => {
-  if (!preparedBy.trim()) {
-    toast.error("Please enter who prepared the report.");
-    return;
-  }
-
-  console.log("Prepared By:", preparedBy);
-
-  toast.success(`Exporting report (Prepared by: ${preparedBy})...`);
-
-  // You will later attach this value to the actual PDF export logic
-};
-
+    if (!preparedBy.trim()) {
+      toast.error("Please enter who prepared the report.");
+      return;
+    }
+    console.log("Prepared By:", preparedBy);
+    toast.success(`Exporting report (Prepared by: ${preparedBy})...`);
+  };
 
   const handleDateFromChange = (date) => {
     if (dateRange === 'weekly') {
@@ -56,13 +76,11 @@ const Reports = () => {
       newDateTo.setDate(newDateTo.getDate() + 7);
       setDateTo(newDateTo);
     }
-
     if (dateRange === 'monthly') {
       const newDateTo = new Date(date);
       newDateTo.setMonth(newDateTo.getMonth() + 1);
       setDateTo(newDateTo);
     }
-
     setDateFrom(date);
     setSelectedMonth((date.getMonth() + 1).toString().padStart(2, '0'));
   };
@@ -78,6 +96,20 @@ const Reports = () => {
 
   const getReportConfig = () => {
     switch (reportType) {
+      case 'repeat-customers':
+        return {
+          title: 'Repeat Customers Report',
+          description: 'List of customers who have visited more than once',
+          columns: [
+            { key: 'customerName', label: 'Customer Name' },
+            { key: 'visitCount', label: 'Number of Visits' },
+            { key: 'mostAvailedService', label: 'Most Availed Service' },
+            { key: 'lastVisit', label: 'Last Visit Date' },
+          ],
+          data: isMockData ? [] : reportData?.data || [],
+          stats: [{ title: 'Total Repeat Customers', value: reportData?.data?.length || 0, icon: Users }],
+        };
+
       case 'top-services':
         return {
           title: 'Top Availed Services Report',
@@ -88,13 +120,17 @@ const Reports = () => {
             { key: 'totalRevenue', label: 'Total Revenue' },
             { key: 'dateAvailed', label: 'Date Availed' },
           ],
-          data: isMockData ? topAvailedServicesData : reportData?.data || [],
+          data: (isMockData ? topAvailedServicesData : reportData?.data || []).map(item => ({
+            ...item,
+            totalRevenue: formatPeso(item.totalRevenue),
+          })),
           stats: [
             { title: 'Total Services', value: '457', icon: FileText },
-            { title: 'Total Revenue', value: '$31,425', icon: DollarSign },
-            { title: 'Avg. per Service', value: '$68.72', icon: TrendingUp },
+            { title: 'Total Revenue', value: formatPeso(31425), icon: FileText },
+            { title: 'Avg. per Service', value: formatPeso(68.72), icon: TrendingUp },
           ],
         };
+
       case 'customer-feedback':
         return {
           title: 'Customer Feedback Report',
@@ -114,6 +150,7 @@ const Reports = () => {
             { title: 'Response Rate', value: '89%', icon: FileText },
           ],
         };
+
       case 'vehicle-history':
         return {
           title: 'Vehicle History Report',
@@ -128,13 +165,17 @@ const Reports = () => {
             { key: 'remarks', label: 'Remarks/Notes' },
             { key: 'status', label: 'Status' },
           ],
-          data: isMockData ? vehicleHistoryData : reportData?.data || [],
+          data: (isMockData ? vehicleHistoryData : reportData?.data || []).map(item => ({
+            ...item,
+            serviceCost: formatPeso(item.serviceCost),
+          })),
           stats: [
             { title: 'Services Completed', value: '189', icon: FileText },
             { title: 'In Progress', value: '12', icon: CalendarIcon },
-            { title: 'Total Spent', value: '$18,450', icon: DollarSign },
+            { title: 'Total Spent', value: formatPeso(18450), icon: FileText },
           ],
         };
+
       case 'revenue':
         return {
           title: 'Revenue Report',
@@ -145,17 +186,59 @@ const Reports = () => {
             { key: 'revenue', label: 'Revenue' },
             { key: 'topServices', label: 'Top Services' },
           ],
-          data: isMockData ? revenueData : reportData?.data || [],
+          data: (isMockData ? revenueData : reportData?.data || []).map(item => ({
+            ...item,
+            revenue: formatPeso(item.revenue),
+          })),
           stats: [
-            {
-              title: 'Total Revenue',
-              value: '$52,350',
-              icon: DollarSign,
-              trend: { value: '12.5% from last period', isPositive: true },
-            },
+            { title: 'Total Revenue', value: formatPeso(52350), icon: FileText, trend: { value: '12.5% from last period', isPositive: true } },
             { title: 'Services Completed', value: '891', icon: FileText },
-            { title: 'Avg. Daily Revenue', value: '$1,745', icon: TrendingUp },
+            { title: 'Avg. Daily Revenue', value: formatPeso(1745), icon: TrendingUp },
           ],
+        };
+
+      case 'service-turnaround':
+        return {
+          title: 'Service Turnaround Report',
+          description: 'Average, fastest, and slowest completion times for services',
+          columns: [
+            { key: 'serviceName', label: 'Service Name' },
+            { key: 'avgTime', label: 'Average Completion Time' },
+            { key: 'fastest', label: 'Fastest Time' },
+            { key: 'slowest', label: 'Slowest Time' },
+          ],
+          data: isMockData ? serviceTurnaroundData : reportData?.data || [],
+          stats: [],
+        };
+
+      case 'technician-performance':
+        return {
+          title: 'Technician Performance Report',
+          description: 'Technician service completion and ratings',
+          columns: [
+            { key: 'technicianName', label: 'Technician Name' },
+            { key: 'servicesCompleted', label: 'Services Completed' },
+            { key: 'avgTime', label: 'Average Service Time' },
+            { key: 'rating', label: 'Customer Rating' },
+          ],
+          data: isMockData ? technicianPerformanceData : reportData?.data || [],
+          stats: [],
+        };
+
+      case 'parts-usage':
+        return {
+          title: 'Parts Usage Report',
+          description: 'Most used parts and their cost',
+          columns: [
+            { key: 'partName', label: 'Part Name' },
+            { key: 'usedQuantity', label: 'Quantity Used' },
+            { key: 'totalCost', label: 'Total Cost' },
+          ],
+          data: (isMockData ? partsUsageData : reportData?.data || []).map(item => ({
+            ...item,
+            totalCost: formatPeso(item.totalCost),
+          })),
+          stats: [],
         };
     }
   };
@@ -167,22 +250,15 @@ const Reports = () => {
   };
 
   const reportConfig = getReportConfig();
-  console.log({ selectedMonth });
+
   return (
     <Card className="w-full bg-transparent shadow-none border-0">
-      {/* <CardHeader>
-        <CardTitle className="text-2xl font-semibold">Reports</CardTitle>
-        <CardDescription className="line-clamp-3">
-          Select report types, date ranges, and export formats to generate comprehensive reports for analysis.
-        </CardDescription>
-      </CardHeader> */}
       <CardContent className="space-y-6">
+        {/* FILTER CARD */}
         <Card className="w-full bg-transparent shadow-none">
           <CardHeader>
             <CardTitle className="text-2xl font-semibold">Report Filter</CardTitle>
-            <CardDescription className="line-clamp-3">
-              Select report parameters and generate your report
-            </CardDescription>
+            <CardDescription className="line-clamp-3">Select report parameters and generate your report</CardDescription>
             <div className="space-y-2">
               <label className="text-sm font-medium">Prepared By</label>
               <input
@@ -194,7 +270,9 @@ const Reports = () => {
               />
             </div>
           </CardHeader>
+
           <CardContent className="space-y-6">
+            {/* MOCK DATA SWITCH */}
             <div className="grid gap-4 md:grid-cols-3">
               <div className="flex flex-col">
                 <Label className="mb-2">Enable Mock Data</Label>
@@ -204,7 +282,9 @@ const Reports = () => {
                 </div>
               </div>
             </div>
-            <div className="grid gap-4  md:grid-cols-2 lg:grid-cols-3">
+
+            {/* REPORT TYPE AND DATE RANGE */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Report Type</label>
                 <Select value={reportType} onValueChange={(value) => setReportType(value)}>
@@ -212,14 +292,19 @@ const Reports = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-popover">
+                    <SelectItem value="repeat-customers">Repeat Customers</SelectItem>
                     <SelectItem value="top-services">Top Availed Services</SelectItem>
                     <SelectItem value="customer-feedback">Customer Feedback</SelectItem>
                     <SelectItem value="vehicle-history">Vehicle History</SelectItem>
-                    <SelectItem value="revenue">Revenue</SelectItem>
+                    {/* <SelectItem value="revenue">Revenue</SelectItem> */}
+                    <SelectItem value="service-turnaround">Service Turnaround</SelectItem>
+                    <SelectItem value="technician-performance">Technician Performance</SelectItem>
+                    <SelectItem value="parts-usage">Parts Usage</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
+              {/* Date Range Selection */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Date Range</label>
                 <div className="flex space-x-2">
@@ -232,32 +317,28 @@ const Reports = () => {
                       <SelectItem value="monthly">Monthly</SelectItem>
                     </SelectContent>
                   </Select>
-                  {/* selection of month */}
+
                   {dateRange === 'monthly' && (
                     <Select value={selectedMonth} onValueChange={(value) => handleSelectMonthChange(value)}>
                       <SelectTrigger className={'w-full'} disabled={dateRange !== 'monthly'}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-popover">
-                        {
-                          /* Generate month items */
-                          Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
-                            <SelectItem key={month} value={month.toString().padStart(2, '0')}>
-                              {new Date(0, month - 1).toLocaleString('default', { month: 'long' })}
-                            </SelectItem>
-                          ))
-                        }
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                          <SelectItem key={month} value={month.toString().padStart(2, '0')}>
+                            {new Date(0, month - 1).toLocaleString('default', { month: 'long' })}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   )}
                 </div>
               </div>
 
+              {/* Date From & To */}
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-2">
-                  <Label htmlFor="dateFrom" className="px-1">
-                    Date From
-                  </Label>
+                  <Label htmlFor="dateFrom" className="px-1">Date From</Label>
                   <Popover open={dateFromOpen} onOpenChange={setDateFromOpen}>
                     <PopoverTrigger asChild>
                       <Button variant="outline" id="dateFrom" className="w-full justify-between font-normal">
@@ -278,10 +359,9 @@ const Reports = () => {
                     </PopoverContent>
                   </Popover>
                 </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="dateToOpen" className="px-1">
-                    Date To
-                  </Label>
+                  <Label htmlFor="dateToOpen" className="px-1">Date To</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" id="dateToOpen" className="w-full justify-between font-normal" disabled>
@@ -295,6 +375,7 @@ const Reports = () => {
                   </Popover>
                 </div>
               </div>
+
               <div className="flex items-end">
                 <Button onClick={handleGenerateReport} className="w-full">
                   Generate Report
@@ -304,14 +385,9 @@ const Reports = () => {
           </CardContent>
         </Card>
 
+        {/* REPORT TABLE */}
         {showReport && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* <div className="grid gap-4 md:grid-cols-3">
-              {reportConfig.stats.map((stat, idx) => (
-                <StatCard key={idx} {...stat} />
-              ))}
-            </div> */}
-
             <Card>
               <CardHeader>
                 <CardTitle>{reportConfig.title}</CardTitle>
@@ -325,7 +401,7 @@ const Reports = () => {
                   onExportPDF={handleExportPDF}
                   dateFrom={dateFrom}
                   dateTo={dateTo}
-                  preparedBy={preparedBy} 
+                  preparedBy={preparedBy}
                 />
               </CardContent>
             </Card>

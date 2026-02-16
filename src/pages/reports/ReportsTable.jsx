@@ -9,6 +9,13 @@ import autoTable from 'jspdf-autotable';
 import { isValid, parseISO, format } from 'date-fns';
 import logo from '@/assets/logo.png';
 
+// ------------------- PESO FORMAT -------------------
+const formatPeso = (amount) => {
+  if (!amount) return '₱0.00';
+  if (typeof amount === 'string' && amount.startsWith('₱')) return amount; // already formatted
+  return `₱${Number(amount).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
 export const ReportsTable = ({
   columns,
   data,
@@ -44,18 +51,19 @@ export const ReportsTable = ({
     return 0;
   });
 
+  // ------------------- AUTO FORMAT PESO & DATE -------------------
   const renderCellValue = (value, column) => {
     if (value === null || value === undefined || value === '') {
       return <span className="text-muted-foreground">-</span>;
     }
 
+    // DATE
     if (typeof value === 'string') {
       const date = parseISO(value);
-      if (isValid(date)) {
-        return format(date, 'MMM dd, yyyy');
-      }
+      if (isValid(date)) return format(date, 'MMM dd, yyyy');
     }
 
+    // RATING STARS
     if (
       typeof value === 'number' &&
       value >= 0 &&
@@ -64,7 +72,7 @@ export const ReportsTable = ({
     ) {
       return (
         <div className="flex items-center">
-          {Array.from({ length: value }).map((_, index) => (
+          {Array.from({ length: 5 }).map((_, index) => (
             <svg
               key={index}
               className={`h-4 w-4 ${index < value ? 'text-yellow-400' : 'text-gray-300'}`}
@@ -78,47 +86,46 @@ export const ReportsTable = ({
       );
     }
 
+    // BADGE
     if (typeof value === 'object' && value?.type === 'badge') {
       return <Badge variant={value.variant || 'default'}>{value.text}</Badge>;
+    }
+
+    // ------------------- AUTO PESO -------------------
+    const pesoKeys = ['revenue', 'servicecost', 'totalrevenue', 'totalcost', 'price', 'amount'];
+    if (typeof value === 'number' && pesoKeys.includes(column.key.toLowerCase())) {
+      return formatPeso(value);
+    }
+
+    if (typeof value === 'string' && value.includes('₱')) {
+      return value; // already formatted
     }
 
     return value;
   };
 
+  // ------------------- EXPORT PDF -------------------
   const handleExportPDF = () => {
-    // ✅ Validation
     if (!preparedBy || preparedBy.trim() === '') {
       alert('Please enter your name in "Prepared By" before exporting.');
       return;
     }
 
     const doc = new jsPDF();
-
-    // 🔹 Export timestamp (NEW)
     const exportedAt = format(new Date(), 'MMM dd, yyyy • hh:mm a');
 
-    // Logo
     doc.addImage(logo, 'PNG', 14, 1, 35, 35);
-
-    // Title
     doc.setFontSize(16);
     doc.text(reportTitle, 60, 20);
 
-    // Date Range
     doc.setFontSize(10);
     const from = dateFrom ? format(dateFrom, 'MMM dd, yyyy') : '';
     const to = dateTo ? format(dateTo, 'MMM dd, yyyy') : '';
-    if (from || to) {
-      doc.text(`Date Range: ${[from, to].filter(Boolean).join(' - ')}`, 14, 35);
-    }
+    if (from || to) doc.text(`Date Range: ${[from, to].filter(Boolean).join(' - ')}`, 14, 35);
 
-    // Prepared By
     doc.text(`Prepared By: ${preparedBy}`, 14, 42);
-
-    // 🔹 Exported Date & Time (NEW)
     doc.text(`Exported On: ${exportedAt}`, 14, 48);
 
-    // Table
     const headers = columns.map((col) => col.label);
     const rows = sortedData.map((row) =>
       columns.map((col) => {
@@ -131,7 +138,11 @@ export const ReportsTable = ({
         }
 
         if (typeof value === 'object' && value?.text) return value.text;
-        if (typeof value === 'string' && value.includes('₱')) return value.replace('₱', 'PHP ');
+
+        // Auto PESO for PDF
+        const pesoKeys = ['revenue', 'servicecost', 'totalrevenue', 'totalcost', 'price', 'amount'];
+        if (typeof value === 'number' && pesoKeys.includes(col.key.toLowerCase())) return formatPeso(value);
+        if (typeof value === 'string' && value.includes('₱')) return value;
 
         return String(value);
       })
@@ -140,22 +151,16 @@ export const ReportsTable = ({
     autoTable(doc, {
       head: [headers],
       body: rows,
-      startY: 55, // ⬅️ adjusted to make room for timestamp
+      startY: 55,
       styles: { fontSize: 9 },
       headStyles: { fillColor: [71, 85, 105] },
     });
 
-    // Save
     doc.save(
-      `${reportTitle.replace(/\s+/g, '_').toLowerCase()}_${format(
-        new Date(),
-        'yyyy-MM-dd'
-      )}.pdf`
+      `${reportTitle.replace(/\s+/g, '_').toLowerCase()}_${format(new Date(), 'yyyy-MM-dd')}.pdf`
     );
 
-    if (onExportPDF) {
-      onExportPDF(reportTitle, columns, sortedData, preparedBy);
-    }
+    if (onExportPDF) onExportPDF(reportTitle, columns, sortedData, preparedBy);
   };
 
   return (
