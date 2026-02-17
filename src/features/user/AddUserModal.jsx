@@ -43,24 +43,22 @@ function AddUser({ isAdd = false, user = {} }) {
       setIsOpen(false);
     }
 
-    isAdd &&
+    if (isAdd) {
       setUserDetails({
         name: "",
         email: "",
         mobileNumber: "",
         password: "",
         role: "staff",
-        position: "Office Staff",
+        position: "Office Staff", // Default remains valid
       });
+    }
 
     resetAddUserMutation();
-  }, [addUserMutationSuccess, isOpen]);
+  }, [addUserMutationSuccess, isOpen, isAdd]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    console.log(userDetails);
-
     await addUserMutation(userDetails);
   };
 
@@ -69,7 +67,7 @@ function AddUser({ isAdd = false, user = {} }) {
       <DialogTrigger asChild>
         {isAdd ? (
           <Button>
-            <Plus /> Add User
+            <Plus className="mr-2 h-4 w-4" /> Add User
           </Button>
         ) : (
           <Button
@@ -96,7 +94,7 @@ function AddUser({ isAdd = false, user = {} }) {
                 id="name"
                 name="name"
                 placeholder="Name"
-                value={userDetails.name}
+                value={userDetails.name || ""}
               />
             </div>
             <div className="grid gap-3">
@@ -108,11 +106,11 @@ function AddUser({ isAdd = false, user = {} }) {
                 id="email"
                 name="email"
                 placeholder="Email"
-                value={userDetails.email}
+                value={userDetails.email || ""}
               />
             </div>
             <div className="grid gap-3">
-              <Label htmlFor="number">Number</Label>
+              <Label htmlFor="number">Mobile Number</Label>
               <Input
                 onChange={(e) =>
                   setUserDetails({
@@ -123,15 +121,13 @@ function AddUser({ isAdd = false, user = {} }) {
                 id="number"
                 name="number"
                 placeholder="Number"
-                value={userDetails.mobileNumber}
+                value={userDetails.mobileNumber || ""}
               />
             </div>
             <div className="grid gap-3">
-              <Label htmlFor="category">Role</Label>
+              <Label htmlFor="role">Role</Label>
               <Select
                 disabled
-                id="role"
-                name="role"
                 value={userDetails.role}
                 onValueChange={(newValue) =>
                   setUserDetails({ ...userDetails, role: newValue })
@@ -164,22 +160,21 @@ function AddUser({ isAdd = false, user = {} }) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
+                    {/* Only Office Staff and Mechanic kept */}
                     <SelectItem value="Office Staff">Office Staff</SelectItem>
                     <SelectItem value="Mechanic">Mechanic</SelectItem>
-                    <SelectItem value="Helper">Helper</SelectItem>
-                    <SelectItem value="Guard">Guard</SelectItem>
-                    <SelectItem value="Driver">Driver</SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>
             </div>
             {isAdd && (
               <div className="grid gap-3">
-                <Label htmlFor="position">Password</Label>
+                <Label htmlFor="password">Password</Label>
                 <Input
-                  type={"password"}
-                  value={userDetails.passworrd}
-                  autocomplete="new-password"
+                  id="password"
+                  type="password"
+                  value={userDetails.password || ""}
+                  autoComplete="new-password"
                   onChange={(e) =>
                     setUserDetails({
                       ...userDetails,
@@ -192,21 +187,21 @@ function AddUser({ isAdd = false, user = {} }) {
           </div>
           <DialogFooter>
             {isAdd && (
-              <DialogClose asChild>
-                <Button variant="outline">Cancel</Button>
-              </DialogClose>
-            )}
-            {isAdd && (
-              <Button type="submit">
-                {addUserMutationPending ? (
-                  <span className="flex items-center gap-2">
-                    <LoadingSpinner />
-                    Saving
-                  </span>
-                ) : (
-                  "Save"
-                )}
-              </Button>
+              <>
+                <DialogClose asChild>
+                  <Button variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button type="submit" disabled={addUserMutationPending}>
+                  {addUserMutationPending ? (
+                    <span className="flex items-center gap-2">
+                      <LoadingSpinner />
+                      Saving
+                    </span>
+                  ) : (
+                    "Save"
+                  )}
+                </Button>
+              </>
             )}
           </DialogFooter>
         </form>

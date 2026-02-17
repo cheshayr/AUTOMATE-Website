@@ -21,7 +21,6 @@ import { CheckCircle, XCircle, Download } from 'lucide-react';
 import AddUserModal from './AddUserModal';
 import { useFetchUsers } from '@/hooks/useUsersQuery';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import ManageUserStatus from './MangeUserStatus';
 import { useDebounce } from '@uidotdev/usehooks';
 
 import {
@@ -50,7 +49,7 @@ const UserManagement = () => {
 
   const [preparedBy, setPreparedBy] = useState('');
 
-  // 🔹 NEW: export scope
+  // 🔹 export scope
   const [exportScope, setExportScope] = useState('page'); // page | all
 
   const {
@@ -138,22 +137,22 @@ const UserManagement = () => {
       59
     );
 
+    // Headers updated: "Status" removed
     const headers = [
       'Name',
       'Email',
       'Mobile Number',
       'Verified',
-      'Status',
       'Role',
       'Position',
     ];
 
+    // Rows updated: "Status" removed
     const rows = dataToExport.map((user) => [
       user.name,
       user.email,
       user.mobileNumber,
       user.isVerified ? 'Yes' : 'No',
-      user.isActive ? 'Active' : 'Inactive',
       user.role,
       user.position,
     ]);
@@ -202,7 +201,6 @@ const UserManagement = () => {
               className="w-48"
             />
 
-            {/* 🔹 EXPORT FILTER */}
             <select
               value={exportScope}
               onChange={(e) => setExportScope(e.target.value)}
@@ -230,7 +228,7 @@ const UserManagement = () => {
               <TableHead>Email</TableHead>
               <TableHead>Mobile Number</TableHead>
               <TableHead className="text-center">Verified</TableHead>
-              <TableHead className="text-center">Status</TableHead>
+              {/* Status Header Removed */}
               <TableHead>Role</TableHead>
               <TableHead>Position</TableHead>
               <TableHead className="text-center">Actions</TableHead>
@@ -240,7 +238,7 @@ const UserManagement = () => {
           <TableBody>
             {usersDataPending ? (
               <TableRow>
-                <TableCell colSpan={8} className="h-96">
+                <TableCell colSpan={7} className="h-96">
                   <div className="flex items-center justify-center h-full">
                     <LoadingSpinner />
                   </div>
@@ -249,7 +247,7 @@ const UserManagement = () => {
             ) : usersDataError ? (
               <TableRow>
                 <TableCell
-                  colSpan={8}
+                  colSpan={7}
                   className="text-center text-red-500"
                 >
                   Error loading users
@@ -268,29 +266,19 @@ const UserManagement = () => {
                       <XCircle className="text-red-500 mx-auto" />
                     )}
                   </TableCell>
-                  <TableCell className="text-center">
-                    {user.isActive ? (
-                      <CheckCircle className="text-green-500 mx-auto" />
-                    ) : (
-                      <XCircle className="text-red-500 mx-auto" />
-                    )}
-                  </TableCell>
+                  {/* Status Cell Removed */}
                   <TableCell>{user.role}</TableCell>
                   <TableCell>{user.position}</TableCell>
                   <TableCell className="flex justify-center gap-2">
                     <AddUserModal user={user} />
-                    <ManageUserStatus
-                      userName={user.name}
-                      id={user._id}
-                      isActive={user.isActive}
-                    />
+                    {/* ManageUserStatus Component Removed */}
                   </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={8}
+                  colSpan={7}
                   className="text-center text-muted-foreground"
                 >
                   No users found.

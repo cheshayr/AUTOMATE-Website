@@ -149,32 +149,35 @@ function AppointmentSheet({ appointment, onSave, onCancel, staffList = [], vehic
               />
 
               <FormField
-                control={form.control}
-                name="assignedStaff"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Assign Mechanic</FormLabel>
-                    <FormControl>
-                      <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!isAdmin}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select a staff" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            <SelectLabel>Staff</SelectLabel>
-                            {staffList.map((staff) => (
-                              <SelectItem key={staff._id} value={staff._id}>
-                                {staff.name}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+  control={form.control}
+  name="assignedStaff"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Assign Mechanic</FormLabel>
+      <FormControl>
+        <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!isAdmin}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select a staff" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Mechanics</SelectLabel>
+              {/* Filter the list here */}
+              {staffList
+                .filter((staff) => staff.position === "Mechanic")
+                .map((staff) => (
+                  <SelectItem key={staff._id} value={staff._id}>
+                    {staff.name}
+                  </SelectItem>
+                ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
 
               <FormField
                 control={form.control}
