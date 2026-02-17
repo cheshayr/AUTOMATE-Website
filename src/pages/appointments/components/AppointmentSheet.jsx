@@ -153,7 +153,7 @@ function AppointmentSheet({ appointment, onSave, onCancel, staffList = [], vehic
                 name="assignedStaff"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Assign Staff</FormLabel>
+                    <FormLabel>Assign Mechanic</FormLabel>
                     <FormControl>
                       <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!isAdmin}>
                         <SelectTrigger className="w-full">
