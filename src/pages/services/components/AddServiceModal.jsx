@@ -1,3 +1,4 @@
+// AddServiceModal.jsx
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -15,18 +16,38 @@ import { useEffect, useState } from 'react';
 
 export function AddServiceModal({ isOpen, setIsOpen, currentData }) {
   const title = currentData ? 'Edit Service' : 'Add Service';
-  const [imageFile, setImageFile] = useState(null);
-  const [errors, setErrors] = useState({});
+
+  const [imageFiles, setImageFiles] = useState([]);
+  const [previewUrls, setPreviewUrls] = useState([]);
+  const [errors, setErrors] = useState([]);
 
   const addService = useAddService();
   const editService = useEditService();
 
   useEffect(() => {
     if (isOpen) {
-      setImageFile(null);
+      setImageFiles([]);
+      setPreviewUrls([]);
+
+      // Load existing images if editing
+      if (currentData?.imageUrls) {
+        setPreviewUrls(currentData.imageUrls);
+      }
+
       setErrors({});
     }
-  }, [isOpen]);
+  }, [isOpen, currentData]);
+
+  const handleImageChange = (files) => {
+    const fileArray = Array.from(files);
+    setImageFiles(prev => [...prev, ...fileArray]);
+    setPreviewUrls(prev => [...prev, ...fileArray.map(file => URL.createObjectURL(file))]);
+  };
+
+  const deleteImage = (index) => {
+    setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
+  };
 
   const validateForm = (description, rangeMin, ETC) => {
     const newErrors = {};
@@ -65,17 +86,16 @@ export function AddServiceModal({ isOpen, setIsOpen, currentData }) {
 
     if (!validateForm(description, rangeMin, ETC)) return;
 
-    // 🔥 FORCE NUMBERS
-    const rangeMinNum = Number(rangeMin);
-    const ETCNum = Number(ETC);
-
     const formData = new FormData();
     formData.append('name', name);
     formData.append('description', description);
-    formData.append('rangeMin', rangeMinNum);
-    formData.append('ETC', ETCNum);
+    formData.append('rangeMin', Number(rangeMin));
+    formData.append('ETC', Number(ETC));
 
-    if (imageFile) formData.append('image', imageFile);
+    // Append all images
+    imageFiles.forEach(file => {
+      formData.append('images', file);
+    });
 
     if (currentData) {
       await editService.mutateAsync(
@@ -91,24 +111,52 @@ export function AddServiceModal({ isOpen, setIsOpen, currentData }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-[425px] max-h-[90vh]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="grid gap-4 overflow-y-auto">
+          {/* IMAGE SECTION */}
           <div className="grid gap-2">
-            <Label>Picture</Label>
+            <Label>Pictures (You can upload one or more images)</Label>
             <Input
               type="file"
               accept="image/*"
-              onChange={(e) => setImageFile(e.target.files[0])}
+              multiple
+              onChange={(e) => handleImageChange(e.target.files)}
             />
+
+            {previewUrls.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                {previewUrls.map((url, index) => (
+                  <div key={index} className="relative">
+                    <img
+                      src={url}
+                      className="h-20 w-full object-cover rounded"
+                    />
+                    {/* DELETE BUTTON */}
+                    <button
+                      type="button"
+                      onClick={() => deleteImage(index)}
+                      className="absolute top-1 right-1 bg-red-600 text-white px-1 rounded text-xs z-10"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
+          {/* SERVICE DETAILS */}
           <div className="grid gap-2">
             <Label>Service Name</Label>
-            <Input name="name" defaultValue={currentData?.name || ''} required />
+            <Input
+              name="name"
+              defaultValue={currentData?.name || ''}
+              required
+            />
           </div>
 
           <div className="grid gap-2">
@@ -130,12 +178,8 @@ export function AddServiceModal({ isOpen, setIsOpen, currentData }) {
               type="number"
               min="0"
               defaultValue={currentData?.rangeMin ?? 0}
-              className={errors.price ? 'border-red-500' : ''}
               required
             />
-            {errors.price && (
-              <p className="text-xs text-red-500">{errors.price}</p>
-            )}
           </div>
 
           <div className="grid gap-2">
@@ -145,12 +189,8 @@ export function AddServiceModal({ isOpen, setIsOpen, currentData }) {
               type="number"
               min="30"
               defaultValue={currentData?.ETC ?? 30}
-              className={errors.etc ? 'border-red-500' : ''}
               required
             />
-            {errors.etc && (
-              <p className="text-xs text-red-500">{errors.etc}</p>
-            )}
           </div>
 
           <DialogFooter>
@@ -166,6 +206,3 @@ export function AddServiceModal({ isOpen, setIsOpen, currentData }) {
 }
 
 export default AddServiceModal;
-
-
-
