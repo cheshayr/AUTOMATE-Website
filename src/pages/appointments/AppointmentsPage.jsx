@@ -117,9 +117,16 @@ const [preparedBy, setPreparedBy] = useState(''); // For PDF report
 // <-- move this up BEFORE filteredAppointments
 
 const filteredAppointments =
-  statusFilter === 'All'
+  (statusFilter === 'All'
     ? appointments
-    : appointments.filter((a) => a.status === statusFilter);
+    : appointments.filter((a) => a.status === statusFilter)
+  )
+  .slice()
+  .sort((a, b) => {
+    const dateA = new Date(a.scheduledTime || a.createdAt || 0);
+    const dateB = new Date(b.scheduledTime || b.createdAt || 0);
+    return dateB - dateA; // newest appointment first
+  });
 
 const staff = users?.data || [];
 
