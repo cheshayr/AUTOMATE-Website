@@ -1,0 +1,115 @@
+/* Custom Palette: #1D2D43 (Navy), #FFFFFF (White) */
+
+.appointment-progress-dialog {
+  max-width: 850px !important;
+  border-radius: 1.5rem !important;
+}
+
+.info-card {
+  display: flex;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  margin: 1rem 0 2rem 0;
+  gap: 1.5rem;
+}
+
+.info-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.info-icon-wrapper {
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  background: white;
+  border: 1px solid #f1f5f9;
+}
+
+.info-divider {
+  width: 1px;
+}
+
+/* Progress Tracker */
+.progress-container {
+  padding: 2.5rem 1rem 3.5rem 1rem;
+}
+
+.progress-track {
+  position: relative;
+  width: 100%;
+}
+
+.line-base {
+  position: absolute;
+  top: 1.25rem; /* Center of node */
+  left: 0;
+  right: 0;
+  height: 4px;
+  z-index: 1;
+}
+
+.line-fill {
+  position: absolute;
+  top: 1.25rem;
+  left: 0;
+  height: 4px;
+  z-index: 2;
+  transition: width 1s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.steps-wrapper {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  justify-content: space-between;
+}
+
+.step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.step-circle {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  border-width: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-content {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.step-label {
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+}
+
+/* Animations */
+@keyframes pulse-soft {
+  0% { box-shadow: 0 0 0 0 rgba(29, 45, 67, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(29, 45, 67, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(29, 45, 67, 0); }
+}
+
+.step-item.active .step-circle {
+  animation: pulse-soft 2s infinite;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 640px) {
+  .info-card { flex-direction: column; gap: 1rem; }
+  .info-divider { display: none; }
+  .step-label { font-size: 0.6rem; white-space: normal; max-width: 50px; }
+  .step-circle { width: 2rem; height: 2rem; }
+  .line-base, .line-fill { top: 1rem; }
+}

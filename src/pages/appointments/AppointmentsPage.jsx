@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import AppointmentProgress from './components/AppoinmentProgress';
 import './AppointmentsPage.css';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../../context/AuthContext';
@@ -133,7 +134,8 @@ const staff = users?.data || [];
   console.log({ user });
   const [date, setDate] = useState(new Date());
   const [staffList, setStaffList] = useState([]); // Initialize as empty array
-  const [vehicleList, setVehicleList] = useState([appointments?.vehicle]);
+  // const [vehicleList, setVehicleList] = useState([appointments?.vehicle]);
+  const [vehicleList, setVehicleList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [invoiceFile, setInvoiceFile] = useState(null); // No type annotation
 
@@ -147,6 +149,8 @@ const staff = users?.data || [];
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalInvoiceOpen, setIsModalInvoiceOpen] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isProgressOpen, setIsProgressOpen] = useState(false);
+  const [progressAppointment, setProgressAppointment] = useState(null);
   const [selectedAppointment, setSelectedAppointment] = useState(''); // For invoice modal, if needed
   const [editingAppointment, setEditingAppointment] = useState(null); // null for new, object for edit
   const { mutateAsync: appointmentMutation } = useAdminUpdateAppointment();
@@ -192,6 +196,11 @@ const staff = users?.data || [];
     setEditingAppointment(appointment);
     // setIsModalOpen(true);
     setIsSheetOpen(true);
+  };
+
+  const handleOpenProgress = (appointment) => {
+  setProgressAppointment(appointment);
+  setIsProgressOpen(true);
   };
 
   const handleCloseModal = () => {
@@ -487,6 +496,13 @@ const staff = users?.data || [];
             <Button variant={'outline'} onClick={handleOpenModal.bind(null, appointment)}>
               <Eye />
             </Button>
+
+            <Button
+              variant={'outline'}
+              onClick={() => handleOpenProgress(appointment)}
+            >
+              Track
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0">
@@ -637,6 +653,13 @@ const staff = users?.data || [];
               />
             )}
           </Sheet>
+
+          <Dialog open={isProgressOpen} onOpenChange={setIsProgressOpen}>
+            {isProgressOpen && (
+              <AppointmentProgress appointment={progressAppointment} />
+            )}
+          </Dialog>
+          
         </Card>
         {/* <Card className={'bg-transparent shadow-none border-0'}></Card> */}
         {/* <div className="bg-[#f5f7ff] min-h-screen p-6">
