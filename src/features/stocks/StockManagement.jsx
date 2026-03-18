@@ -140,44 +140,103 @@ const StockManagement = () => {
   };
 
   /* ================= PDF EXPORT ================= */
-  const handleExportPDF = () => {
-    if (!preparedBy.trim()) {
-      toast.error("Please enter who prepared the report.");
-      return;
-    }
+  const COMPANY_NAME = "Tierodman Auto Center";
 
-    const dataToExport = exportScope === "all" ? rawInventory : paginatedData;
+const handleExportPDF = () => {
+  if (!preparedBy.trim()) {
+    toast.error("Please enter who prepared the report.");
+    return;
+  }
 
-    const doc = new jsPDF();
-    const exportedAt = format(new Date(), "MMM dd, yyyy • hh:mm a");
+  const dataToExport = exportScope === "all" ? rawInventory : paginatedData;
 
-    doc.addImage(logo, "PNG", 14, 10, 30, 30);
-    doc.setFontSize(16);
-    doc.text("Inventory Report", 55, 20);
+  if (dataToExport.length === 0) {
+    toast.error("No inventory data to export.");
+    return;
+  }
 
-    doc.setFontSize(10);
-    doc.text(`Category Filter: ${itemCategory}`, 14, 45);
-    doc.text(`Prepared By: ${preparedBy}`, 14, 52);
-    doc.text(`Exported On: ${exportedAt}`, 14, 58);
-    doc.text(`Scope: ${exportScope === "all" ? "All Pages" : "Current Page"}`, 14, 65);
+  const doc = new jsPDF();
+  const exportedAt = format(new Date(), "MMM dd, yyyy • hh:mm a");
 
-    autoTable(doc, {
-      head: [["Item Name", "Category", "Supplier", "Stock", "Status"]],
-      body: dataToExport.map((item) => [
-        item.itemName,
-        item.category,
-        item.supplier?.companyName || item.companyName || "No Supplier",
-        item.stock,
-        item.stock <= 0 ? "Out of Stock" : item.stock <= 10 ? "Low Stock" : "In Stock",
-      ]),
-      startY: 75,
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [71, 85, 105] },
-    });
+  autoTable(doc, {
+    head: [["Item Name", "Category", "Supplier", "Stock", "Status"]],
 
-    doc.save(`inventory_report_${format(new Date(), "yyyy-MM-dd")}.pdf`);
-    toast.success("Inventory exported successfully!");
-  };
+    body: dataToExport.map((item) => [
+      item.itemName || "N/A",
+      item.category || "N/A",
+      item.supplier?.companyName || item.companyName || "No Supplier",
+      item.stock ?? 0,
+      item.stock <= 0
+        ? "Out of Stock"
+        : item.stock <= 10
+        ? "Low Stock"
+        : "In Stock",
+    ]),
+
+    startY: 70,
+    styles: { fontSize: 9 },
+    headStyles: { fillColor: [71, 85, 105] },
+
+    didDrawPage: function () {
+      const pageHeight = doc.internal.pageSize.height;
+      const pageWidth = doc.internal.pageSize.width;
+      const pageNumber = doc.internal.getCurrentPageInfo().pageNumber;
+      const pageCount = doc.internal.getNumberOfPages();
+
+      // ================= HEADER (FIRST PAGE ONLY) =================
+      if (pageNumber === 1) {
+        // Logo
+        doc.addImage(logo, "PNG", 14, 10, 20, 20);
+
+        // Title
+        doc.setFontSize(16);
+        doc.text("Inventory Report", pageWidth / 2, 20, {
+          align: "center",
+        });
+
+        // Company Name
+        doc.setFontSize(10);
+        doc.text(COMPANY_NAME, pageWidth / 2, 26, {
+          align: "center",
+        });
+
+        // Meta Info
+        doc.text(`Category Filter: ${itemCategory}`, 14, 40);
+        doc.text(`Prepared By: ${preparedBy}`, 14, 46);
+        doc.text(`Exported: ${exportedAt}`, 14, 52);
+        doc.text(
+          `Scope: ${exportScope === "all" ? "All Pages" : "Current Page"}`,
+          14,
+          58
+        );
+
+        // Divider
+        doc.setLineWidth(0.3);
+        doc.line(14, 64, pageWidth - 14, 64);
+      }
+
+      // ================= FOOTER (ALL PAGES) =================
+      doc.setLineWidth(0.3);
+      doc.line(14, pageHeight - 15, pageWidth - 14, pageHeight - 15);
+
+      doc.setFontSize(9);
+
+      // LEFT: Company
+      doc.text(COMPANY_NAME, 14, pageHeight - 8);
+
+      // RIGHT: Page number
+      doc.text(
+        `Page ${pageNumber} of ${pageCount}`,
+        pageWidth - 14,
+        pageHeight - 8,
+        { align: "right" }
+      );
+    },
+  });
+
+  doc.save(`inventory_report_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  toast.success("Inventory exported successfully!");
+};
 
   return (
     <Card className="w-full bg-transparent shadow-none border-0">
