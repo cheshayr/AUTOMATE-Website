@@ -282,14 +282,14 @@ const staff = users?.data || [];
     await uploadInvoiceMutation({ id: selectedAppointment, updatedData: formData });
   };
 
-  const handleExportPDF = () => {
-  // 1. Prepared By validation
+  const COMPANY_NAME = "Tierodman Auto Center";
+
+const handleExportPDF = () => {
   if (!preparedBy.trim()) {
     toast.error('Please enter who prepared the report.');
     return;
   }
 
-  // 2. Status filter validation (NO DATA)
   if (!filteredAppointments || filteredAppointments.length === 0) {
     toast.error(`No appointments found for status "${statusFilter}".`);
     return;
@@ -297,18 +297,6 @@ const staff = users?.data || [];
 
   const doc = new jsPDF();
   const exportedAt = format(new Date(), 'MMM dd, yyyy • hh:mm a');
-
-  // --- ADD LOGO ---
-  doc.addImage(logoImage, 'PNG', 14, 10, 40, 40);
-  // ----------------
-
-  doc.setFontSize(16);
-  doc.text('Appointments Report', 60, 25);
-
-  doc.setFontSize(10);
-  doc.text(`Status Filter: ${statusFilter}`, 14, 55);
-  doc.text(`Prepared By: ${preparedBy}`, 14, 62);
-  doc.text(`Exported On: ${exportedAt}`, 14, 68);
 
   autoTable(doc, {
     startY: 75,
@@ -321,10 +309,38 @@ const staff = users?.data || [];
         : '-',
       a.services?.map((s) => s?.service?.name || '-').join(', ') || '-',
       a.status || '-',
-      a.scheduledTime ? new Date(a.scheduledTime).toLocaleString() : '-',
+      a.scheduledTime ? format(new Date(a.scheduledTime), 'MMM dd, yyyy • hh:mm a') : '-',
     ]),
     styles: { fontSize: 9 },
     headStyles: { fillColor: [71, 85, 105] },
+
+    didDrawPage: function (data) {
+      const pageHeight = doc.internal.pageSize.height;
+      const pageWidth = doc.internal.pageSize.width;
+      const pageNumber = doc.internal.getCurrentPageInfo().pageNumber;
+      const pageCount = doc.internal.getNumberOfPages();
+
+      // ===== HEADER (FIRST PAGE ONLY) =====
+      if (pageNumber === 1) {
+        doc.addImage(logoImage, 'PNG', 14, 10, 40, 40);
+        doc.setFontSize(16);
+        doc.text('Appointments Report', pageWidth / 2, 25, { align: 'center' });
+        doc.setFontSize(10);
+        doc.text(COMPANY_NAME, pageWidth / 2, 32, { align: 'center' });
+        doc.text(`Status Filter: ${statusFilter}`, 14, 50);
+        doc.text(`Prepared By: ${preparedBy}`, 14, 57);
+        doc.text(`Exported On: ${exportedAt}`, 14, 64);
+        doc.setLineWidth(0.3);
+        doc.line(14, 70, pageWidth - 14, 70);
+      }
+
+      // ===== FOOTER (ALL PAGES) =====
+      doc.setLineWidth(0.3);
+      doc.line(14, pageHeight - 15, pageWidth - 14, pageHeight - 15);
+      doc.setFontSize(9);
+      doc.text(COMPANY_NAME, 14, pageHeight - 8);
+      doc.text(`Page ${pageNumber} of ${pageCount}`, pageWidth - 14, pageHeight - 8, { align: 'right' });
+    },
   });
 
   doc.save(`appointments_report_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
