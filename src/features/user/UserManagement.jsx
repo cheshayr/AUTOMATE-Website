@@ -120,41 +120,26 @@ const UserManagement = () => {
   // =============================
   // EXPORT USERS TO PDF
   // =============================
-  const handleExportUsersPDF = () => {
-    if (!preparedBy.trim()) {
-      alert('Please enter "Prepared By" before exporting.');
-      return;
-    }
+  const COMPANY_NAME = "Tierodman Auto Center";
 
-    const dataToExport = exportScope === "all" ? allUsers : users;
+const handleExportUsersPDF = () => {
+  if (!preparedBy.trim()) {
+    alert('Please enter "Prepared By" before exporting.');
+    return;
+  }
 
-    if (!dataToExport.length) {
-      alert("No users available to export.");
-      return;
-    }
+  const dataToExport = exportScope === "all" ? allUsers : users;
 
-    const doc = new jsPDF();
-    const exportedAt = format(new Date(), "MMM dd, yyyy • hh:mm a");
+  if (!dataToExport.length) {
+    alert("No users available to export.");
+    return;
+  }
 
-    // Logo
-    doc.addImage(logo, "PNG", 14, 8, 30, 30);
+  const doc = new jsPDF();
+  const exportedAt = format(new Date(), "MMM dd, yyyy • hh:mm a");
 
-    // Title
-    doc.setFontSize(16);
-    doc.text("User Management Report", 55, 20);
-
-    doc.setFontSize(10);
-    doc.text(`Prepared By: ${preparedBy}`, 14, 45);
-    doc.text(`Exported On: ${exportedAt}`, 14, 52);
-    doc.text(
-      `Export Scope: ${
-        exportScope === "all" ? "All Users" : "Current Page"
-      }`,
-      14,
-      59
-    );
-
-    const headers = [
+  autoTable(doc, {
+    head: [[
       "Name",
       "Email",
       "Mobile Number",
@@ -162,31 +147,79 @@ const UserManagement = () => {
       "Role",
       "Position",
       "Status",
-    ];
+    ]],
 
-    const rows = dataToExport.map((user) => [
-      user.name,
-      user.email,
-      user.mobileNumber,
+    body: dataToExport.map((user) => [
+      user.name || "-",
+      user.email || "-",
+      user.mobileNumber || "-",
       user.isVerified ? "Yes" : "No",
-      user.role,
-      user.position,
+      user.role || "-",
+      user.position || "-",
       user.isActive ? "Active" : "Deactivated",
-    ]);
+    ]),
 
-    autoTable(doc, {
-      head: [headers],
-      body: rows,
-      startY: 65,
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [71, 85, 105] },
-    });
+    startY: 70,
+    styles: { fontSize: 9 },
+    headStyles: { fillColor: [71, 85, 105] },
 
-    doc.save(
-      `user_management_${exportScope}_${format(new Date(), "yyyy-MM-dd")}.pdf`
-    );
-  };
+    didDrawPage: function () {
+      const pageHeight = doc.internal.pageSize.height;
+      const pageWidth = doc.internal.pageSize.width;
+      const pageNumber = doc.internal.getCurrentPageInfo().pageNumber;
+      const pageCount = doc.internal.getNumberOfPages();
 
+      // ================= HEADER (ONLY FIRST PAGE) =================
+      if (pageNumber === 1) {
+        doc.addImage(logo, "PNG", 14, 10, 20, 20);
+
+        doc.setFontSize(16);
+        doc.text("User Management Report", pageWidth / 2, 20, {
+          align: "center",
+        });
+
+        doc.setFontSize(10);
+        doc.text(COMPANY_NAME, pageWidth / 2, 26, {
+          align: "center",
+        });
+
+        doc.text(`Prepared By: ${preparedBy}`, 14, 40);
+        doc.text(`Exported: ${exportedAt}`, 14, 46);
+        doc.text(
+          `Scope: ${
+            exportScope === "all" ? "All Users" : "Current Page"
+          }`,
+          14,
+          52
+        );
+
+        doc.setLineWidth(0.3);
+        doc.line(14, 58, pageWidth - 14, 58);
+      }
+
+      // ================= FOOTER (PROFESSIONAL ALIGNMENT) =================
+      doc.setLineWidth(0.3);
+      doc.line(14, pageHeight - 15, pageWidth - 14, pageHeight - 15);
+
+      doc.setFontSize(9);
+
+      // LEFT: Company name
+      doc.text(COMPANY_NAME, 14, pageHeight - 8);
+
+      // RIGHT: Page number
+      doc.text(
+        `Page ${pageNumber} of ${pageCount}`,
+        pageWidth - 14,
+        pageHeight - 8,
+        { align: "right" }
+      );
+    },
+  });
+
+  doc.save(
+    `user_management_${exportScope}_${format(new Date(), "yyyy-MM-dd")}.pdf`
+  );
+};
   // =============================
   // FILTER USERS BY STATUS
   // =============================
