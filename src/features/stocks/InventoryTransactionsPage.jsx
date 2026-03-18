@@ -98,75 +98,105 @@ const InventoryTransactionsPage = () => {
     return filteredTransactions.slice(start, start + pageSize);
   }, [filteredTransactions, page, pageSize]);
 
-  const handleExportPDF = () => {
-    if (!preparedBy.trim()) {
-      alert('Please enter "Prepared By" before exporting.');
-      return;
-    }
+  const COMPANY_NAME = "Tierodman Auto Center";
 
-    const dataToExport = exportScope === "all" ? filteredTransactions : paginatedData;
+const handleExportPDF = () => {
+  if (!preparedBy.trim()) {
+    toast.error('Please enter "Prepared By" before exporting.');
+    return;
+  }
 
-    if (!dataToExport.length) {
-      alert("No transactions available to export.");
-      return;
-    }
+  const dataToExport = exportScope === "all" ? filteredTransactions : paginatedData;
 
-    const doc = new jsPDF();
-    const exportedAt = format(new Date(), "MMM dd, yyyy • hh:mm a");
+  if (!dataToExport.length) {
+    toast.error("No transactions available to export.");
+    return;
+  }
 
-    doc.addImage(logo, "PNG", 14, 8, 30, 30);
-    doc.setFontSize(16);
-    doc.text("Inventory Transaction History", 50, 20);
+  const doc = new jsPDF();
+  const exportedAt = format(new Date(), "MMM dd, yyyy • hh:mm a");
 
-    doc.setFontSize(10);
-    doc.text(`Prepared By: ${preparedBy}`, 14, 45);
-    doc.text(`Exported On: ${exportedAt}`, 14, 52);
-    doc.text(
-      `Export Scope: ${exportScope === "all" ? "All Transactions" : "Current Page"}`,
-      14,
-      59
-    );
+  autoTable(doc, {
+    startY: 75,
+    head: [["ID", "Date & Time", "Item", "Supplier", "Purpose", "Type", "Qty", "Remarks"]],
+    body: dataToExport.map((tx) => [
+      tx._id,
+      formatDateTimePH(tx.dateTime),
+      tx.itemName || "-",
+      tx.supplier?.supplierName || tx.supplierName || "-",
+      tx.reason || "-",
+      tx.type,
+      tx.quantity,
+      tx.remarks || "-",
+    ]),
+    styles: { fontSize: 9 },
+    headStyles: { fillColor: [71, 85, 105] },
 
-    if (dateFrom || dateTo) {
-      doc.text(
-        `Date Range: ${
-          dateFrom ? format(dateFrom, "MMM dd, yyyy") : ""
-        } - ${dateTo ? format(dateTo, "MMM dd, yyyy") : ""}`,
-        14,
-        66
-      );
-    }
+    didDrawPage: function () {
+      const pageHeight = doc.internal.pageSize.height;
+      const pageWidth = doc.internal.pageSize.width;
+      const pageNumber = doc.internal.getCurrentPageInfo().pageNumber;
+      const pageCount = doc.internal.getNumberOfPages();
 
-    autoTable(doc, {
-      startY: 75,
-      head: [
-        ["ID", "Date & Time", "Item", "Supplier", "Purpose", "Type", "Qty", "Remarks"],
-      ],
-      body: dataToExport.map((tx) => [
-        tx._id,
-        formatDateTimePH(tx.dateTime),
-        tx.itemName,
-        tx.supplier?.supplierName || tx.supplierName || "-",
-        tx.reason || "-",
-        tx.type,
-        tx.quantity,
-        tx.remarks || "-",
-      ]),
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [71, 85, 105] },
-    });
+      // ================= HEADER (FIRST PAGE ONLY) =================
+      if (pageNumber === 1) {
+        // Logo
+        doc.addImage(logo, "PNG", 14, 10, 30, 30);
 
-    doc.save(`inventory_transactions_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+        // Title
+        doc.setFontSize(16);
+        doc.text("Inventory Transaction History", pageWidth / 2, 20, { align: "center" });
 
-    createTransaction.mutate({
-      type: "SYSTEM",
-      itemName: "EXPORT",
-      quantity: dataToExport.length,
-      reason: `Exported by ${preparedBy}`,
-      remarks: `Exported ${exportScope === "all" ? "all transactions" : "current page"}`,
-      dateTime: new Date().toISOString(),
-    });
-  };
+        // Company Name
+        doc.setFontSize(10);
+        doc.text(COMPANY_NAME, pageWidth / 2, 26, { align: "center" });
+
+        // Metadata
+        doc.text(`Prepared By: ${preparedBy}`, 14, 45);
+        doc.text(`Exported On: ${exportedAt}`, 14, 52);
+        doc.text(
+          `Export Scope: ${exportScope === "all" ? "All Transactions" : "Current Page"}`,
+          14,
+          59
+        );
+
+        if (dateFrom || dateTo) {
+          doc.text(
+            `Date Range: ${dateFrom ? format(dateFrom, "MMM dd, yyyy") : ""} - ${dateTo ? format(dateTo, "MMM dd, yyyy") : ""}`,
+            14,
+            66
+          );
+        }
+
+        // Divider
+        doc.setLineWidth(0.3);
+        doc.line(14, 72, pageWidth - 14, 72);
+      }
+
+      // ================= FOOTER (ALL PAGES) =================
+      doc.setLineWidth(0.3);
+      doc.line(14, pageHeight - 15, pageWidth - 14, pageHeight - 15);
+
+      doc.setFontSize(9);
+      doc.text(COMPANY_NAME, 14, pageHeight - 8);
+      doc.text(`Page ${pageNumber} of ${pageCount}`, pageWidth - 14, pageHeight - 8, { align: "right" });
+    },
+  });
+
+  doc.save(`inventory_transactions_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+
+  // Record export as SYSTEM transaction
+  createTransaction.mutate({
+    type: "SYSTEM",
+    itemName: "EXPORT",
+    quantity: dataToExport.length,
+    reason: `Exported by ${preparedBy}`,
+    remarks: `Exported ${exportScope === "all" ? "all transactions" : "current page"}`,
+    dateTime: new Date().toISOString(),
+  });
+
+  toast.success("Transactions exported successfully!");
+};
 
   return (
     <Card className="w-full bg-transparent shadow-none border-0">
