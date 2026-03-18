@@ -9,10 +9,13 @@ import autoTable from 'jspdf-autotable';
 import { isValid, parseISO, format } from 'date-fns';
 import logo from '@/assets/logo.png';
 
+// ------------------- COMPANY NAME -------------------
+const COMPANY_NAME = "Tierodman Auto Center"; // 🔥 change if needed
+
 // ------------------- PESO FORMAT -------------------
 const formatPeso = (amount) => {
   if (!amount) return '₱0.00';
-  if (typeof amount === 'string' && amount.startsWith('₱')) return amount; // already formatted
+  if (typeof amount === 'string' && amount.startsWith('₱')) return amount;
   return `₱${Number(amount).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
@@ -51,19 +54,17 @@ export const ReportsTable = ({
     return 0;
   });
 
-  // ------------------- AUTO FORMAT PESO & DATE -------------------
+  // ------------------- CELL RENDER -------------------
   const renderCellValue = (value, column) => {
     if (value === null || value === undefined || value === '') {
       return <span className="text-muted-foreground">-</span>;
     }
 
-    // DATE
     if (typeof value === 'string') {
       const date = parseISO(value);
       if (isValid(date)) return format(date, 'MMM dd, yyyy');
     }
 
-    // RATING STARS
     if (
       typeof value === 'number' &&
       value >= 0 &&
@@ -73,12 +74,7 @@ export const ReportsTable = ({
       return (
         <div className="flex items-center">
           {Array.from({ length: 5 }).map((_, index) => (
-            <svg
-              key={index}
-              className={`h-4 w-4 ${index < value ? 'text-yellow-400' : 'text-gray-300'}`}
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
+            <svg key={index} className={`h-4 w-4 ${index < value ? 'text-yellow-400' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.974a1 1 0 00.95.69h4.18c.969 0 1.371 1.24.588 1.81l-3.39 2.462a1 1 0 00-.364 1.118l1.287 3.974c.3.921-.755 1.688-1.54 1.118l-3.39-2.462a1 1 0 00-1.175 0l-3.39 2.462c-.784.57-1.838-.197-1.539-1.118l1.286-3.974a1 1 0 00-.364-1.118L2.034 9.4c-.783-.57-.38-1.81.588-1.81h4.18a1 1 0 00.95-.69l1.286-3.974z" />
             </svg>
           ))}
@@ -86,19 +82,17 @@ export const ReportsTable = ({
       );
     }
 
-    // BADGE
     if (typeof value === 'object' && value?.type === 'badge') {
       return <Badge variant={value.variant || 'default'}>{value.text}</Badge>;
     }
 
-    // ------------------- AUTO PESO -------------------
     const pesoKeys = ['revenue', 'servicecost', 'totalrevenue', 'totalcost', 'price', 'amount'];
     if (typeof value === 'number' && pesoKeys.includes(column.key.toLowerCase())) {
       return formatPeso(value);
     }
 
     if (typeof value === 'string' && value.includes('₱')) {
-      return value; // already formatted
+      return value;
     }
 
     return value;
@@ -114,19 +108,8 @@ export const ReportsTable = ({
     const doc = new jsPDF();
     const exportedAt = format(new Date(), 'MMM dd, yyyy • hh:mm a');
 
-    doc.addImage(logo, 'PNG', 14, 1, 35, 35);
-    doc.setFontSize(16);
-    doc.text(reportTitle, 60, 20);
-
-    doc.setFontSize(10);
-    const from = dateFrom ? format(dateFrom, 'MMM dd, yyyy') : '';
-    const to = dateTo ? format(dateTo, 'MMM dd, yyyy') : '';
-    if (from || to) doc.text(`Date Range: ${[from, to].filter(Boolean).join(' - ')}`, 14, 35);
-
-    doc.text(`Prepared By: ${preparedBy}`, 14, 42);
-    doc.text(`Exported On: ${exportedAt}`, 14, 48);
-
     const headers = columns.map((col) => col.label);
+
     const rows = sortedData.map((row) =>
       columns.map((col) => {
         const value = row[col.key];
@@ -139,7 +122,6 @@ export const ReportsTable = ({
 
         if (typeof value === 'object' && value?.text) return value.text;
 
-        // Auto PESO for PDF
         const pesoKeys = ['revenue', 'servicecost', 'totalrevenue', 'totalcost', 'price', 'amount'];
         if (typeof value === 'number' && pesoKeys.includes(col.key.toLowerCase())) return formatPeso(value);
         if (typeof value === 'string' && value.includes('₱')) return value;
@@ -151,9 +133,50 @@ export const ReportsTable = ({
     autoTable(doc, {
       head: [headers],
       body: rows,
-      startY: 55,
+      startY: 60,
       styles: { fontSize: 9 },
       headStyles: { fillColor: [71, 85, 105] },
+
+      // 🔥 HEADER + FOOTER EVERY PAGE
+      didDrawPage: function (data) {
+        const pageSize = doc.internal.pageSize;
+        const pageHeight = pageSize.height || pageSize.getHeight();
+        const pageWidth = pageSize.width || pageSize.getWidth();
+        const pageNumber = doc.internal.getCurrentPageInfo().pageNumber;
+        const pageCount = doc.internal.getNumberOfPages();
+
+        // ---------- HEADER ----------
+        doc.addImage(logo, 'PNG', 14, 5, 25, 25);
+
+        doc.setFontSize(14);
+        doc.text(reportTitle, 45, 15);
+
+        doc.setFontSize(9);
+        doc.text(COMPANY_NAME, 45, 22);
+
+        const from = dateFrom ? format(dateFrom, 'MMM dd, yyyy') : '';
+        const to = dateTo ? format(dateTo, 'MMM dd, yyyy') : '';
+        if (from || to) {
+          doc.text(`Date: ${[from, to].filter(Boolean).join(' - ')}`, 14, 35);
+        }
+
+        doc.text(`Prepared By: ${preparedBy}`, 14, 42);
+        doc.text(`Exported: ${exportedAt}`, 14, 48);
+
+        // ---------- FOOTER ----------
+        doc.setFontSize(9);
+        doc.text(
+          `${COMPANY_NAME}`,
+          14,
+          pageHeight - 10
+        );
+
+        doc.text(
+          `Page ${pageNumber} of ${pageCount}`,
+          pageWidth - 50,
+          pageHeight - 10
+        );
+      },
     });
 
     doc.save(

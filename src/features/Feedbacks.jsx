@@ -36,11 +36,13 @@ import { format, parseISO, isValid } from 'date-fns';
 import logo from '@/assets/logo.png';
 import { toast } from 'sonner';
 
+// ✅ CHANGE IF NEEDED
+const COMPANY_NAME = "Tierodman Auto Center";
+
 const Feedbacks = () => {
   const [filter, setFilter] = useState('All');
   const [preparedBy, setPreparedBy] = useState('');
 
-  // ✅ FIX: convert filter
   const ratingFilter = filter === 'All' ? null : Number(filter);
   const { data, isPending } = useAppointments(ratingFilter);
 
@@ -54,15 +56,6 @@ const Feedbacks = () => {
 
     const doc = new jsPDF();
     const exportedAt = format(new Date(), 'MMM dd, yyyy • hh:mm a');
-
-    doc.addImage(logo, 'PNG', 14, 10, 30, 30);
-    doc.setFontSize(16);
-    doc.text('Customer Feedback Report', 55, 20);
-
-    doc.setFontSize(10);
-    doc.text(`Rating Filter: ${filter === 'All' ? 'All Ratings' : `${filter} Star`}`, 14, 45);
-    doc.text(`Prepared By: ${preparedBy}`, 14, 52);
-    doc.text(`Exported On: ${exportedAt}`, 14, 58);
 
     autoTable(doc, {
       head: [['Customer', 'Service', 'Feedback', 'Rating', 'Date']],
@@ -78,9 +71,58 @@ const Feedbacks = () => {
           ? format(parseISO(a.feedback.createdAt), 'MMM dd, yyyy')
           : '-',
       ]),
-      startY: 65,
+      startY: 70,
       styles: { fontSize: 9 },
       headStyles: { fillColor: [71, 85, 105] },
+
+      didDrawPage: function () {
+        const pageSize = doc.internal.pageSize;
+        const pageHeight = pageSize.height || pageSize.getHeight();
+        const pageWidth = pageSize.width || pageSize.getWidth();
+        const pageNumber = doc.internal.getCurrentPageInfo().pageNumber;
+        const pageCount = doc.internal.getNumberOfPages();
+
+        // ================= HEADER (ONLY FIRST PAGE) =================
+        if (pageNumber === 1) {
+          // Logo
+          doc.addImage(logo, 'PNG', 14, 10, 20, 20);
+
+          // Title (centered)
+          doc.setFontSize(16);
+          doc.text('Customer Feedback Report', pageWidth / 2, 20, { align: 'center' });
+
+          // Company name (centered)
+          doc.setFontSize(10);
+          doc.text(COMPANY_NAME, pageWidth / 2, 26, { align: 'center' });
+
+          // Details (left aligned)
+          doc.text(
+            `Rating Filter: ${filter === 'All' ? 'All Ratings' : `${filter} Star`}`,
+            14,
+            40
+          );
+          doc.text(`Prepared By: ${preparedBy}`, 14, 46);
+          doc.text(`Exported: ${exportedAt}`, 14, 52);
+
+          // Divider line
+          doc.setLineWidth(0.3);
+          doc.line(14, 58, pageWidth - 14, 58);
+        }
+
+        // ================= FOOTER (ALL PAGES) =================
+        doc.setLineWidth(0.3);
+        doc.line(14, pageHeight - 15, pageWidth - 14, pageHeight - 15);
+
+        doc.setFontSize(9);
+
+        // Center footer text
+        doc.text(
+          `${COMPANY_NAME} • Page ${pageNumber} of ${pageCount}`,
+          pageWidth / 2,
+          pageHeight - 8,
+          { align: 'center' }
+        );
+      },
     });
 
     doc.save(`feedback_report_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
