@@ -135,40 +135,98 @@ const SuppliersManagement = () => {
     );
   };
 
-  const handleExportPDF = () => {
-    if (!preparedBy.trim()) {
-      toast.error('Please enter "Prepared By" before exporting.');
-      return;
-    }
-    const exportData = exportScope === "all" ? sortedSuppliers : paginatedSuppliers;
-    if (exportData.length === 0) {
-      toast.error("No suppliers to export.");
-      return;
-    }
+  const COMPANY_NAME = "Tierodman Auto Center";
 
-    const doc = new jsPDF();
-    const exportedAt = format(new Date(), "MMM dd, yyyy • hh:mm a");
-    doc.addImage(logo, "PNG", 14, 5, 35, 35);
-    doc.setFontSize(16);
-    doc.text("Suppliers Report", 60, 22);
-    doc.setFontSize(10);
-    doc.text(`Prepared By: ${preparedBy}`, 14, 45);
-    doc.text(`Exported On: ${exportedAt}`, 14, 52);
+const handleExportPDF = () => {
+  if (!preparedBy.trim()) {
+    toast.error('Please enter "Prepared By" before exporting.');
+    return;
+  }
 
-    autoTable(doc, {
-      head: [["Company Name", "Email", "Contact Number", "Address"]],
-      body: exportData.map((s) => [
-        s.companyName || "N/A",
-        s.email || "N/A",
-        s.contactNumber || "N/A",
-        s.address || "N/A",
-      ]),
-      startY: 65,
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [71, 85, 105] },
-    });
-    doc.save(`suppliers_${format(new Date(), "yyyy-MM-dd")}.pdf`);
-  };
+  const exportData = exportScope === "all" ? sortedSuppliers : paginatedSuppliers;
+
+  if (exportData.length === 0) {
+    toast.error("No suppliers to export.");
+    return;
+  }
+
+  const doc = new jsPDF();
+  const exportedAt = format(new Date(), "MMM dd, yyyy • hh:mm a");
+
+  autoTable(doc, {
+    head: [["Company Name", "Email", "Contact Number", "Address"]],
+
+    body: exportData.map((s) => [
+      s.companyName || "N/A",
+      s.email || "N/A",
+      s.contactNumber || "N/A",
+      s.address || "N/A",
+    ]),
+
+    startY: 70,
+    styles: { fontSize: 9 },
+    headStyles: { fillColor: [71, 85, 105] },
+
+    didDrawPage: function () {
+      const pageHeight = doc.internal.pageSize.height;
+      const pageWidth = doc.internal.pageSize.width;
+      const pageNumber = doc.internal.getCurrentPageInfo().pageNumber;
+      const pageCount = doc.internal.getNumberOfPages();
+
+      // ================= HEADER (FIRST PAGE ONLY) =================
+      if (pageNumber === 1) {
+        // Logo
+        doc.addImage(logo, "PNG", 14, 10, 20, 20);
+
+        // Title
+        doc.setFontSize(16);
+        doc.text("Suppliers Report", pageWidth / 2, 20, {
+          align: "center",
+        });
+
+        // Company name
+        doc.setFontSize(10);
+        doc.text(COMPANY_NAME, pageWidth / 2, 26, {
+          align: "center",
+        });
+
+        // Details
+        doc.text(`Prepared By: ${preparedBy}`, 14, 40);
+        doc.text(`Exported: ${exportedAt}`, 14, 46);
+        doc.text(
+          `Scope: ${
+            exportScope === "all" ? "All Suppliers" : "Current Page"
+          }`,
+          14,
+          52
+        );
+
+        // Divider
+        doc.setLineWidth(0.3);
+        doc.line(14, 58, pageWidth - 14, 58);
+      }
+
+      // ================= FOOTER (ALL PAGES) =================
+      doc.setLineWidth(0.3);
+      doc.line(14, pageHeight - 15, pageWidth - 14, pageHeight - 15);
+
+      doc.setFontSize(9);
+
+      // LEFT: Company
+      doc.text(COMPANY_NAME, 14, pageHeight - 8);
+
+      // RIGHT: Page number
+      doc.text(
+        `Page ${pageNumber} of ${pageCount}`,
+        pageWidth - 14,
+        pageHeight - 8,
+        { align: "right" }
+      );
+    },
+  });
+
+  doc.save(`suppliers_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+};
 
   const SortIcon = ({ column }) =>
     sortConfig.key === column ? (
