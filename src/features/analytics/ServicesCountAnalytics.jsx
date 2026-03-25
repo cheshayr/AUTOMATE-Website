@@ -172,9 +172,15 @@ export function ServicesCountAnalytics() {
       return config;
     }, {});
 
+    
+    dynamicChartConfig['combined'] = {
+      label: 'Combined',
+      color: `var(--chart-1)`,
+    };
+
     return {
       chartConfig: dynamicChartConfig,
-      serviceNames: discoveredServiceNames,
+      serviceNames: ['combined', ...discoveredServiceNames],
       chartData: data,
     };
   }, [apiResponse]); // This memo re-runs only when the API response changes
@@ -183,9 +189,9 @@ export function ServicesCountAnalytics() {
   const [activeChart, setActiveChart] = React.useState(null);
 
   React.useEffect(() => {
-    // If we have service names and no active chart has been set, default to the first one.
+  
     if (serviceNames.length > 0 && !activeChart) {
-      setActiveChart(serviceNames[0]);
+      setActiveChart('combined');
     }
   }, [serviceNames, activeChart]); // Dependencies ensure this runs at the right time
 
@@ -196,10 +202,18 @@ export function ServicesCountAnalytics() {
     }
 
     // Calculate the total for each service
-    return serviceNames.reduce((acc, name) => {
+    const serviceTotals = serviceNames.filter(name => name !== 'combined').reduce((acc, name) => {
       acc[name] = chartData.reduce((sum, entry) => sum + (entry[name] || 0), 0);
       return acc;
     }, {});
+
+    // Calculate combined total
+    const combinedTotal = Object.values(serviceTotals).reduce((sum, val) => sum + val, 0);
+    
+    return {
+      combined: combinedTotal,
+      ...serviceTotals,
+    };
   }, [chartData, serviceNames]); // Re-calculate if data or service names change
 
   // 5. Handle loading and empty states before rendering the main component
@@ -310,14 +324,28 @@ export function ServicesCountAnalytics() {
                 />
               }
             />
-            {/* The Line component is now fully dynamic */}
-            <Line
-              dataKey={activeChart}
-              type="monotone"
-              stroke={chartConfig[activeChart]?.color}
-              strokeWidth={2}
-              dot={false}
-            />
+            {/* */}
+            {activeChart === 'combined' 
+              ? serviceNames
+                  .filter(name => name !== 'combined')
+                  .map((serviceName) => (
+                    <Line
+                      key={serviceName}
+                      dataKey={serviceName}
+                      type="monotone"
+                      stroke={chartConfig[serviceName]?.color}
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  ))
+              : <Line
+                  dataKey={activeChart}
+                  type="monotone"
+                  stroke={chartConfig[activeChart]?.color}
+                  strokeWidth={2}
+                  dot={false}
+                />
+            }
           </LineChart>
         </ChartContainer>
       </CardContent>
