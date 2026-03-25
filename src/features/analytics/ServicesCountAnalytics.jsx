@@ -271,7 +271,7 @@ export function ServicesCountAnalytics() {
   if (isSuccess && (!chartData || chartData.length === 0)) {
     
     return (
-      <Card className="py-4 sm:py-0 shadow-none h-full">
+      <Card className="py-4 sm:py-0 sm:pt-4 shadow-none h-full">
         <CardHeader className="flex flex-col items-stretch !p-0 sm:border-b">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-6 pb-3">
             <div className="flex flex-1 flex-col justify-center gap-1">
@@ -380,7 +380,7 @@ export function ServicesCountAnalytics() {
   }
 
   return (
-    <Card className="py-4 sm:py-0 shadow-none h-full">
+    <Card className="py-4 sm:py-0 sm:pt-4 shadow-none h-full">
       <CardHeader className="flex flex-col items-stretch !p-0 sm:border-b">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-6 pb-3">
           <div className="flex flex-1 flex-col justify-center gap-1">
