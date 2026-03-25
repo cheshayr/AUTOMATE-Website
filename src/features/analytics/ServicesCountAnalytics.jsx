@@ -139,19 +139,56 @@
 
 import * as React from 'react';
 import { CartesianGrid, Line, LineChart, XAxis } from 'recharts';
+import { Calendar, X } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { useFetchServicesAnalytics } from '@/hooks/useAnalytticsQuery';
 import { Skeleton } from '@/components/ui/skeleton'; // For loading state
+import { Button } from '@/components/ui/button';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 export function ServicesCountAnalytics() {
   // 1. Fetch data using your custom hook
   const { data: apiResponse, isPending, isSuccess } = useFetchServicesAnalytics();
 
-  // 2. Dynamically derive chart configuration and service names from the data
+  // Date range 
+  const [dateRange, setDateRange] = React.useState({
+    from: null,
+    to: null,
+  });
+
+  // Filter data based on selected date range
+  const filteredChartData = React.useMemo(() => {
+    if (!apiResponse?.data) return [];
+
+    if (!dateRange.from && !dateRange.to) {
+      return apiResponse.data;
+    }
+
+    return apiResponse.data.filter((item) => {
+      const itemDate = new Date(item.date);
+      const fromDate = dateRange.from ? new Date(dateRange.from) : null;
+      const toDate = dateRange.to ? new Date(dateRange.to) : null;
+
+      if (fromDate && itemDate < fromDate) return false;
+      if (toDate) {
+        const nextDay = new Date(toDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        if (itemDate >= nextDay) return false;
+      }
+      return true;
+    });
+  }, [apiResponse?.data, dateRange]);
+
+  
   const { chartConfig, serviceNames, chartData } = React.useMemo(() => {
-    const data = apiResponse?.data || [];
+    const data = filteredChartData;
 
     if (data.length === 0) {
       return { chartConfig: {}, serviceNames: [], chartData: [] };
@@ -183,7 +220,7 @@ export function ServicesCountAnalytics() {
       serviceNames: ['combined', ...discoveredServiceNames],
       chartData: data,
     };
-  }, [apiResponse]); // This memo re-runs only when the API response changes
+  }, [filteredChartData]);
 
   // 3. Manage the active chart state, initializing it once data is available
   const [activeChart, setActiveChart] = React.useState(null);
@@ -232,25 +269,107 @@ export function ServicesCountAnalytics() {
   }
 
   if (isSuccess && (!chartData || chartData.length === 0)) {
+    
     return (
-      <Card className="py-4 sm:py-0 shadow-none h-full flex items-center justify-center">
-        {apiResponse?.data?.length > 0 ? (
-          <CardHeader>
-            <CardTitle>Services Insights</CardTitle>
-            <CardDescription>No service data available to display.</CardDescription>
-          </CardHeader>
-        ) : (
-          <div className=" w-full h-full py-6">
-            <CardHeader>
+      <Card className="py-4 sm:py-0 shadow-none h-full">
+        <CardHeader className="flex flex-col items-stretch !p-0 sm:border-b">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-6 pb-3">
+            <div className="flex flex-1 flex-col justify-center gap-1">
               <CardTitle>Services Insights</CardTitle>
-              <CardDescription>Showing lifetime total availed services by customers.</CardDescription>
-            </CardHeader>
-
-            <div className="min-h-64  flex items-center justify-center">
-              <p>No availed serivces to show yet.</p>
+              <CardDescription>Showing lifetime total availed services by customers</CardDescription>
             </div>
+            
+            {/* Date Range Picker Button */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 w-fit"
+                  title="Filter by date range"
+                >
+                  <Calendar className="h-4 w-4" />
+                  {dateRange.from && dateRange.to ? (
+                    <span className="text-xs">
+                      {dateRange.from.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {dateRange.to.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </span>
+                  ) : (
+                    <span className="text-xs">Filter dates</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 flex flex-col" align="end">
+                <div className="p-4 border-b">
+                  <h3 className="text-sm font-semibold mb-3">Select Date Range</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">From</label>
+                      <CalendarComponent
+                        mode="single"
+                        selected={dateRange.from}
+                        onSelect={(date) =>
+                          setDateRange({ ...dateRange, from: date })
+                        }
+                        disabled={(date) =>
+                          dateRange.to ? date > dateRange.to : false
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">To</label>
+                      <CalendarComponent
+                        mode="single"
+                        selected={dateRange.to}
+                        onSelect={(date) =>
+                          setDateRange({ ...dateRange, to: date })
+                        }
+                        disabled={(date) =>
+                          dateRange.from ? date < dateRange.from : false
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-2 p-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDateRange({ from: null, to: null })}
+                    className="flex-1"
+                  >
+                    Clear
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
-        )}
+
+          <div className="flex overflow-auto w-full border-t">
+            {/* Show tabs even when no data */}
+            {apiResponse?.data && apiResponse.data.length > 0 && serviceNames.map((serviceKey) => (
+              <button
+                key={serviceKey}
+                data-active={activeChart === serviceKey}
+                className="data-[active=true]:bg-muted/50 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l sm:border-t-0 sm:border-l sm:px-8 sm:py-6"
+                onClick={() => setActiveChart(serviceKey)}
+              >
+                <span className="text-muted-foreground text-xs"> {chartConfig[serviceKey]?.label}</span>
+                <span className="text-lg leading-none font-bold sm:text-3xl">
+                  {(totals[serviceKey] || 0).toLocaleString()}
+                </span>
+              </button>
+            ))}
+          </div>
+        </CardHeader>
+        <CardContent className="px-2 sm:p-6 flex items-center justify-center min-h-[250px]">
+          <div className="text-center">
+            {dateRange.from || dateRange.to ? (
+              <p className="text-muted-foreground">No services data available for the selected date range.</p>
+            ) : (
+              <p className="text-muted-foreground">No services data available yet.</p>
+            )}
+          </div>
+        </CardContent>
       </Card>
     );
   }
@@ -262,12 +381,79 @@ export function ServicesCountAnalytics() {
 
   return (
     <Card className="py-4 sm:py-0 shadow-none h-full">
-      <CardHeader className="flex flex-col items-stretch border-b !p-0 sm:flex-row">
-        <div className="flex flex-1 flex-col justify-center gap-1 px-6 pb-3 sm:pb-0 w-3/12">
-          <CardTitle>Services Insights</CardTitle>
-          <CardDescription>Showing lifetime total availed services by customers</CardDescription>
+      <CardHeader className="flex flex-col items-stretch !p-0 sm:border-b">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-6 pb-3">
+          <div className="flex flex-1 flex-col justify-center gap-1">
+            <CardTitle>Services Insights</CardTitle>
+            <CardDescription>Showing lifetime total availed services by customers</CardDescription>
+          </div>
+          
+          {/* Date Range Picker Button */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 w-fit"
+                title="Filter by date range"
+              >
+                <Calendar className="h-4 w-4" />
+                {dateRange.from && dateRange.to ? (
+                  <span className="text-xs">
+                    {dateRange.from.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {dateRange.to.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </span>
+                ) : (
+                  <span className="text-xs">Filter dates</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 flex flex-col" align="end">
+              <div className="p-4 border-b">
+                <h3 className="text-sm font-semibold mb-3">Select Date Range</h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">From</label>
+                    <CalendarComponent
+                      mode="single"
+                      selected={dateRange.from}
+                      onSelect={(date) =>
+                        setDateRange({ ...dateRange, from: date })
+                      }
+                      disabled={(date) =>
+                        dateRange.to ? date > dateRange.to : false
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">To</label>
+                    <CalendarComponent
+                      mode="single"
+                      selected={dateRange.to}
+                      onSelect={(date) =>
+                        setDateRange({ ...dateRange, to: date })
+                      }
+                      disabled={(date) =>
+                        dateRange.from ? date < dateRange.from : false
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2 p-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setDateRange({ from: null, to: null })}
+                  className="flex-1"
+                >
+                  Clear
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
-        <div className="flex overflow-auto w-9/12">
+
+        <div className="flex overflow-auto w-full border-t">
           {/* Dynamically render a button for each service */}
           {serviceNames.map((serviceKey) => (
             <button
