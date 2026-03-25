@@ -174,7 +174,7 @@ export function ServicesCountAnalytics() {
 
     
     dynamicChartConfig['combined'] = {
-      label: 'Combined',
+      label: 'All Metrics',
       color: `var(--chart-1)`,
     };
 
