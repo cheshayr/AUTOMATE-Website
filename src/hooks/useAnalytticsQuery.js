@@ -66,3 +66,22 @@ export const useFetchAppointmentsEvent = () => {
     },
   });
 };
+
+export const useFetchAnalyticsInsights = () => {
+  return useQuery({
+    queryKey: ['analytics-insights'],
+    queryFn: async () => {
+      const response = await authenticatedApi.get('/analytics/insights');
+      if (response.status !== 200) {
+        throw new Error('Failed to fetch analytics insights');
+      }
+      return response.data;
+    },
+    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 30, // 30 minutes - insights are more expensive to generate
+    cacheTime: 1000 * 60 * 60, // 60 minutes
+    onError: (error) => {
+      console.error('Error fetching analytics insights:', error);
+    },
+  });
+};
