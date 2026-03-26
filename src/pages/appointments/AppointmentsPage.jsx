@@ -110,7 +110,8 @@ const AppointmentsPage = () => {
   const { user } = useAuthContext();
   const { data, isLoading } = useAppointments();
   const { data: summaryData, isLoading: summaryIsLoading } = useGetAppointmentSummary();
-  const { data: users } = useFetchUsers('', 'staff');
+  // we added '1' for page 1, '100' for the limit, and 'active' for the status
+  const { data: users } = useFetchUsers('', 'staff', 1, 100, 'active');
   const isAdmin = user?.role === 'admin';
   const appointments = data?.appointments || [];
 const [statusFilter, setStatusFilter] = useState('All'); 
