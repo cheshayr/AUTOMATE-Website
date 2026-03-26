@@ -93,6 +93,159 @@
   letter-spacing: 0.025em;
   white-space: nowrap;
 }
+/* Container and Modal Styling */
+.appointment-progress-dialog {
+  max-width: 750px !important;
+  border-radius: 1.5rem !important;
+  padding: 1.5rem !important;
+}
+
+/* Info Card Section */
+.info-card {
+  display: flex;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.info-section {
+  flex: 1;
+}
+
+.info-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: white;
+  border-radius: 0.75rem;
+  border: 1px solid #f1f5f9;
+}
+
+/* Progress Tracker Layout */
+.progress-container {
+  padding: 2.5rem 0.5rem;
+}
+
+.progress-track {
+  position: relative;
+  width: 100%;
+}
+
+/* The Background Line (Gray) */
+.line-base {
+  position: absolute;
+  top: 20px; /* Aligned to center of 40px circle */
+  left: 0;
+  right: 0;
+  height: 4px;
+  background-color: #f1f5f9;
+  border-radius: 10px;
+  z-index: 0;
+}
+
+/* The Filling Line (Navy/Red) */
+.line-fill {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  height: 4px;
+  border-radius: 10px;
+  z-index: 1;
+  transition: width 0.8s cubic-bezier(0.65, 0, 0.35, 1), background-color 0.5s ease;
+}
+
+/* Step Items */
+.steps-wrapper {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  z-index: 10;
+}
+
+.step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 80px; /* Fixed width to keep labels centered */
+}
+
+/* The Circles */
+.step-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #e2e8f0;
+  background-color: white;
+  transition: all 0.5s ease;
+  font-family: inherit;
+}
+
+/* Pulse Animation for the CURRENT active step */
+.active .step-circle {
+  animation: pulse-navy 2s infinite;
+}
+
+/* Canceled Pulse */
+.active .border-red-500 {
+  animation: pulse-red 2s infinite !important;
+}
+
+@keyframes pulse-navy {
+  0% { box-shadow: 0 0 0 0px rgba(29, 45, 67, 0.2); }
+  70% { box-shadow: 0 0 0 10px rgba(29, 45, 67, 0); }
+  100% { box-shadow: 0 0 0 0px rgba(29, 45, 67, 0); }
+}
+
+@keyframes pulse-red {
+  0% { box-shadow: 0 0 0 0px rgba(239, 68, 68, 0.3); }
+  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0px rgba(239, 68, 68, 0); }
+}
+
+/* Step Label Text */
+.step-label {
+  margin-top: 12px;
+  font-size: 10px;
+  text-align: center;
+  font-weight: 800;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.step-time {
+  margin-top: 4px;
+  font-size: 9px;
+  color: #64748b;
+}
+
+/* Status Footer box */
+.current-status-box {
+  transition: all 0.3s ease;
+}
+
+/* Hover effect on info card items */
+.info-card:hover {
+  border-color: #cbd5e1;
+  background-color: #f8fafc;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .step-label {
+    display: none; /* Hide labels on very small screens to avoid overlap */
+  }
+  .info-card {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
 
 /* Animations */
 @keyframes pulse-soft {

@@ -1,12 +1,11 @@
 import React from "react";
-import { Check, User, Car, Clock, ShieldCheck, Wrench, ClipboardList } from "lucide-react";
-import { DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Check, User, Car, Wrench, XCircle, UserCheck, Phone, Mail } from "lucide-react";
+import { DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import './AppointmentProgress.css';
 
-const stages = [
+const baseStages = [
   { label: "Pending", statusMsg: "Waiting for booking confirmation" },
   { label: "Booked", statusMsg: "Appointment confirmed" },
   { label: "Arrived", statusMsg: "Vehicle is at the shop" },
@@ -15,16 +14,23 @@ const stages = [
   { label: "Completed", statusMsg: "Ready for pickup" },
 ];
 
-const AppointmentProgress = ({ appointment, onClose }) => {
+const AppointmentProgress = ({ appointment }) => {
   if (!appointment) return null;
 
-  // Logic to handle naming inconsistencies between DB and UI
-  const currentIndex = stages.findIndex(s => 
+  const isCanceled = appointment.status === "Canceled";
+  
+  const currentStages = isCanceled 
+    ? [...baseStages, { label: "Canceled", statusMsg: "This appointment has been canceled" }] 
+    : baseStages;
+
+  const currentIndex = currentStages.findIndex(s => 
     s.label === appointment.status || 
     (s.label === "Arrived" && appointment.status === "Vehicle Arrived")
   );
+  
   const activeIndex = currentIndex === -1 ? 0 : currentIndex;
   const vehicle = appointment.vehicle || {};
+  const assignedStaff = appointment.assignedStaff || null;
 
   return (
     <DialogContent className="appointment-progress-dialog bg-white border-none shadow-2xl">
@@ -37,29 +43,44 @@ const AppointmentProgress = ({ appointment, onClose }) => {
         </div>
       </DialogHeader>
 
-      {/* Primary Info Card */}
+      {/* Vehicle & Customer Contact Section */}
       <div className="info-card bg-slate-50 border-slate-200">
         <div className="info-section">
-          <div className="info-icon-wrapper text-[#1D2D43]">
+          <div className="info-icon-wrapper text-[#1D2D43] shadow-sm">
             <Car size={20} />
           </div>
           <div>
-            <p className="info-label text-slate-500 uppercase font-bold text-[10px]">Vehicle Details</p>
-            <p className="info-value text-[#1D2D43] font-semibold">
-              {vehicle.brand} {vehicle.model} <span className="text-slate-400 font-normal">({vehicle.year})</span>
+            <p className="text-slate-500 uppercase font-bold text-[10px] mb-1">Vehicle Details</p>
+            <p className="text-[#1D2D43] font-bold text-sm">
+              {vehicle.brand} {vehicle.model}
             </p>
+            <p className="text-xs text-slate-500">{vehicle.year} • {vehicle.licensePlate || "No Plate"}</p>
           </div>
         </div>
         
-        <div className="info-divider bg-slate-200" />
+        <div className="hidden md:block w-px h-12 bg-slate-200" />
 
         <div className="info-section">
-          <div className="info-icon-wrapper text-[#1D2D43]">
+          <div className="info-icon-wrapper text-[#1D2D43] shadow-sm">
             <User size={20} />
           </div>
-          <div>
-            <p className="info-label text-slate-500 uppercase font-bold text-[10px]">Assigned Customer</p>
-            <p className="info-value text-[#1D2D43] font-semibold">{appointment.name || "Guest User"}</p>
+          <div className="flex-1">
+            <p className="text-slate-500 uppercase font-bold text-[10px] mb-1">Customer Contact</p>
+            <p className="text-[#1D2D43] font-bold text-sm mb-1">{appointment.name || "Guest User"}</p>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 text-slate-600">
+                <Phone size={12} />
+                <a href={`tel:${appointment.phone}`} className="text-[11px] font-medium hover:text-[#1D2D43] underline decoration-slate-300 underline-offset-2">
+                  {appointment.phone || "No Phone"}
+                </a>
+              </div>
+              <div className="flex items-center gap-2 text-slate-600">
+                <Mail size={12} />
+                <a href={`mailto:${appointment.email}`} className="text-[11px] font-medium hover:text-[#1D2D43] truncate max-w-[140px]">
+                  {appointment.email || "No Email"}
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -67,34 +88,45 @@ const AppointmentProgress = ({ appointment, onClose }) => {
       {/* Progress Visualization */}
       <div className="progress-container">
         <div className="progress-track">
-          <div className="line-base bg-slate-200"></div>
+          <div className="line-base"></div>
           <div 
-            className="line-fill bg-[#1D2D43]" 
-            style={{ width: `${(activeIndex / (stages.length - 1)) * 100}%` }}
+            className={`line-fill transition-all duration-700 ${isCanceled ? 'bg-red-500' : 'bg-green-500'}`} 
+            style={{ width: `${(activeIndex / (currentStages.length - 1)) * 100}%` }}
           ></div>
 
           <div className="steps-wrapper">
-            {stages.map((stage, index) => {
-              const isCompleted = index < activeIndex;
+            {currentStages.map((stage, index) => {
+              const isPast = index < activeIndex;
               const isCurrent = index === activeIndex;
               
+              let circleStyles = "step-circle transition-all duration-500 ";
+              let content = null;
+
+              if (isPast) {
+                circleStyles += isCanceled ? "bg-red-500 border-red-500 text-white" : "bg-green-500 border-green-500 text-white";
+                content = <Check size={18} strokeWidth={3} />;
+              } else if (isCurrent) {
+                // Minimal styling: No 'ring' classes, just a clean border and shadow
+                circleStyles += isCanceled 
+                    ? "border-red-500 text-red-500 bg-white shadow-sm" 
+                    : "border-[#1D2D43] text-[#1D2D43] bg-white shadow-sm scale-110";
+                content = isCanceled ? <XCircle size={22} strokeWidth={2.5} /> : <span className="text-xs font-bold">{index + 1}</span>;
+              } else {
+                circleStyles += "bg-white text-slate-300 border-slate-200";
+                content = <span className="text-xs font-bold">{index + 1}</span>;
+              }
+
               return (
                 <div key={index} className={`step-item ${isCurrent ? 'active' : ''}`}>
-                  <div className={`step-circle transition-all duration-500 
-                    ${isCompleted ? 'bg-[#1D2D43] border-[#1D2D43] text-white' : ''} 
-                    ${isCurrent ? 'border-[#1D2D43] text-[#1D2D43] bg-white ring-4 ring-[#1D2D43]/10 scale-110' : 'bg-white text-slate-300 border-slate-200'}`}>
-                    {isCompleted ? (
-                      <Check size={18} strokeWidth={3} />
-                    ) : (
-                      <span className="text-xs font-bold">{index + 1}</span>
-                    )}
+                  <div className={circleStyles}>
+                    {content}
                   </div>
                   <div className="step-content">
-                    <p className={`step-label text-[11px] font-bold ${isCurrent || isCompleted ? 'text-[#1D2D43]' : 'text-slate-400'}`}>
+                    <p className={`step-label font-extrabold text-[10px] ${isPast ? (isCanceled ? 'text-red-500' : 'text-green-600') : isCurrent ? (isCanceled ? 'text-red-500' : 'text-[#1D2D43]') : 'text-slate-400'}`}>
                       {stage.label}
                     </p>
                     {appointment.timestamps?.[index] && (
-                       <p className="step-time text-[9px] text-slate-500 mt-1">
+                       <p className="step-time">
                         {format(new Date(appointment.timestamps[index]), "h:mm a")}
                        </p>
                     )}
@@ -106,51 +138,48 @@ const AppointmentProgress = ({ appointment, onClose }) => {
         </div>
       </div>
 
-      {/* Detailed Service Specs - THE ADDED DETAILS */}
+      {/* Details Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
         <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-3">
             <Wrench size={16} className="text-[#1D2D43]" />
             <span className="text-sm font-bold text-[#1D2D43]">Service Summary</span>
           </div>
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1.5">
             {appointment.services?.map((s, i) => (
-              <Badge key={i} variant="secondary" className="bg-white text-[#1D2D43] border-slate-200 text-[10px]">
+              <Badge key={i} className="bg-white text-[#1D2D43] border-slate-200 text-[10px] font-semibold">
                 {s?.service?.name || "Standard Check"}
               </Badge>
-            )) || <span className="text-xs text-slate-400 italic">No services listed</span>}
+            ))}
           </div>
         </div>
 
         <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
-          <div className="flex items-center gap-2 mb-2">
-            <ShieldCheck size={16} className="text-[#1D2D43]" />
-            <span className="text-sm font-bold text-[#1D2D43]">Technician Notes</span>
+          <div className="flex items-center gap-2 mb-3">
+            <UserCheck size={16} className="text-[#1D2D43]" />
+            <span className="text-sm font-bold text-[#1D2D43]">Assigned Mechanic</span>
           </div>
-          <p className="text-xs text-slate-600 leading-relaxed">
-            {appointment.notes?.staffNotes || "Initial assessment is underway. Please wait for the technician's full report."}
-          </p>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-[#1D2D43]/10 flex items-center justify-center text-[#1D2D43] font-bold text-xs">
+              {assignedStaff?.name ? assignedStaff.name.charAt(0) : "T"}
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-700">{assignedStaff?.name || "Unassigned"}</p>
+              <p className="text-[10px] text-slate-500">{assignedStaff?.role || "Technician"}</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Footer Status Message */}
-      <div className="current-status-box bg-[#1D2D43]/5 border-l-4 border-[#1D2D43] p-4 rounded-r-lg">
+      {/* Live Status Footer */}
+      <div className={`current-status-box border-l-4 p-4 rounded-r-lg ${isCanceled ? 'bg-red-50 border-red-500' : 'bg-green-50 border-green-500'}`}>
         <div className="flex items-center gap-3">
-          <div className="status-indicator h-2 w-2 rounded-full bg-[#1D2D43] animate-pulse"></div>
-          <p className="text-sm text-[#1D2D43]">
-            <span className="font-bold">Live Status:</span> {stages[activeIndex]?.statusMsg}
+          <div className={`h-2 w-2 rounded-full animate-pulse ${isCanceled ? 'bg-red-500' : 'bg-green-500'}`}></div>
+          <p className={`text-sm ${isCanceled ? 'text-red-700' : 'text-green-800'}`}>
+            <span className="font-bold">Live Status:</span> {currentStages[activeIndex]?.statusMsg}
           </p>
         </div>
       </div>
-
-      <DialogFooter>
-        <Button 
-          onClick={onClose} 
-          className="w-full bg-[#1D2D43] hover:bg-[#2a3f5a] text-white font-bold py-6 rounded-xl"
-        >
-          Return to Dashboard
-        </Button>
-      </DialogFooter>
     </DialogContent>
   );
 };
