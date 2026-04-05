@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from "react";
-import DashboardLayout from "../DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -17,6 +16,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   CheckCircle,
   XCircle,
@@ -231,81 +237,79 @@ const handleExportUsersPDF = () => {
   });
 
   return (
-    <DashboardLayout>
-      <Card className="w-full bg-transparent shadow-none border-0">
-        <CardHeader>
-          <CardTitle className="text-2xl font-semibold">
-            User Management
-          </CardTitle>
-          <CardDescription>
-            View, search, add, manage, and export user accounts.
-          </CardDescription>
-        </CardHeader>
+    <Card className="w-full bg-transparent shadow-none border-0">
+      <CardHeader className="px-0">
+        <CardTitle className="text-2xl font-bold">User Management</CardTitle>
+        <CardDescription>View, search, add, manage, and export user accounts.</CardDescription>
+      </CardHeader>
 
-        <CardContent>
-          {/* TOP CONTROLS */}
-          <div className="flex flex-wrap gap-4 justify-between mb-4">
-            <div className="w-full md:w-[40%]">
-              <Input
-                type="text"
-                placeholder="Search by name or email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+      <CardContent className="px-0">
+          {/* Search and Controls */}
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <Input
+              type="text"
+              placeholder="Search by name or email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1"
+            />
+          </div>
 
-            <div className="flex flex-wrap gap-2 items-end">
-              <Input
-                placeholder="Prepared By"
-                value={preparedBy}
-                onChange={(e) => setPreparedBy(e.target.value)}
-                className="w-48"
-              />
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-3 mb-8 items-end">
+            <Input
+              placeholder="Prepared By"
+              value={preparedBy}
+              onChange={(e) => setPreparedBy(e.target.value)}
+              className="h-9 w-[200px]"
+            />
 
-              {/* Status Filter Dropdown */}
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-9 px-3 border rounded-md text-sm bg-background"
-              >
-                <option value="all">All Users</option>
-                <option value="active">Active</option>
-                <option value="inactive">Deactivated</option>
-              </select>
+            {/* Status Filter Dropdown */}
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-9 w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Users</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Deactivated</SelectItem>
+              </SelectContent>
+            </Select>
 
-              <select
-                value={exportScope}
-                onChange={(e) => setExportScope(e.target.value)}
-                className="h-9 px-3 border rounded-md text-sm bg-background"
-              >
-                <option value="page">Current Page</option>
-                <option value="all">All Users</option>
-              </select>
+            <Select value={exportScope} onValueChange={setExportScope}>
+              <SelectTrigger className="h-9 w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="page">Current Page</SelectItem>
+                <SelectItem value="all">All Users</SelectItem>
+              </SelectContent>
+            </Select>
 
-              <Button variant="outline" onClick={handleExportUsersPDF}>
-                <Download className="h-4 w-4 mr-2" />
-                Export PDF
-              </Button>
+            <Button variant="outline" onClick={handleExportUsersPDF} className="h-9 px-4">
+              <Download className="h-4 w-4 mr-2" />
+              Export PDF
+            </Button>
 
-              <AddUserModal isAdd />
-            </div>
+            <AddUserModal isAdd />
           </div>
 
           {/* TABLE */}
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Mobile Number</TableHead>
-                <TableHead className="text-center">Verified</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Position</TableHead>
-                <TableHead className="text-center">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
+          <div className="border rounded-lg bg-white overflow-hidden shadow-sm">
+            <Table>
+              <TableHeader className="bg-slate-50">
+                <TableRow>
+                  <TableHead className="font-bold">Name</TableHead>
+                  <TableHead className="font-bold">Email</TableHead>
+                  <TableHead className="font-bold">Mobile Number</TableHead>
+                  <TableHead className="text-center font-bold">Verified</TableHead>
+                  <TableHead className="font-bold">Role</TableHead>
+                  <TableHead className="font-bold">Position</TableHead>
+                  <TableHead className="text-center font-bold">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
 
-            <TableBody>
+              <TableBody>
               {usersDataPending ? (
                 <TableRow>
                   <TableCell colSpan={7} className="h-96">
@@ -322,10 +326,10 @@ const handleExportUsersPDF = () => {
                 </TableRow>
               ) : filteredUsers.length > 0 ? (
                 filteredUsers.map((user) => (
-                  <TableRow key={user._id}>
-                    <TableCell>{user.name}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>{user.mobileNumber}</TableCell>
+                  <TableRow key={user._id} className="hover:bg-slate-50/50">
+                    <TableCell className="font-semibold text-slate-900">{user.name}</TableCell>
+                    <TableCell className="text-slate-600">{user.email}</TableCell>
+                    <TableCell className="text-slate-600">{user.mobileNumber}</TableCell>
                     <TableCell className="text-center">
                       {user.isVerified ? (
                         <CheckCircle className="text-green-500 mx-auto" />
@@ -362,10 +366,11 @@ const handleExportUsersPDF = () => {
               )}
             </TableBody>
           </Table>
+          </div>
 
           {/* PAGINATION */}
           {totalItems > 0 && totalPages > 1 && (
-            <Pagination className="mt-4">
+            <Pagination className="mt-6">
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
@@ -398,7 +403,6 @@ const handleExportUsersPDF = () => {
           )}
         </CardContent>
       </Card>
-    </DashboardLayout>
   );
 };
 
