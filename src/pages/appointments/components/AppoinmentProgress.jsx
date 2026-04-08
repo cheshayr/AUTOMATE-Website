@@ -29,7 +29,7 @@ const AppointmentProgress = ({ appointment }) => {
   );
   
   const activeIndex = currentIndex === -1 ? 0 : currentIndex;
-  const vehicle = appointment.vehicle || {};
+  const vehicle = appointment.vehicle || appointment.vehicleDetails || appointment.car || {};
   const assignedStaff = appointment.assignedStaff || null;
 
   return (
@@ -51,10 +51,27 @@ const AppointmentProgress = ({ appointment }) => {
           </div>
           <div>
             <p className="text-slate-500 uppercase font-bold text-[10px] mb-1">Vehicle Details</p>
+            
+            {/* Vehicle Name */}
             <p className="text-[#1D2D43] font-bold text-sm">
               {vehicle.brand} {vehicle.model}
             </p>
-            <p className="text-xs text-slate-500">{vehicle.year} • {vehicle.licensePlate || "No Plate"}</p>
+
+            {/* Year */}
+            <p className="text-xs text-slate-500 mb-1">
+              {vehicle.year}
+            </p>
+
+            {/* ✅ NEW: PLATE NUMBER (highlighted) */}
+            <Badge className="bg-[#1D2D43] text-white text-[10px] px-2 py-1">
+              Plate: {vehicle.year} • {
+                vehicle.licensePlate || 
+                vehicle.plateNumber || 
+                vehicle.plate || 
+                vehicle.plate_no || 
+                "No Plate"
+              }
+            </Badge>
           </div>
         </div>
         
@@ -106,7 +123,6 @@ const AppointmentProgress = ({ appointment }) => {
                 circleStyles += isCanceled ? "bg-red-500 border-red-500 text-white" : "bg-green-500 border-green-500 text-white";
                 content = <Check size={18} strokeWidth={3} />;
               } else if (isCurrent) {
-                // Minimal styling: No 'ring' classes, just a clean border and shadow
                 circleStyles += isCanceled 
                     ? "border-red-500 text-red-500 bg-white shadow-sm" 
                     : "border-[#1D2D43] text-[#1D2D43] bg-white shadow-sm scale-110";
