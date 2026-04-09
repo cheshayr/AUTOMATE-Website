@@ -103,7 +103,6 @@ const Reports = () => {
           columns: [
             { key: 'customerName', label: 'Customer Name' },
             { key: 'visitCount', label: 'Number of Visits' },
-            { key: 'mostAvailedService', label: 'Most Availed Service' },
             { key: 'lastVisit', label: 'Last Visit Date' },
           ],
           data: isMockData ? [] : reportData?.data || [],
@@ -117,7 +116,6 @@ const Reports = () => {
           columns: [
             { key: 'serviceName', label: 'Service Name' },
             { key: 'timesAvailed', label: 'Times Availed' },
-            { key: 'totalRevenue', label: 'Total Revenue' },
             { key: 'dateAvailed', label: 'Date Availed' },
           ],
           data: (isMockData ? topAvailedServicesData : reportData?.data || []).map(item => ({
@@ -218,8 +216,7 @@ const Reports = () => {
           columns: [
             { key: 'technicianName', label: 'Technician Name' },
             { key: 'servicesCompleted', label: 'Services Completed' },
-            { key: 'avgTime', label: 'Average Service Time' },
-            { key: 'rating', label: 'Customer Rating' },
+            
           ],
           data: isMockData ? technicianPerformanceData : reportData?.data || [],
           stats: [],
@@ -296,10 +293,10 @@ const Reports = () => {
                     <SelectItem value="top-services">Top Availed Services</SelectItem>
                     <SelectItem value="customer-feedback">Customer Feedback</SelectItem>
                     <SelectItem value="vehicle-history">Vehicle History</SelectItem>
-                    {/* <SelectItem value="revenue">Revenue</SelectItem> */}
-                    <SelectItem value="service-turnaround">Service Turnaround</SelectItem>
                     <SelectItem value="technician-performance">Technician Performance</SelectItem>
-                    <SelectItem value="parts-usage">Parts Usage</SelectItem>
+                    {/*<SelectItem value="service-turnaround">Service Turnaround</SelectItem> */}
+                    {/* <SelectItem value="revenue">Revenue</SelectItem> */}
+                    {/*<SelectItem value="parts-usage">Parts Usage</SelectItem> */}
                   </SelectContent>
                 </Select>
               </div>
