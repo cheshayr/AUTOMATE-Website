@@ -54,11 +54,11 @@ import logo from "@/assets/logo.png";
 const UserManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedRole, setSelectedRole] = useState("all");
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  const [selectedRole] = useState("");
 
   const [preparedBy, setPreparedBy] = useState("");
   const [exportScope, setExportScope] = useState("page");
@@ -70,7 +70,7 @@ const UserManagement = () => {
     error: usersDataError,
   } = useFetchUsers(
     debouncedSearchQuery,
-    selectedRole,
+    selectedRole === "all" ? "" : selectedRole,
     currentPage,
     itemsPerPage,
     statusFilter
@@ -84,7 +84,7 @@ const UserManagement = () => {
   // Fetch all users for export all
   const { data: allUsersData } = useFetchUsers(
     debouncedSearchQuery,
-    selectedRole,
+    selectedRole === "all" ? "" : selectedRole,
     1,
     totalItems || 1,
     statusFilter
@@ -273,6 +273,19 @@ const handleExportUsersPDF = () => {
                 <SelectItem value="all">All Users</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="inactive">Deactivated</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Role Filter Dropdown */}
+            <Select value={selectedRole} onValueChange={setSelectedRole}>
+              <SelectTrigger className="h-9 w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="staff">Staff</SelectItem>
+                <SelectItem value="user">User</SelectItem>
               </SelectContent>
             </Select>
 
