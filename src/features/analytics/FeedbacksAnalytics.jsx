@@ -1,151 +1,165 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
-
-import { Label, Pie, PieChart, Sector } from 'recharts';
+import React, { useMemo } from 'react';
+import { Star } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChartContainer, ChartStyle, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFetchFeedbackAnalytics } from '@/hooks/useAnalytticsQuery';
 
-export const description = 'An interactive pie chart';
+export const description = 'A horizontal bar chart showing rating distribution';
 
 // Removed the `satisfies ChartConfig` operator
 const chartConfig = {
   star1: {
     label: '1 Star',
-    color: 'var(--chart-1)',
+    color: '#ef4444',
   },
   star2: {
     label: '2 Star',
-    color: 'var(--chart-2)',
+    color: '#f97316',
   },
   star3: {
     label: '3 Star',
-    color: 'var(--chart-3)',
+    color: '#eab308',
   },
   star4: {
     label: '4 Star',
-    color: 'var(--chart-4)',
+    color: '#84cc16',
   },
   star5: {
     label: '5 Star',
-    color: 'var(--chart-5)',
+    color: '#22c55e',
   },
 };
 
 export function FeedbacksAnalytics() {
-  //   const countData = [
-  //     { month: 'star1', count: 186, fill: 'var(--color-star1)' },
-  //     { month: 'star2', count: 305, fill: 'var(--color-star2)' },
-  //     { month: 'star3', count: 237, fill: 'var(--color-star3)' },
-  //     { month: 'star4', count: 173, fill: 'var(--color-star4)' },
-  //     { month: 'star5', count: 209, fill: 'var(--color-star5)' },
-  //   ];
   const { data, isPending, isSuccess } = useFetchFeedbackAnalytics();
 
   const countData = data?.data;
 
-  const id = 'pie-interactive';
-  const [activeMonth, setActiveMonth] = useState(null); // 1. Initialize with null
+  // Calculate overall rating and total count
+  const stats = useMemo(() => {
+    if (!countData || countData.length === 0) return { avgRating: 0, totalReviews: 0, maxCount: 0 };
 
-  // 2. Use an effect to set the active month once the data is available
-  React.useEffect(() => {
-    // Check if we have data and if activeMonth hasn't been set yet
-    if (countData && countData.length > 0) {
-      setActiveMonth(countData[0]?.month);
+    let totalReviews = 0;
+    let totalRating = 0;
+    let maxCount = 0;
+
+    countData.forEach((item) => {
+      const starValue = parseInt(item.month.replace('star', ''));
+      totalReviews += item.count;
+      totalRating += starValue * item.count;
+      maxCount = Math.max(maxCount, item.count);
+    });
+
+    const avgRating = totalReviews > 0 ? (totalRating / totalReviews).toFixed(1) : 0;
+    return { avgRating, totalReviews, maxCount };
+  }, [countData]);
+
+  // Render star rating stars
+  const renderStars = (rating) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 !== 0;
+
+    for (let i = 0; i < 5; i++) {
+      if (i < fullStars) {
+        stars.push(
+          <Star
+            key={i}
+            size={16}
+            className="fill-yellow-400 text-yellow-400"
+          />
+        );
+      } else if (i === fullStars && hasHalfStar) {
+        stars.push(
+          <div key={i} className="relative">
+            <Star size={16} className="text-gray-300" />
+            <div className="absolute top-0 left-0 overflow-hidden w-2">
+              <Star size={16} className="fill-yellow-400 text-yellow-400" />
+            </div>
+          </div>
+        );
+      } else {
+        stars.push(
+          <Star
+            key={i}
+            size={16}
+            className="text-gray-300"
+          />
+        );
+      }
     }
-  }, [countData]); // 3. This effect runs whenever `countData` changes
+    return stars;
+  };
 
-  const activeIndex = useMemo(
-    () => countData?.findIndex((item) => item.month === activeMonth),
-    [activeMonth, countData] // Added countData
-  );
-  const months = useMemo(
-    () => countData?.map((item) => item.month),
-    [countData] // Changed from []
-  );
   return (
-    <Card data-chart={id} className="flex flex-col h-full shadow-none">
-      <ChartStyle id={id} config={chartConfig} />
-      <CardHeader className="flex-row items-start space-y-0 pb-0">
+    <Card className="flex flex-col h-full shadow-none">
+      <CardHeader className="pb-4">
         <div className="grid gap-1">
           <CardTitle>Feedbacks</CardTitle>
           <CardDescription>Showing total count of feedbacks.</CardDescription>
         </div>
-        <Select value={activeMonth} onValueChange={setActiveMonth}>
-          <SelectTrigger className="ml-auto h-7 w-[130px] rounded-lg pl-2.5" aria-label="Select a value">
-            <SelectValue placeholder="Select month" />
-          </SelectTrigger>
-          <SelectContent align="end" className="rounded-xl">
-            {months?.map((key) => {
-              // Removed type assertion `as keyof typeof chartConfig`
-              const config = chartConfig[key];
-
-              if (!config) {
-                return null;
-              }
-
-              return (
-                <SelectItem key={key} value={key} className="rounded-lg [&_span]:flex">
-                  <div className="flex items-center gap-2 text-xs">
-                    <span
-                      className="flex h-3 w-3 shrink-0 rounded-xs"
-                      style={{
-                        backgroundColor: `var(--color-${key})`,
-                      }}
-                    />
-                    {config?.label}
-                  </div>
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
       </CardHeader>
-      <CardContent className="flex flex-1 justify-center pb-0">
-        {data?.data.filter((el) => el.count > 0).length > 0 ? (
-          <ChartContainer id={id} config={chartConfig} className="mx-auto aspect-square w-full max-w-[300px]">
-            <PieChart>
-              <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-              <Pie
-                data={countData}
-                dataKey="count"
-                nameKey="month"
-                innerRadius={60}
-                strokeWidth={5}
-                activeIndex={activeIndex}
-                // Removed the `: PieSectorDataItem` type annotation
-                activeShape={({ outerRadius = 0, ...props }) => (
-                  <g>
-                    <Sector {...props} outerRadius={outerRadius + 10} />
-                    <Sector {...props} outerRadius={outerRadius + 25} innerRadius={outerRadius + 12} />
-                  </g>
-                )}
-              >
-                <Label
-                  content={({ viewBox }) => {
-                    if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
-                      return (
-                        <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
-                          <tspan x={viewBox.cx} y={viewBox.cy} className="fill-foreground text-3xl font-bold">
-                            {countData[activeIndex]?.count?.toLocaleString()}
-                          </tspan>
-                          <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 24} className="fill-muted-foreground">
-                            Feedbacks
-                          </tspan>
-                        </text>
-                      );
-                    }
-                  }}
-                />
-              </Pie>
-            </PieChart>
-          </ChartContainer>
+      <CardContent className="flex flex-1 flex-col">
+        {isSuccess && countData?.filter((el) => el.count > 0).length > 0 ? (
+          <div className="space-y-6">
+            {/* Overall Rating Section */}
+            <div className="text-center space-y-2">
+              <div className="text-5xl font-bold text-gray-900 dark:text-gray-100">
+                {stats.avgRating}
+              </div>
+              <div className="flex justify-center gap-1">
+                {renderStars(parseFloat(stats.avgRating))}
+              </div>
+              <div className="text-sm text-gray-500">
+                {stats.totalReviews.toLocaleString()} {stats.totalReviews === 1 ? 'review' : 'reviews'}
+              </div>
+            </div>
+
+            {/* Horizontal Bars Section */}
+            <div className="space-y-3">
+              {[5, 4, 3, 2, 1].map((starLevel) => {
+                const starData = countData?.find((item) => item.month === `star${starLevel}`);
+                const count = starData?.count || 0;
+                const percentage = stats.maxCount > 0 ? (count / stats.maxCount) * 100 : 0;
+
+                return (
+                  <div key={starLevel} className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium w-8">{starLevel}</span>
+                      <div className="flex gap-0.5">
+                        {Array.from({ length: starLevel }).map((_, i) => (
+                          <Star
+                            key={i}
+                            size={12}
+                            className="fill-yellow-400 text-yellow-400"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-300"
+                          style={{
+                            width: `${percentage}%`,
+                            backgroundColor: chartConfig[`star${starLevel}`]?.color,
+                          }}
+                        />
+                      </div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400 w-12 text-right">
+                        {count.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         ) : (
-          <div className="min-h-64  flex items-center justify-center">
-            <p>No ratings to show yet.</p>
+          <div className="min-h-64 flex items-center justify-center">
+            <p className="text-gray-500">No ratings to show yet.</p>
           </div>
         )}
       </CardContent>
