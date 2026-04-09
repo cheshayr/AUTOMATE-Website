@@ -34,6 +34,12 @@ const partsUsageData = [
   { partName: 'Oil Filter', usedQuantity: 40, totalCost: 320 },
 ];
 
+const inventorySummaryData = [
+  { itemName: 'Engine Oil', beginningStock: 50, soldUsed: 12, addedStock: 10, remainingStock: 48 },
+  { itemName: 'Brake Pad', beginningStock: 20, soldUsed: 5, addedStock: 0, remainingStock: 15 },
+  { itemName: 'Tire', beginningStock: 10, soldUsed: 2, addedStock: 5, remainingStock: 13 },
+];
+
 // ------------------- PESO FORMAT FUNCTION -------------------
 const formatPeso = (amount) => {
   if (!amount) return '₱0.00';
@@ -107,6 +113,23 @@ const Reports = () => {
           ],
           data: isMockData ? [] : reportData?.data || [],
           stats: [{ title: 'Total Repeat Customers', value: reportData?.data?.length || 0, icon: Users }],
+        };
+
+      case 'inventory-summary':
+        return {
+          title: 'Inventory Summary Report',
+          description: 'Tracks stock movement, usage, and remaining inventory',
+          columns: [
+            { key: 'itemName', label: 'Item Name' },
+            { key: 'beginningStock', label: 'Beginning Stock' },
+            { key: 'soldUsed', label: 'Sold / Used' },
+            { key: 'addedStock', label: 'Added Stock' },
+            { key: 'remainingStock', label: 'Remaining Stock' },
+          ],
+          data: isMockData ? inventorySummaryData : reportData?.data || [],
+          stats: [
+            { title: 'Total Items', value: (isMockData ? inventorySummaryData.length : reportData?.data?.length || 0), icon: FileText },
+          ],
         };
 
       case 'top-services':
@@ -294,6 +317,7 @@ const Reports = () => {
                     <SelectItem value="customer-feedback">Customer Feedback</SelectItem>
                     <SelectItem value="vehicle-history">Vehicle History</SelectItem>
                     <SelectItem value="technician-performance">Technician Performance</SelectItem>
+                    <SelectItem value="inventory-summary">Inventory Summary</SelectItem>
                     {/*<SelectItem value="service-turnaround">Service Turnaround</SelectItem> */}
                     {/* <SelectItem value="revenue">Revenue</SelectItem> */}
                     {/*<SelectItem value="parts-usage">Parts Usage</SelectItem> */}
