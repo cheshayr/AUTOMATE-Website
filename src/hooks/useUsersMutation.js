@@ -32,8 +32,11 @@ export const useActivateUser = () => {
   const queryClient = useQueryClient();
 
   const activateUser = async (data) => {
-    const response = await authenticatedApi.patch(`/users/${data.id}/reactivate-account`, data);
-    if (response.status !== 201) {
+    // data should contain: { id, adminPassword }
+    const response = await authenticatedApi.patch(`/users/${data.id}/reactivate-account`, {
+      adminPassword: data.adminPassword
+    });
+    if (response.status !== 200) {
       throw new Error('Failed to activate user');
     }
     return response.data;
@@ -42,7 +45,7 @@ export const useActivateUser = () => {
   return useMutation({
     mutationFn: (data) => activateUser(data),
     onSuccess: () => {
-      queryClient.invalidateQueries('users');
+      queryClient.invalidateQueries(['users']);
       toast.success('User activated successfully');
     },
     onError: (error) => {
@@ -57,8 +60,11 @@ export const useDeactivateUser = () => {
   const queryClient = useQueryClient();
 
   const deactivateUser = async (data) => {
-    const response = await authenticatedApi.patch(`/users/${data.id}/deactivate-account`, data);
-    if (response.status !== 201) {
+    // data should contain: { id, adminPassword }
+    const response = await authenticatedApi.patch(`/users/${data.id}/deactivate-account`, {
+      adminPassword: data.adminPassword
+    });
+    if (response.status !== 200) {
       throw new Error('Failed to deactivate user');
     }
     return response.data;
@@ -67,7 +73,7 @@ export const useDeactivateUser = () => {
   return useMutation({
     mutationFn: (data) => deactivateUser(data),
     onSuccess: () => {
-      queryClient.invalidateQueries('users');
+      queryClient.invalidateQueries(['users']);
       toast.success('User deactivated successfully');
     },
     onError: (error) => {
@@ -139,13 +145,16 @@ export const useDeleteUser = () => {
 };
 
 /* =========================================
-   REACTIVATE USER (FIXED)
+   REACTIVATE USER
 ========================================= */
 export const useReactivateUser = () => {
   const queryClient = useQueryClient();
 
-  const reactivateUser = async (id) => {
-    const response = await authenticatedApi.patch(`/users/${id}/reactivate-account`);
+  const reactivateUser = async (data) => {
+    // data should contain: { id, adminPassword }
+    const response = await authenticatedApi.patch(`/users/${data.id}/reactivate-account`, {
+      adminPassword: data.adminPassword
+    });
     if (response.status !== 200) {
       throw new Error("Failed to reactivate user");
     }

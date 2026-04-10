@@ -8,15 +8,17 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
-import { useDeleteUser } from "@/hooks/useUsersMutation";
+import { useDeactivateUser } from "@/hooks/useUsersMutation";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { toast } from "sonner";
 
 function DeleteUserButton({ id, userName, role, currentUser }) {
   const [isOpen, setIsOpen] = useState(false);
-  const { mutateAsync, isPending } = useDeleteUser();
+  const [adminPassword, setAdminPassword] = useState("");
+  const { mutateAsync, isPending } = useDeactivateUser();
 
   const handleDelete = async () => {
     try {
@@ -26,38 +28,49 @@ function DeleteUserButton({ id, userName, role, currentUser }) {
         return;
       }
 
-      // 🚨 VALIDATION 2 — Prevent self delete
+      // Check admin password
+      if (!adminPassword.trim()) {
+        toast.error("Admin password is required to deactivate an account.");
+        return;
+      }
+
+      // Prevent self delete
       if (currentUser?._id === id) {
-        toast.error("You cannot delete your own account.");
+        toast.error("You cannot deactivate your own account.");
         return;
       }
 
-      // 🚨 VALIDATION 3 — Protect Admin (matches backend)
+      // Protect Admin (matches backend)
       if (role === "admin") {
-        toast.error("Admin accounts cannot be deleted.");
+        toast.error("Admin accounts cannot be deactivated.");
         return;
       }
 
-      // 🚨 OPTIONAL — Staff warning
-      if (role === "staff") {
-        toast.warning(
-          "Make sure this staff member has no active assignments before deleting."
-        );
-      }
+      await mutateAsync({ id, adminPassword });
 
-      await mutateAsync(id);
-
-      toast.success("User account has been deactivated.");
+      toast.success("User account has been deactivated successfully.");
       setIsOpen(false);
+      setAdminPassword("");
     } catch (error) {
       console.error(error);
 
       // ✅ Show backend error message if available
       const message =
-        error?.response?.data?.message || "Failed to delete user.";
+        error?.response?.data?.message || error?.response?.data?.error || "Failed to deactivate user.";
 
       toast.error(message);
     }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && !isPending) {
+      handleDelete();
+    }
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setAdminPassword("");
   };
 
   return (
@@ -74,31 +87,51 @@ function DeleteUserButton({ id, userName, role, currentUser }) {
 
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete User</DialogTitle>
+          <DialogTitle>Deactivate User Account</DialogTitle>
         </DialogHeader>
 
-        <p className="text-sm text-muted-foreground">
-          This will deactivate user{" "}
-          <span className="font-semibold">{userName}</span>.
-          This action can be reversed later.
-        </p>
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            This will deactivate user{" "}
+            <span className="font-semibold">{userName}</span>. They will not be
+            able to login until reactivated by an admin.
+          </p>
+
+
+          <div>
+            <label className="text-sm font-medium text-gray-700 mb-2 block">
+              Admin Password <span className="text-red-500">*</span>
+            </label>
+            <Input
+              type="password"
+              placeholder="Enter admin password"
+              value={adminPassword}
+              onChange={(e) => setAdminPassword(e.target.value)}
+              onKeyPress={handleKeyPress}
+              disabled={isPending}
+              autoFocus
+            />
+          </div>
+        </div>
 
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline" onClick={handleClose}>
+              Cancel
+            </Button>
           </DialogClose>
 
           <Button
             onClick={handleDelete}
-            disabled={isPending}
+            disabled={isPending || !adminPassword.trim()}
             className="bg-red-600 hover:bg-red-700 text-white"
           >
             {isPending ? (
               <>
-                <LoadingSpinner /> Deleting...
+                <LoadingSpinner /> Deactivating...
               </>
             ) : (
-              "Delete"
+              "Deactivate"
             )}
           </Button>
         </DialogFooter>
