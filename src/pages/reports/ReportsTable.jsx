@@ -10,7 +10,9 @@ import { isValid, parseISO, format } from 'date-fns';
 import logo from '@/assets/logo.png';
 
 // ------------------- COMPANY NAME -------------------
-const COMPANY_NAME = "Tierodman Auto Center"; // 🔥 change if needed
+const COMPANY_NAME = "Tierodman Auto Center";
+const COMPANY_CONTACT = "0912-345-6789"; 
+const COMPANY_ADDRESS = "Quezon City, Philippines"; // 🔥 change if needed
 
 // ------------------- PESO FORMAT -------------------
 const formatPeso = (amount) => {
@@ -133,9 +135,11 @@ export const ReportsTable = ({
     autoTable(doc, {
       head: [headers],
       body: rows,
-      startY: 60,
+      startY: 65,
+      margin: { top: 65 }, // ✅ THIS FIXES PAGE 2 OVERLAP
       styles: { fontSize: 9 },
       headStyles: { fillColor: [71, 85, 105] },
+      showHead: 'everyPage', // optional but recommended
 
       // 🔥 HEADER + FOOTER EVERY PAGE
       didDrawPage: function (data) {
@@ -146,6 +150,7 @@ export const ReportsTable = ({
         const pageCount = doc.internal.getNumberOfPages();
 
         // ---------- HEADER ----------
+       // ---------- HEADER ----------
         doc.addImage(logo, 'PNG', 14, 5, 25, 25);
 
         doc.setFontSize(14);
@@ -153,16 +158,17 @@ export const ReportsTable = ({
 
         doc.setFontSize(9);
         doc.text(COMPANY_NAME, 45, 22);
+        doc.text(`Contact: ${COMPANY_CONTACT}`, 45, 27);
+        doc.text(`Address: ${COMPANY_ADDRESS}`, 45, 32);
 
         const from = dateFrom ? format(dateFrom, 'MMM dd, yyyy') : '';
         const to = dateTo ? format(dateTo, 'MMM dd, yyyy') : '';
         if (from || to) {
-          doc.text(`Date: ${[from, to].filter(Boolean).join(' - ')}`, 14, 35);
+          doc.text(`Date: ${[from, to].filter(Boolean).join(' - ')}`, 14, 40);
         }
 
-        doc.text(`Prepared By: ${preparedBy}`, 14, 42);
-        doc.text(`Exported: ${exportedAt}`, 14, 48);
-
+        doc.text(`Prepared By: ${preparedBy}`, 14, 47);
+        doc.text(`Exported: ${exportedAt}`, 14, 53);
         // ---------- FOOTER ----------
         doc.setFontSize(9);
         doc.text(

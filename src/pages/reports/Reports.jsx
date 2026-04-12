@@ -279,7 +279,7 @@ const Reports = () => {
           <CardHeader>
             <CardTitle className="text-2xl font-semibold">Report Filter</CardTitle>
             <CardDescription className="line-clamp-3">Select report parameters and generate your report</CardDescription>
-            <div className="space-y-2">
+            <div className="space-y-2 flex flex-col justify-end">
               <label className="text-sm font-medium">Prepared By</label>
               <input
                 type="text"
@@ -305,7 +305,7 @@ const Reports = () => {
 
             {/* REPORT TYPE AND DATE RANGE */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <div className="space-y-2">
+              <div className="space-y-2 flex flex-col justify-end">
                 <label className="text-sm font-medium">Report Type</label>
                 <Select value={reportType} onValueChange={(value) => setReportType(value)}>
                   <SelectTrigger className={'w-full'}>
@@ -357,44 +357,75 @@ const Reports = () => {
               </div>
 
               {/* Date From & To */}
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-2">
-                  <Label htmlFor="dateFrom" className="px-1">Date From</Label>
-                  <Popover open={dateFromOpen} onOpenChange={setDateFromOpen}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" id="dateFrom" className="w-full justify-between font-normal">
-                        {dateFrom ? dateFrom.toLocaleDateString() : 'Select date'}
-                        <ChevronDownIcon />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={dateFrom}
-                        captionLayout="dropdown"
-                        onSelect={(date) => {
-                          handleDateFromChange(date);
-                          setDateFromOpen(false);
-                        }}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+              <div className="space-y-2">
+                <Label className="px-1">Date Range</Label>
 
-                <div className="space-y-2">
-                  <Label htmlFor="dateToOpen" className="px-1">Date To</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" id="dateToOpen" className="w-full justify-between font-normal" disabled>
-                        {dateTo ? dateTo.toLocaleDateString() : 'Select date'}
-                        <ChevronDownIcon />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-between font-normal h-10"
+                    >
+                      {dateFrom && dateTo ? (
+                        <span>
+                          {dateFrom.toLocaleDateString()} - {dateTo.toLocaleDateString()}
+                        </span>
+                      ) : (
+                        <span>Select date range</span>
+                      )}
+                      <ChevronDownIcon />
+                    </Button>
+                  </PopoverTrigger>
+
+                  <PopoverContent className="w-auto p-0 flex flex-col" align="start">
+                    <div className="p-4 border-b space-y-4">
+                      
+                      {/* FROM */}
+                      <div>
+                        <label className="text-xs text-muted-foreground">From</label>
+                        <Calendar
+                          mode="single"
+                          selected={dateFrom}
+                          captionLayout="dropdown"
+                          onSelect={(date) => {
+                            handleDateFromChange(date); // KEEP your logic
+                          }}
+                          disabled={(date) =>
+                            dateTo ? date > dateTo : false
+                          }
+                        />
+                      </div>
+
+                      {/* TO */}
+                      <div>
+                        <label className="text-xs text-muted-foreground">To</label>
+                        <Calendar
+                          mode="single"
+                          selected={dateTo}
+                          captionLayout="dropdown"
+                          onSelect={(date) => setDateTo(date)}
+                          disabled={(date) =>
+                            dateFrom ? date < dateFrom : false
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    <div className="p-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => {
+                          setDateFrom(null);
+                          setDateTo(null);
+                        }}
+                      >
+                        Clear
                       </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-                      <Calendar mode="single" selected={dateTo} captionLayout="dropdown" />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div className="flex items-end">
