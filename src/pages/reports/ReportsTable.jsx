@@ -11,14 +11,21 @@ import logo from '@/assets/logo.png';
 
 // ------------------- COMPANY NAME -------------------
 const COMPANY_NAME = "Tierodman Auto Center";
-const COMPANY_CONTACT = "0912-345-6789"; 
-const COMPANY_ADDRESS = "Quezon City, Philippines"; // 🔥 change if needed
+const COMPANY_CONTACT = "0917-849-6894"; 
+const COMPANY_ADDRESS = "246 P. Ocampo  Ext,. cor. Sampaloc St., San Antonio Makati City"; // 🔥 change if needed
 
 // ------------------- PESO FORMAT -------------------
 const formatPeso = (amount) => {
-  if (!amount) return '₱0.00';
-  if (typeof amount === 'string' && amount.startsWith('₱')) return amount;
-  return `₱${Number(amount).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (!amount) return 'PHP 0.00';
+
+  if (typeof amount === 'string' && amount.startsWith('₱')) {
+    return amount.replace('₱', 'PHP ');
+  }
+
+  return `PHP ${Number(amount).toLocaleString('en-PH', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })}`;
 };
 
 export const ReportsTable = ({
@@ -89,11 +96,11 @@ export const ReportsTable = ({
     }
 
     const pesoKeys = ['revenue', 'servicecost', 'totalrevenue', 'totalcost', 'price', 'amount'];
-    if (typeof value === 'number' && pesoKeys.includes(column.key.toLowerCase())) {
+    if (typeof value === 'number' && pesoKeys.includes(column.key.toLowerCase().replace(/_/g, ''))) {
       return formatPeso(value);
     }
 
-    if (typeof value === 'string' && value.includes('₱')) {
+    if (typeof value === 'string' && value.includes('PHP')) {
       return value;
     }
 
@@ -124,9 +131,20 @@ export const ReportsTable = ({
 
         if (typeof value === 'object' && value?.text) return value.text;
 
-        const pesoKeys = ['revenue', 'servicecost', 'totalrevenue', 'totalcost', 'price', 'amount'];
-        if (typeof value === 'number' && pesoKeys.includes(col.key.toLowerCase())) return formatPeso(value);
-        if (typeof value === 'string' && value.includes('₱')) return value;
+        const pesoKeys = [
+          'revenue',
+          'servicecost',
+          'service_cost',
+          'servicecosts',
+          'totalrevenue',
+          'totalcost',
+          'price',
+          'amount'
+        ];
+        if (typeof value === 'number' && pesoKeys.includes(col.key.toLowerCase().replace(/_/g, ''))) return formatPeso(value);
+        if (typeof value === 'string' && (value.includes('₱') || value.includes('PHP'))) {
+          return value.replace('₱', 'PHP ');
+        }
 
         return String(value);
       })
