@@ -66,6 +66,7 @@ const Reports = () => {
     useEffect(() => {
     if (loggedInUser && isAutoFilled) {
       if (loggedInUser.role === 'staff') {
+        setPreparedBy(loggedInUser.name);
         const fullName = loggedInUser.name || '';
         const role = loggedInUser.role || '';
         const position = loggedInUser.position || '';
