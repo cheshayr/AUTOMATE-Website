@@ -21,7 +21,7 @@ const Sidebar = ({ onLogout, role }) => {
     { to: '/appointments', icon: <Calendar size={24} />, label: 'Appointments' },
     { to: '/services', icon: <Wrench size={24} />, label: 'Services' },
     { to: '/inventory', icon: <Package size={24} />, label: 'Inventory' },
-     { to: '/user', icon: <Users size={24} />, label: 'User Management' },
+    { to: '/user', icon: <Users size={24} />, label: 'User Management' },
     { to: '/analytics', icon: <BarChart2 size={24} />, label: 'Analytics' },
   ];
 

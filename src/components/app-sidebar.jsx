@@ -84,8 +84,8 @@ const data = {
     { url: '/inventory', icon: Package, name: 'Inventory' },
     { url: '/feedbacks', icon: MessageCircle, name: 'Feedbacks' },
     //{ url: '/activities', icon: Frame, name: 'Activity Logs' },
-    { url: '/analytics', icon: BarChart2, name: 'Analytics' },
-    { url: '/reports', icon: FileText, name: 'Performance Report' },
+    // { url: '/analytics', icon: BarChart2, name: 'Analytics' },
+    // { url: '/reports', icon: FileText, name: 'Performance Report' },
 
     // { to: '/dashboard', icon: <Home size={24} />, label: 'Dashboard' },
     //   { to: '/appointments', icon: <Calendar size={24} />, label: 'Appointments' },
