@@ -185,7 +185,12 @@ export const ReportsTable = ({
           doc.text(`Date: ${[from, to].filter(Boolean).join(' - ')}`, 14, 40);
         }
 
-        doc.text(`Prepared By: ${preparedBy}`, 14, 47);
+        doc.setFont(undefined, 'bold');
+        doc.text('Prepared By:', 14, 47);
+
+        doc.setFont(undefined, 'normal');
+        doc.text(preparedBy || '-', 40, 47);
+
         doc.text(`Exported: ${exportedAt}`, 14, 53);
         // ---------- FOOTER ----------
         doc.setFontSize(9);

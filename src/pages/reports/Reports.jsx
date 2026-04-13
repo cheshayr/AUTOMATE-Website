@@ -66,7 +66,13 @@ const Reports = () => {
     useEffect(() => {
     if (loggedInUser && isAutoFilled) {
       if (loggedInUser.role === 'staff') {
-        setPreparedBy(loggedInUser.name);
+        const fullName = loggedInUser.name || '';
+        const role = loggedInUser.role || '';
+        const position = loggedInUser.position || '';
+
+        const formatted = `${fullName} ${position ? `- ${position}` : ''} (${role})`;
+
+        setPreparedBy(formatted);
       }
     }
   }, [loggedInUser, isAutoFilled]);
