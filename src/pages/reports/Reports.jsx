@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -17,6 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar.jsx';
 import { subDays } from 'date-fns';
 import { ReportsTable } from './ReportsTable.jsx';
+import { useFetchUsers } from '@/hooks/useUsersQuery';
 
 // ------------------- NEW MOCK DATA -------------------
 const serviceTurnaroundData = [
@@ -58,6 +59,17 @@ const Reports = () => {
   const [showReport, setShowReport] = useState(false);
   const [isMockData, setIsMockData] = useState(false);
   const [preparedBy, setPreparedBy] = useState('');
+  const [isAutoFilled, setIsAutoFilled] = useState(true);
+
+  const loggedInUser = JSON.parse(localStorage.getItem('user'));
+
+    useEffect(() => {
+    if (loggedInUser && isAutoFilled) {
+      if (loggedInUser.role === 'staff') {
+        setPreparedBy(loggedInUser.name);
+      }
+    }
+  }, [loggedInUser, isAutoFilled]);
 
   const {
     data: reportData,
@@ -284,9 +296,13 @@ const Reports = () => {
               <input
                 type="text"
                 value={preparedBy}
-                onChange={(e) => setPreparedBy(e.target.value)}
+                onChange={(e) => {
+                  setPreparedBy(e.target.value);
+                  setIsAutoFilled(false); // stop auto override
+                }}
                 placeholder="Enter your name"
                 className="w-full px-3 py-2 border rounded-md bg-background"
+                disabled={loggedInUser?.role === 'staff'} // 🔥 staff cannot edit
               />
             </div>
           </CardHeader>
