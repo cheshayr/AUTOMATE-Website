@@ -235,6 +235,17 @@
   border-color: #cbd5e1;
   background-color: #f8fafc;
 }
+/* 🔥 FORCE NUMBER VISIBILITY */
+.step-circle span {
+  color: inherit !important;
+  z-index: 5;
+  position: relative;
+}
+
+/* Ensure circle doesn't override text */
+.step-circle {
+  color: inherit !important;
+}
 
 /* Responsive adjustments */
 @media (max-width: 640px) {

@@ -117,19 +117,34 @@ const AppointmentProgress = ({ appointment }) => {
               const isCurrent = index === activeIndex;
               
               let circleStyles = "step-circle transition-all duration-500 ";
-              let content = null;
+
+              // SHOW NUMBER
+              let content = (
+                <span
+                  className={`text-xs font-bold ${
+                    isPast
+                      ? "text-white"
+                      : isCurrent
+                      ? (isCanceled ? "text-red-500" : "text-[#1D2D43]")
+                      : "text-slate-400"
+                  }`}
+                >
+                  {index + 1}
+                </span>
+              );
 
               if (isPast) {
-                circleStyles += isCanceled ? "bg-red-500 border-red-500 text-white" : "bg-green-500 border-green-500 text-white";
-                content = <Check size={18} strokeWidth={3} />;
-              } else if (isCurrent) {
                 circleStyles += isCanceled 
-                    ? "border-red-500 text-red-500 bg-white shadow-sm" 
-                    : "border-[#1D2D43] text-[#1D2D43] bg-white shadow-sm scale-110";
-                content = isCanceled ? <XCircle size={22} strokeWidth={2.5} /> : <span className="text-xs font-bold">{index + 1}</span>;
-              } else {
+                  ? "bg-red-500 border-red-500 text-white" 
+                  : "bg-green-500 border-green-500 text-white";
+              } 
+              else if (isCurrent) {
+                circleStyles += isCanceled 
+                  ? "border-red-500 text-red-500 bg-white shadow-sm" 
+                  : "border-[#1D2D43] text-[#1D2D43] bg-white shadow-sm scale-110";
+              } 
+              else {
                 circleStyles += "bg-white text-slate-300 border-slate-200";
-                content = <span className="text-xs font-bold">{index + 1}</span>;
               }
 
               return (
