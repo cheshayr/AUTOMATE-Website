@@ -7,8 +7,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useFetchAnalyticsInsights } from '@/hooks/useAnalytticsQuery';
 import { Zap, RotateCw } from 'lucide-react';
 
-export function AIInsightsPanel() {
-  const { data, isPending, isError, refetch } = useFetchAnalyticsInsights();
+export function AIInsightsPanel({ dateRange = {} }) {
+  const { data, isPending, isError, refetch } = useFetchAnalyticsInsights(dateRange);
 
   const insights = data?.data?.insights;
   const summary = data?.data?.summary;

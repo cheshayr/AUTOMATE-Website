@@ -153,15 +153,9 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 
-export function ServicesCountAnalytics() {
+export function ServicesCountAnalytics({ dateRange = {}, setDateRange = () => {} }) {
   // 1. Fetch data using your custom hook
-  const { data: apiResponse, isPending, isSuccess } = useFetchServicesAnalytics();
-
-  // Date range 
-  const [dateRange, setDateRange] = React.useState({
-    from: null,
-    to: null,
-  });
+  const { data: apiResponse, isPending, isSuccess } = useFetchServicesAnalytics(dateRange);
 
   // Filter data based on selected date range
   const filteredChartData = React.useMemo(() => {

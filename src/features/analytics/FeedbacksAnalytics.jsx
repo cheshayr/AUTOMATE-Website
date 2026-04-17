@@ -32,8 +32,8 @@ const chartConfig = {
   },
 };
 
-export function FeedbacksAnalytics() {
-  const { data, isPending, isSuccess } = useFetchFeedbackAnalytics();
+export function FeedbacksAnalytics({ dateRange = {} }) {
+  const { data, isPending, isSuccess } = useFetchFeedbackAnalytics(dateRange);
 
   const countData = data?.data;
 
@@ -159,7 +159,11 @@ export function FeedbacksAnalytics() {
           </div>
         ) : (
           <div className="min-h-64 flex items-center justify-center">
-            <p className="text-gray-500">No ratings to show yet.</p>
+            {dateRange.from || dateRange.to ? (
+              <p className="text-gray-500">No ratings available for the selected date range.</p>
+            ) : (
+              <p className="text-gray-500">No ratings to show yet.</p>
+            )}
           </div>
         )}
       </CardContent>

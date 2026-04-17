@@ -1,10 +1,18 @@
 import authenticatedApi from '@/api/axiosInstance';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-export const useFetchFeedbackAnalytics = () => {
+export const useFetchFeedbackAnalytics = (dateRange = {}) => {
   const queryClient = useQueryClient();
   const fetchFeedbackAnalytics = async () => {
-    const response = await authenticatedApi.get('/analytics/feedback');
+    const params = new URLSearchParams();
+    if (dateRange.from) {
+      params.append('startDate', dateRange.from.toISOString().split('T')[0]);
+    }
+    if (dateRange.to) {
+      params.append('endDate', dateRange.to.toISOString().split('T')[0]);
+    }
+    
+    const response = await authenticatedApi.get(`/analytics/feedback?${params.toString()}`);
     if (response.status !== 200) {
       throw new Error('Failed to fetch feedback analytics');
     }
@@ -12,7 +20,7 @@ export const useFetchFeedbackAnalytics = () => {
   };
 
   return useQuery({
-    queryKey: ['feedback-analyics'],
+    queryKey: ['feedback-analyics', dateRange.from, dateRange.to],
     queryFn: () => fetchFeedbackAnalytics(),
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -23,10 +31,18 @@ export const useFetchFeedbackAnalytics = () => {
   });
 };
 
-export const useFetchServicesAnalytics = () => {
+export const useFetchServicesAnalytics = (dateRange = {}) => {
   const queryClient = useQueryClient();
   const fetchServicesAnalytics = async () => {
-    const response = await authenticatedApi.get('/analytics/services');
+    const params = new URLSearchParams();
+    if (dateRange.from) {
+      params.append('startDate', dateRange.from.toISOString().split('T')[0]);
+    }
+    if (dateRange.to) {
+      params.append('endDate', dateRange.to.toISOString().split('T')[0]);
+    }
+    
+    const response = await authenticatedApi.get(`/analytics/services?${params.toString()}`);
     if (response.status !== 200) {
       throw new Error('Failed to fetch services analytics');
     }
@@ -34,7 +50,7 @@ export const useFetchServicesAnalytics = () => {
   };
 
   return useQuery({
-    queryKey: ['services-analyics'],
+    queryKey: ['services-analyics', dateRange.from, dateRange.to],
     queryFn: () => fetchServicesAnalytics(),
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -45,10 +61,18 @@ export const useFetchServicesAnalytics = () => {
   });
 };
 
-export const useFetchAppointmentsEvent = () => {
+export const useFetchAppointmentsEvent = (dateRange = {}) => {
   const queryClient = useQueryClient();
   const fetchAppointmentsEvent = async () => {
-    const response = await authenticatedApi.get('/analytics/appointments');
+    const params = new URLSearchParams();
+    if (dateRange.from) {
+      params.append('startDate', dateRange.from.toISOString().split('T')[0]);
+    }
+    if (dateRange.to) {
+      params.append('endDate', dateRange.to.toISOString().split('T')[0]);
+    }
+    
+    const response = await authenticatedApi.get(`/analytics/appointments?${params.toString()}`);
     if (response.status !== 200) {
       throw new Error('Failed to fetch apppointments events');
     }
@@ -56,7 +80,7 @@ export const useFetchAppointmentsEvent = () => {
   };
 
   return useQuery({
-    queryKey: ['apppointments-analyics'],
+    queryKey: ['apppointments-analyics', dateRange.from, dateRange.to],
     queryFn: () => fetchAppointmentsEvent(),
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -67,11 +91,19 @@ export const useFetchAppointmentsEvent = () => {
   });
 };
 
-export const useFetchAnalyticsInsights = () => {
+export const useFetchAnalyticsInsights = (dateRange = {}) => {
   return useQuery({
-    queryKey: ['analytics-insights'],
+    queryKey: ['analytics-insights', dateRange.from, dateRange.to],
     queryFn: async () => {
-      const response = await authenticatedApi.get('/analytics/insights');
+      const params = new URLSearchParams();
+      if (dateRange.from) {
+        params.append('startDate', dateRange.from.toISOString().split('T')[0]);
+      }
+      if (dateRange.to) {
+        params.append('endDate', dateRange.to.toISOString().split('T')[0]);
+      }
+      
+      const response = await authenticatedApi.get(`/analytics/insights?${params.toString()}`);
       if (response.status !== 200) {
         throw new Error('Failed to fetch analytics insights');
       }
