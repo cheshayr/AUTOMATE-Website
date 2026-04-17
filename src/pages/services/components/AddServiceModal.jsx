@@ -19,6 +19,7 @@ export function AddServiceModal({ isOpen, setIsOpen, currentData }) {
 
   const [imageFiles, setImageFiles] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
+  const [existingImageUrls, setExistingImageUrls] = useState([]);
   const [errors, setErrors] = useState([]);
 
   const addService = useAddService();
@@ -28,9 +29,11 @@ export function AddServiceModal({ isOpen, setIsOpen, currentData }) {
     if (isOpen) {
       setImageFiles([]);
       setPreviewUrls([]);
+      setExistingImageUrls([]);
 
       // Load existing images if editing
       if (currentData?.imageUrls) {
+        setExistingImageUrls(currentData.imageUrls);
         setPreviewUrls(currentData.imageUrls);
       }
 
@@ -46,7 +49,13 @@ export function AddServiceModal({ isOpen, setIsOpen, currentData }) {
 
   const deleteImage = (index) => {
     setPreviewUrls(prev => prev.filter((_, i) => i !== index));
-    setImageFiles(prev => prev.filter((_, i) => i !== index));
+    
+    if (index < existingImageUrls.length) {
+      setExistingImageUrls(prev => prev.filter((_, i) => i !== index));
+    } else {
+      const newFileIndex = index - existingImageUrls.length;
+      setImageFiles(prev => prev.filter((_, i) => i !== newFileIndex));
+    }
   };
 
   const validateForm = (description, rangeMin, ETC) => {
@@ -92,7 +101,16 @@ export function AddServiceModal({ isOpen, setIsOpen, currentData }) {
     formData.append('rangeMin', Number(rangeMin));
     formData.append('ETC', Number(ETC));
 
-    // Append all images
+    if (currentData && existingImageUrls.length > 0) {
+  
+      const keptIndices = existingImageUrls.map(url => 
+        currentData.imageUrls.indexOf(url)
+      ).filter(index => index !== -1);
+      
+      formData.append('existingImageOrder', JSON.stringify(keptIndices));
+    }
+
+  
     imageFiles.forEach(file => {
       formData.append('images', file);
     });
