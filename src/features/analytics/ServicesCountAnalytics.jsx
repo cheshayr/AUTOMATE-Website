@@ -138,7 +138,7 @@
 'use client';
 
 import * as React from 'react';
-import { CartesianGrid, Line, LineChart, XAxis } from 'recharts';
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
 import { Calendar, X } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -481,6 +481,7 @@ export function ServicesCountAnalytics({ dateRange = {}, setDateRange = () => {}
               axisLine={false}
               tickMargin={8}
               minTickGap={32}
+              label={{ value: 'Date', position: 'insideBottomRight', offset: -5 }}
               tickFormatter={(value) => {
                 const date = new Date(value);
                 return date.toLocaleDateString('en-US', {
@@ -488,6 +489,9 @@ export function ServicesCountAnalytics({ dateRange = {}, setDateRange = () => {}
                   day: 'numeric',
                 });
               }}
+            />
+            <YAxis
+              label={{ value: 'Number of Services', angle: -90, position: 'insideLeft' }}
             />
             <ChartTooltip
               cursor={false}
