@@ -117,6 +117,8 @@ export const ReportsTable = ({
     const doc = new jsPDF();
     const exportedAt = format(new Date(), 'MMM dd, yyyy • hh:mm a');
 
+    const totalPagesExp = "{total_pages_count_string}";
+
     const headers = columns.map((col) => col.label);
 
     const rows = sortedData.map((row) =>
@@ -165,9 +167,9 @@ export const ReportsTable = ({
         const pageHeight = pageSize.height || pageSize.getHeight();
         const pageWidth = pageSize.width || pageSize.getWidth();
         const pageNumber = doc.internal.getCurrentPageInfo().pageNumber;
-        const pageCount = doc.internal.getNumberOfPages();
+        
 
-        // ---------- HEADER ----------
+      
        // ---------- HEADER ----------
         doc.addImage(logo, 'PNG', 14, 5, 25, 25);
 
@@ -192,21 +194,39 @@ export const ReportsTable = ({
         doc.text(preparedBy || '-', 40, 47);
 
         doc.text(`Exported: ${exportedAt}`, 14, 53);
+       
         // ---------- FOOTER ----------
         doc.setFontSize(9);
-        doc.text(
-          `${COMPANY_NAME}`,
-          14,
-          pageHeight - 10
-        );
+        doc.setFont(undefined, 'normal');
+
+        // Get actual page width
+        const pWidth = doc.internal.pageSize.width;
+        const pHeight = doc.internal.pageSize.height;
+
+        // 14 is the standard default margin for autoTable
+        // If you want it even further to the right, try 10
+        const sideMargin = 20; 
+        const bottomMargin = 12;
+
+        // LEFT: Company Name (starts at 14)
+        doc.text(COMPANY_NAME, sideMargin, pHeight - bottomMargin);
+
+        // RIGHT: Page Number
+        // This formula: (Total Width - Margin) ensures it stays 'inside' the right edge
+        const xRight = pWidth - sideMargin;
 
         doc.text(
-          `Page ${pageNumber} of ${pageCount}`,
-          pageWidth - 50,
-          pageHeight - 10
+          `Page ${pageNumber} of ${totalPagesExp}`, 
+          xRight, 
+          pHeight - bottomMargin, 
+          { align: 'center' }
         );
       },
     });
+
+    if (typeof doc.putTotalPages === 'function') {
+      doc.putTotalPages(totalPagesExp);
+    }
 
     doc.save(
       `${reportTitle.replace(/\s+/g, '_').toLowerCase()}_${format(new Date(), 'yyyy-MM-dd')}.pdf`
