@@ -139,7 +139,7 @@
 
 import * as React from 'react';
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
-import { Calendar, X } from 'lucide-react';
+import { Calendar, X, Download } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -152,8 +152,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { exportAnalyticsToPDF } from '@/utils/analyticsExportPdf';
 
-export function ServicesCountAnalytics({ dateRange = {}, setDateRange = () => {} }) {
+export function ServicesCountAnalytics({ 
+  dateRange = {}, 
+  setDateRange = () => {},
+  preparedBy = '',
+  setPreparedBy = () => {}
+}) {
   // 1. Fetch data using your custom hook
   const { data: apiResponse, isPending, isSuccess } = useFetchServicesAnalytics(dateRange);
 
@@ -247,6 +253,17 @@ export function ServicesCountAnalytics({ dateRange = {}, setDateRange = () => {}
     };
   }, [chartData, serviceNames]); // Re-calculate if data or service names change
 
+  // PDF Export
+  const handleExportPDF = () => {
+    exportAnalyticsToPDF({
+      chartData,
+      dateRange,
+      preparedBy,
+      serviceNames,
+      activeChart,
+    });
+  };
+
   // 5. Handle loading and empty states before rendering the main component
   if (isPending) {
     return (
@@ -296,33 +313,33 @@ export function ServicesCountAnalytics({ dateRange = {}, setDateRange = () => {}
                 <div className="p-4 border-b">
                   <h3 className="text-sm font-semibold mb-3">Select Date Range</h3>
                   <div className="space-y-3">
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground">From</label>
-                      <CalendarComponent
-                        mode="single"
-                        selected={dateRange.from}
-                        onSelect={(date) =>
-                          setDateRange({ ...dateRange, from: date })
-                        }
-                        disabled={(date) =>
-                          dateRange.to ? date > dateRange.to : false
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground">To</label>
-                      <CalendarComponent
-                        mode="single"
-                        selected={dateRange.to}
-                        onSelect={(date) =>
-                          setDateRange({ ...dateRange, to: date })
-                        }
-                        disabled={(date) =>
-                          dateRange.from ? date < dateRange.from : false
-                        }
-                      />
-                    </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">From</label>
+                    <CalendarComponent
+                      mode="single"
+                      selected={dateRange.from}
+                      onSelect={(date) =>
+                        setDateRange({ ...dateRange, from: date })
+                      }
+                      disabled={(date) =>
+                        dateRange.to ? date > dateRange.to : false
+                      }
+                    />
                   </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">To</label>
+                    <CalendarComponent
+                      mode="single"
+                      selected={dateRange.to}
+                      onSelect={(date) =>
+                        setDateRange({ ...dateRange, to: date })
+                      }
+                      disabled={(date) =>
+                        dateRange.from ? date < dateRange.from : false
+                      }
+                    />
+                  </div>
+                </div>
                 </div>
                 <div className="flex gap-2 p-4">
                   <Button
@@ -445,6 +462,19 @@ export function ServicesCountAnalytics({ dateRange = {}, setDateRange = () => {}
               </div>
             </PopoverContent>
           </Popover>
+          
+          {/* Export PDF Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportPDF}
+            disabled={!preparedBy || preparedBy.trim() === ''}
+            className="gap-1.5 w-fit"
+            title={preparedBy ? "Export to PDF" : "Enter a name in 'Prepared By' to export"}
+          >
+            <Download className="h-4 w-4" />
+            <span className="text-xs">Export PDF</span>
+          </Button>
         </div>
 
         <div className="flex overflow-auto w-full border-t">
