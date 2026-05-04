@@ -15,6 +15,7 @@ const COMPANY_ADDRESS = "246 P. Ocampo Ext., cor. Sampoloc St., San Antonio Maka
  * @param {string} preparedBy - The name/info of who prepared the report
  * @param {Array} serviceNames - Array of service names
  * @param {string} activeChart - Currently active chart view ('combined' or specific service name)
+ * @param {Object} insights - AI insights data { insights: string, summary: { totalCompleted, averageRating, topService } }
  */
 export const exportAnalyticsToPDF = ({
   chartData,
@@ -22,6 +23,7 @@ export const exportAnalyticsToPDF = ({
   preparedBy,
   serviceNames,
   activeChart,
+  insights = null,
 }) => {
   if (!preparedBy || preparedBy.trim() === '') {
     alert('Please enter your name in "Prepared By" before exporting.');
@@ -32,11 +34,13 @@ export const exportAnalyticsToPDF = ({
   const exportedAt = format(new Date(), 'MMM dd, yyyy • hh:mm a');
   const totalPagesExp = "{total_pages_count_string}";
 
+  let startY = 65;
 
+  // =============== PAGE 1: HEADER + INSIGHTS SECTION ===============
+  // Add header and insights on the first page
   let tableData = [];
 
   if (!chartData || chartData.length === 0) {
-   
     tableData = [['No data available', '-']];
   } else {
     // Calculate service totals
@@ -73,11 +77,52 @@ export const exportAnalyticsToPDF = ({
     }
   }
 
+  // =============== ADD AI INSIGHTS SECTION (IF AVAILABLE) ===============
+  if (insights?.data?.insights) {
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'bold');
+    doc.text('AI Insights & Recommendations', 14, startY);
+    
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(9);
+    startY += 6;
+
+    // Add insights text with text wrapping
+    const insightsText = insights.data.insights;
+    const insightLines = doc.splitTextToSize(insightsText, 180);
+    doc.text(insightLines, 14, startY);
+    startY += insightLines.length * 4 + 5;
+
+    // Add summary stats if available
+    if (insights.data.summary) {
+      const summary = insights.data.summary;
+      doc.setFont(undefined, 'bold');
+      doc.setFontSize(9);
+      doc.text('Summary Statistics:', 14, startY);
+      startY += 4;
+
+      doc.setFont(undefined, 'normal');
+      const summaryLines = [];
+      summaryLines.push(`Total Completed: ${summary.totalCompleted || 0}`);
+      summaryLines.push(`Average Rating: ${summary.averageRating || 'N/A'} ⭐`);
+      if (summary.topService) {
+        summaryLines.push(`Top Service: ${summary.topService._id || 'N/A'}`);
+      }
+
+      summaryLines.forEach((line) => {
+        doc.text(line, 14, startY);
+        startY += 4;
+      });
+      
+      startY += 3;
+    }
+  }
+
   // ------------------- GENERATE PDF STRUCTURE -------------------
   autoTable(doc, {
     head: [['Period / Service', activeChart === 'combined' ? 'Total Count' : 'Count']],
     body: tableData,
-    startY: 65,
+    startY: startY,
     margin: { top: 65 },
     styles: { fontSize: 9 },
     headStyles: { fillColor: [71, 85, 105] },

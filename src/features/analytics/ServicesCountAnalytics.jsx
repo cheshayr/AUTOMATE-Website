@@ -143,7 +143,7 @@ import { Calendar, X, Download } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { useFetchServicesAnalytics } from '@/hooks/useAnalytticsQuery';
+import { useFetchServicesAnalytics, useFetchAnalyticsInsights } from '@/hooks/useAnalytticsQuery';
 import { Skeleton } from '@/components/ui/skeleton'; // For loading state
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
@@ -162,6 +162,9 @@ export function ServicesCountAnalytics({
 }) {
   // 1. Fetch data using your custom hook
   const { data: apiResponse, isPending, isSuccess } = useFetchServicesAnalytics(dateRange);
+
+  // Fetch AI insights
+  const { data: insightsData } = useFetchAnalyticsInsights(dateRange);
 
   // Filter data based on selected date range
   const filteredChartData = React.useMemo(() => {
@@ -261,6 +264,7 @@ export function ServicesCountAnalytics({
       preparedBy,
       serviceNames,
       activeChart,
+      insights: insightsData,
     });
   };
 
