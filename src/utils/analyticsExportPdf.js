@@ -8,6 +8,24 @@ const COMPANY_NAME = "Tierodman Auto Center";
 const COMPANY_CONTACT = "0917-849-6894";
 const COMPANY_ADDRESS = "246 P. Ocampo Ext., cor. Sampoloc St., San Antonio Makati City";
 
+const normalizeInsightText = (text = '') =>
+  String(text)
+    .replace(/\r\n/g, '\n')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\s+\n/g, '\n')
+    .trim();
+
+const getInsightBullets = (text = '') => {
+  const normalized = normalizeInsightText(text);
+  if (!normalized) return [];
+
+  return normalized
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => line.replace(/^[-*•]\s*/, ''));
+};
+
 /**
  * Export Services Analytics to PDF with text-based format
  * @param {Array} chartData - The chart data from the API
@@ -35,6 +53,8 @@ export const exportAnalyticsToPDF = ({
   const totalPagesExp = "{total_pages_count_string}";
 
   let startY = 65;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const contentWidth = pageWidth - 28;
 
   // =============== PAGE 1: HEADER + INSIGHTS SECTION ===============
   // Add header and insights on the first page
@@ -87,11 +107,20 @@ export const exportAnalyticsToPDF = ({
     doc.setFontSize(9);
     startY += 6;
 
-    // Add insights text with text wrapping
-    const insightsText = insights.data.insights;
-    const insightLines = doc.splitTextToSize(insightsText, 180);
-    doc.text(insightLines, 14, startY);
-    startY += insightLines.length * 4 + 5;
+    const insightBullets = getInsightBullets(insights.data.insights);
+
+    if (insightBullets.length > 0) {
+      insightBullets.forEach((bullet) => {
+        const wrappedBullet = doc.splitTextToSize(bullet, contentWidth - 8);
+        doc.text('•', 14, startY);
+        doc.text(wrappedBullet, 20, startY);
+        startY += wrappedBullet.length * 4 + 2;
+      });
+    } else {
+      const fallbackLines = doc.splitTextToSize(normalizeInsightText(insights.data.insights), contentWidth);
+      doc.text(fallbackLines, 14, startY);
+      startY += fallbackLines.length * 4 + 4;
+    }
 
     // Add summary stats if available
     if (insights.data.summary) {
@@ -99,22 +128,28 @@ export const exportAnalyticsToPDF = ({
       doc.setFont(undefined, 'bold');
       doc.setFontSize(9);
       doc.text('Summary Statistics:', 14, startY);
-      startY += 4;
+      startY += 6;
 
-      doc.setFont(undefined, 'normal');
-      const summaryLines = [];
-      summaryLines.push(`Total Completed: ${summary.totalCompleted || 0}`);
-      summaryLines.push(`Average Rating: ${summary.averageRating || 'N/A'} ⭐`);
-      if (summary.topService) {
-        summaryLines.push(`Top Service: ${summary.topService._id || 'N/A'}`);
-      }
+      const summaryRows = [
+        ['Total Completed', String(summary.totalCompleted || 0)],
+        ['Average Rating', `${summary.averageRating || 'N/A'} / 5`],
+        ['Top Service', summary.topService?._id || 'N/A'],
+      ];
 
-      summaryLines.forEach((line) => {
-        doc.text(line, 14, startY);
-        startY += 4;
+      autoTable(doc, {
+        startY,
+        head: [['Metric', 'Value']],
+        body: summaryRows,
+        theme: 'grid',
+        styles: { fontSize: 8.5, cellPadding: 2 },
+        headStyles: { fillColor: [71, 85, 105] },
+        columnStyles: {
+          0: { cellWidth: 52, fontStyle: 'bold' },
+          1: { cellWidth: contentWidth - 52 },
+        },
       });
-      
-      startY += 3;
+
+      startY = doc.lastAutoTable.finalY + 6;
     }
   }
 
