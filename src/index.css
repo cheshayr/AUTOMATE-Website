@@ -104,6 +104,11 @@ code {
   --chart-3: oklch(57.7% 0.245 27.325); /* Red */
   --chart-4: oklch(51% 0 0); /* Medium Gray */
   --chart-5: oklch(92.6977% 0 0); /* Subtle Gray */
+  --chart-6: oklch(65% 0.25 142.495); /* Green */
+  --chart-7: oklch(55% 0.30 290.155); /* Purple */
+  --chart-8: oklch(70% 0.28 180.756); /* Teal/Cyan */
+  --chart-9: oklch(68% 0.26 333.476); /* Pink */
+  --chart-10: oklch(75% 0.18 60.234); /* Lime Green */
 }
 
 .dark {
@@ -141,6 +146,11 @@ code {
   --chart-3: oklch(0.704 0.191 22.216); /* Red for dark mode chart */
   --chart-4: oklch(0.627 0.265 303.9); /* Purplish-blue for dark mode chart */
   --chart-5: oklch(0.645 0.246 16.439); /* Orange-red for dark mode chart */
+  --chart-6: oklch(0.72 0.25 142.495); /* Bright green for dark mode chart */
+  --chart-7: oklch(0.65 0.30 290.155); /* Bright purple for dark mode chart */
+  --chart-8: oklch(0.75 0.28 180.756); /* Bright cyan for dark mode chart */
+  --chart-9: oklch(0.75 0.26 333.476); /* Bright pink for dark mode chart */
+  --chart-10: oklch(0.80 0.22 60.234); /* Bright lime for dark mode chart */
 }
 
 @layer base {

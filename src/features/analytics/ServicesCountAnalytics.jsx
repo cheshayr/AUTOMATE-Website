@@ -201,7 +201,7 @@ export function ServicesCountAnalytics({
     const discoveredServiceNames = Object.keys(data[0]).filter((key) => key !== 'date');
 
     // Define a list of colors for the chart lines
-    const chartColors = ['--chart-1', '--chart-2', '--chart-3', '--chart-4', '--chart-5'];
+    const chartColors = ['--chart-1', '--chart-2', '--chart-3', '--chart-4', '--chart-5', '--chart-6', '--chart-7', '--chart-8', '--chart-9', '--chart-10'];
 
     // Build the configuration object for the ChartContainer
     const dynamicChartConfig = discoveredServiceNames.reduce((config, name, index) => {
