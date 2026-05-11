@@ -138,7 +138,7 @@
 'use client';
 
 import * as React from 'react';
-import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
+import { CartesianGrid, Legend, Line, LineChart, XAxis, YAxis } from 'recharts';
 import { Calendar, X, Download } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -542,6 +542,15 @@ export function ServicesCountAnalytics({
                 />
               }
             />
+            {activeChart === 'combined' && (
+              <Legend 
+                verticalAlign="bottom" 
+                height={36}
+                wrapperStyle={{
+                  paddingTop: '20px',
+                }}
+              />
+            )}
             {/* */}
             {activeChart === 'combined' 
               ? serviceNames
@@ -566,6 +575,28 @@ export function ServicesCountAnalytics({
             }
           </LineChart>
         </ChartContainer>
+        {/* Custom Legend for Better Visibility */}
+        {activeChart === 'combined' && (
+          <div className="mt-3 px-2 sm:px-0">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
+              {serviceNames
+                .filter(name => name !== 'combined')
+                .map((serviceName) => (
+                  <div key={serviceName} className="flex items-center gap-2 p-1.5 rounded hover:bg-muted/30 transition-colors">
+                    <div
+                      className="w-6 h-1.5 flex-shrink-0"
+                      style={{
+                        backgroundColor: chartConfig[serviceName]?.color || '#ccc',
+                      }}
+                    />
+                    <span className="text-xs font-medium truncate text-foreground capitalize">
+                      {serviceName}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
