@@ -60,6 +60,10 @@ const UserManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
 
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchQuery, selectedRole, statusFilter]);
+
   const [preparedBy, setPreparedBy] = useState("");
   const [exportScope, setExportScope] = useState("page");
   
@@ -236,6 +240,8 @@ const handleExportUsersPDF = () => {
     return true;
   });
 
+  
+
   return (
     <Card className="w-full bg-transparent shadow-none border-0">
       <CardHeader className="px-0">
@@ -250,7 +256,10 @@ const handleExportUsersPDF = () => {
               type="text"
               placeholder="Search by name or email..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
               className="flex-1"
             />
           </div>
@@ -265,7 +274,13 @@ const handleExportUsersPDF = () => {
             />
 
             {/* Status Filter Dropdown */}
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select
+              value={statusFilter}
+              onValueChange={(value) => {
+                setStatusFilter(value);
+                setCurrentPage(1);
+              }}
+            >
               <SelectTrigger className="h-9 w-[160px]">
                 <SelectValue />
               </SelectTrigger>
@@ -277,7 +292,13 @@ const handleExportUsersPDF = () => {
             </Select>
 
             {/* Role Filter Dropdown */}
-            <Select value={selectedRole} onValueChange={setSelectedRole}>
+            <Select
+              value={selectedRole}
+              onValueChange={(value) => {
+                setSelectedRole(value);
+                setCurrentPage(1);
+              }}
+            >
               <SelectTrigger className="h-9 w-[160px]">
                 <SelectValue />
               </SelectTrigger>
