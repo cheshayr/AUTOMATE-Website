@@ -573,7 +573,7 @@ export function ServicesCountAnalytics({
   <div className="mt-5 rounded-xl border bg-muted/20 p-4">
     <div className="mb-3 flex items-center justify-between">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-        Service Legend
+        Services Legend
       </p>
 
       <p className="text-xs text-muted-foreground">
