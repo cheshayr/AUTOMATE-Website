@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash2 } from "lucide-react";
+import { UserX } from "lucide-react";
 import { useState } from "react";
 import { useDeactivateUser } from "@/hooks/useUsersMutation";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -81,7 +81,7 @@ function DeleteUserButton({ id, userName, role, currentUser }) {
           size="icon"
           className="text-red-600 hover:bg-red-50"
         >
-          <Trash2 size={18} />
+          <UserX size={18} />
         </Button>
       </DialogTrigger>
 
