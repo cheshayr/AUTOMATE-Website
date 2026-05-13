@@ -58,7 +58,11 @@ function AppointmentSheet({ appointment, onSave, onCancel, staffList = [], vehic
     ? new Date(appointment.scheduledDate).toISOString().split('T')[0]
     : '';
   const scheduledTime = appointment?.scheduledTime
-    ? new Date(appointment.scheduledTime).toTimeString().slice(0, 5)
+    ? new Date(appointment.scheduledTime).toLocaleString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      })
     : '';
 
   const serviceName = appointment.services?.[0].service?.name;

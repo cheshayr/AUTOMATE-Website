@@ -310,7 +310,14 @@ const handleExportPDF = () => {
         : '-',
       a.services?.map((s) => s?.service?.name || '-').join(', ') || '-',
       a.status || '-',
-      a.scheduledTime ? format(new Date(a.scheduledTime), 'MMM dd, yyyy • hh:mm a') : '-',
+      a.scheduledTime ? new Date(a.scheduledTime).toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      }) : '-',
     ]),
     styles: { fontSize: 9 },
     headStyles: { fillColor: [71, 85, 105] },
@@ -424,9 +431,18 @@ const handleExportPDF = () => {
   const value = row.getValue('scheduledTime');
   if (!value) return <div className="pl-4">-</div>;
 
+  // Convert UTC time to user's local timezone
+  const date = new Date(value);
   return (
     <div className="pl-4">
-      {format(new Date(value), 'MMM dd, yyyy • hh:mm a')}
+      {date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      })}
     </div>
   );
 },
