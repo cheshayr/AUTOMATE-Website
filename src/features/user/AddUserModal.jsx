@@ -1,5 +1,16 @@
 import { Button } from "@/components/ui/button";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Dialog,
   DialogClose,
   DialogContent,
@@ -23,12 +34,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
 import { Eye, EyeIcon, EyeOffIcon, Plus } from "lucide-react";
-import { useAddUser } from "@/hooks/useUsersMutation";
+import {
+  useAddUser,
+  useAdminResetUserPassword,
+} from "@/hooks/useUsersMutation";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 function AddUser({ isAdd = false, user = {} }) {
   const [userDetails, setUserDetails] = useState(user);
   const [isOpen, setIsOpen] = useState(false);
+
+  const [adminPassword, setAdminPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const {
     mutateAsync: addUserMutation,
@@ -37,6 +55,11 @@ function AddUser({ isAdd = false, user = {} }) {
     isSuccess: addUserMutationSuccess,
     reset: resetAddUserMutation,
   } = useAddUser();
+
+  const {
+    mutateAsync: resetPasswordMutation,
+    isPending: resetPasswordPending,
+  } = useAdminResetUserPassword();
 
   useEffect(() => {
     if (addUserMutationSuccess) {
@@ -61,6 +84,43 @@ function AddUser({ isAdd = false, user = {} }) {
     e.preventDefault();
     await addUserMutation(userDetails);
   };
+
+  const handleResetPassword = async () => {
+  try {
+    if (!adminPassword.trim()) {
+      alert("Admin password is required.");
+      return;
+    }
+
+    if (!newPassword.trim() || !confirmPassword.trim()) {
+      alert("Please fill all password fields.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      alert("Passwords do not match.");
+      return;
+    }
+
+    await resetPasswordMutation({
+      id: userDetails._id,
+      adminPassword,
+      password: newPassword,
+      passwordConfirm: confirmPassword,
+    });
+
+    alert("Password reset successfully.");
+
+    setAdminPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+  } catch (error) {
+    alert(
+      error?.response?.data?.message ||
+      "Failed to reset password."
+    );
+  }
+};
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -167,6 +227,73 @@ function AddUser({ isAdd = false, user = {} }) {
                 </SelectContent>
               </Select>
             </div>
+            {!isAdd && (
+                <div className="grid gap-3 border-t pt-4">
+                  <Label>Reset Password</Label>
+
+                  <Input
+                    type="password"
+                    placeholder="New password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    disabled={resetPasswordPending}
+                  />
+
+                  <Input
+                    type="password"
+                    placeholder="Confirm new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    disabled={resetPasswordPending}
+                  />
+
+                  <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={resetPasswordPending}
+              >
+                Reset Password
+              </Button>
+            </AlertDialogTrigger>
+
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  Admin Verification
+                </AlertDialogTitle>
+
+                <AlertDialogDescription>
+                  Please enter the admin password to confirm password reset.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <Input
+                type="password"
+                placeholder="Enter admin password"
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                disabled={resetPasswordPending}
+              />
+
+              <AlertDialogFooter>
+                <AlertDialogCancel>
+                  Cancel
+                </AlertDialogCancel>
+
+                <AlertDialogAction
+                  onClick={handleResetPassword}
+                >
+                  {resetPasswordPending
+                    ? "Resetting..."
+                    : "Confirm Reset"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+                </div>
+              )}
             {isAdd && (
               <div className="grid gap-3">
                 <Label htmlFor="password">Password</Label>

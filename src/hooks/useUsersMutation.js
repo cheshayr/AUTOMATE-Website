@@ -144,6 +144,33 @@ export const useDeleteUser = () => {
   });
 };
 
+export const useAdminResetUserPassword = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      adminPassword,
+      password,
+      passwordConfirm,
+    }) => {
+      const res = await authenticatedApi.patch(`/users/${id}`, {
+        adminPassword,
+        password,
+        passwordConfirm,
+      });
+
+      return res.data;
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["users"],
+      });
+    },
+  });
+};
+
 /* =========================================
    REACTIVATE USER
 ========================================= */
