@@ -138,7 +138,8 @@ const staff = users?.data || [];
   // const [vehicleList, setVehicleList] = useState([appointments?.vehicle]);
   const [vehicleList, setVehicleList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [invoiceFile, setInvoiceFile] = useState(null); // No type annotation
+  const [invoiceFile, setInvoiceFile] = useState(null); 
+  const [adminPassword, setAdminPassword] = useState("");// No type annotation
 
 
 
@@ -264,24 +265,42 @@ const staff = users?.data || [];
   };
 
   const handleUploadInvoice = async (e) => {
-    console.log('Uploading invoice for appointment:', selectedAppointment);
+  e.preventDefault();
 
-    e.preventDefault();
-    // e.preventDefault(); // Use 'e' for consistency with event handlers
+  try {
+    if (!adminPassword.trim()) {
+      toast.error("Admin password is required.");
+      return;
+    }
+
     const formDataInitial = new FormData(e.target);
     const formData = new FormData();
 
-    const finalCost = formDataInitial.get('finalCost');
+    const finalCost = formDataInitial.get("finalCost");
 
-    formData.append('finalCost', finalCost);
-    formData.append('id', selectedAppointment);
+    formData.append("finalCost", finalCost);
+    formData.append("id", selectedAppointment);
+    formData.append("adminPassword", adminPassword);
 
-    if (invoiceFile) formData.append('image', invoiceFile);
+    if (invoiceFile) formData.append("image", invoiceFile);
 
-    console.table([...formData]);
+    await uploadInvoiceMutation({
+      id: selectedAppointment,
+      updatedData: formData,
+    });
 
-    await uploadInvoiceMutation({ id: selectedAppointment, updatedData: formData });
-  };
+    toast.success("Receipt uploaded successfully.");
+
+    setAdminPassword("");
+    setInvoiceFile(null);
+    handleCloseInvoiceModal();
+  } catch (error) {
+    toast.error(
+      error?.response?.data?.message ||
+      "Failed to upload receipt."
+    );
+  }
+};
 
   const COMPANY_NAME = "Tierodman Auto Center";
 
@@ -666,13 +685,18 @@ const handleExportPDF = () => {
           </Dialog>
           <Dialog open={isModalInvoiceOpen} onOpenChange={setIsModalInvoiceOpen}>
             {isModalInvoiceOpen && (
+              <div>
               <UploadInvoice
-                // currentData={appointments.find((appointment) => appointment._id === selectedAppointment)}
                 appointmentId={selectedAppointment}
                 onSave={handleUploadInvoice}
-                onCancel={handleCloseModal}
+                onCancel={handleCloseInvoiceModal}
                 setInvoiceFile={setInvoiceFile}
+                adminPassword={adminPassword}
+                setAdminPassword={setAdminPassword}
               />
+
+              
+            </div>
             )}
           </Dialog>
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>

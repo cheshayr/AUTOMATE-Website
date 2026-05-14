@@ -7,13 +7,33 @@ import { useGetAppointmentById } from '@/hooks/useAppointments.query';
 import { cn } from '@/lib/utils';
 import { DialogClose } from '@radix-ui/react-dialog';
 import React, { useRef, useState } from 'react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
-function UploadInvoice({ appointmentId, onSave, onCancel, setInvoiceFile }) {
+function UploadInvoice({
+  appointmentId,
+  onSave,
+  onCancel,
+  setInvoiceFile,
+  adminPassword,
+  setAdminPassword,
+}) {
   const { data: currentData, isLoading, isError } = useGetAppointmentById(appointmentId);
   console.log('🚀 ~ UploadInvoice ~ currentData:', currentData);
   const title = 'Upload Invoice';
   const [previewUrl, setPreviewUrl] = useState(null); // No type annotation
   const fileInputRef = useRef(null);
+  const formRef = useRef(null);
+  const [adminDialogOpen, setAdminDialogOpen] = useState(false);
 
   const handleFileChange = (event) => {
     // No type annotation for event
@@ -37,13 +57,16 @@ function UploadInvoice({ appointmentId, onSave, onCancel, setInvoiceFile }) {
       <DialogContent className="sm:max-w-[425px] flex flex-col max-h-[90vh]">
         <DialogHeader className="p-1 pb-0">
           <DialogTitle>{title}</DialogTitle>
+          <p className="text-sm text-muted-foreground">
+            Reference No: <span className="font-medium text-foreground">{currentData?.refNo || 'Loading...'}</span>
+          </p>
           {/* <DialogDescription>
               Make changes to your profile here. Click save when you're
               done.
             </DialogDescription> */}
         </DialogHeader>
 
-        <form onSubmit={onSave} className="flex flex-col flex-grow overflow-hidden">
+        <form ref={formRef} onSubmit={onSave} className="flex flex-col flex-grow overflow-hidden">
           {isError && (
             <div className="text-red-500 text-center p-4">
               <p>Error loading appointment data. Please try again later.</p>
@@ -126,7 +149,41 @@ function UploadInvoice({ appointmentId, onSave, onCancel, setInvoiceFile }) {
                     Cancel
                   </Button>
                 </DialogClose>
-                <Button type="submit">Save changes</Button>
+                <AlertDialog open={adminDialogOpen} onOpenChange={setAdminDialogOpen}>
+  <Button type="button" onClick={() => setAdminDialogOpen(true)}>
+    Save changes
+  </Button>
+
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Admin Verification</AlertDialogTitle>
+      <AlertDialogDescription>
+        Please enter the admin password to verify this receipt upload.
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+
+    <Input
+      type="password"
+      placeholder="Enter admin password"
+      value={adminPassword}
+      onChange={(e) => setAdminPassword(e.target.value)}
+    />
+
+    <AlertDialogFooter>
+      <AlertDialogCancel>Cancel</AlertDialogCancel>
+
+      <Button
+        type="button"
+        onClick={() => {
+          setAdminDialogOpen(false);
+          formRef.current?.requestSubmit();
+        }}
+      >
+        Confirm Upload
+      </Button>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
               </DialogFooter>
             </>
           )}
