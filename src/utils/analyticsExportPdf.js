@@ -50,6 +50,10 @@ export const exportAnalyticsToPDF = ({
 
   const doc = new jsPDF();
   const exportedAt = format(new Date(), 'MMM dd, yyyy • hh:mm a');
+  const reportDateRange = {
+    from: dateRange?.from,
+    to: dateRange?.to,
+  };
   const totalPagesExp = "{total_pages_count_string}";
 
   let startY = 65;
@@ -181,12 +185,25 @@ export const exportAnalyticsToPDF = ({
       doc.text(`Contact: ${COMPANY_CONTACT}`, 45, 27);
       doc.text(`Address: ${COMPANY_ADDRESS}`, 45, 32);
 
-      // Date range info
-      const from = dateRange?.from ? format(dateRange.from, 'MMM dd, yyyy') : '';
-      const to = dateRange?.to ? format(dateRange.to, 'MMM dd, yyyy') : 'Present';
-      if (from) {
-        doc.text(`Date: ${from} - ${to}`, 14, 40);
-      }
+      //DATE RANGE
+      const fromDate = reportDateRange.from ? new Date(reportDateRange.from) : null;
+      const toDate = reportDateRange.to ? new Date(reportDateRange.to) : null;
+
+      const from =
+        fromDate && !isNaN(fromDate)
+          ? format(fromDate, 'MMM dd, yyyy')
+          : 'Start';
+
+      const to =
+        toDate && !isNaN(toDate)
+          ? format(toDate, 'MMM dd, yyyy')
+          : 'Present';
+
+      doc.setFont(undefined, 'bold');
+      doc.text('Date Range:', 14, 40);
+
+      doc.setFont(undefined, 'normal');
+      doc.text(`${from} - ${to}`, 40, 40);
 
       // Active chart view info
       doc.setFont(undefined, 'bold');
