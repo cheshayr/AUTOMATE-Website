@@ -340,7 +340,7 @@ const Reports = () => {
                     <SelectItem value="customer-feedback">Customer Feedback</SelectItem>
                     <SelectItem value="vehicle-history">Vehicle History</SelectItem>
                     <SelectItem value="technician-performance">Technician Performance</SelectItem>
-                    <SelectItem value="inventory-summary">Inventory Summary</SelectItem>
+                    {/* <SelectItem value="inventory-summary">Inventory Summary</SelectItem> */}
                     {/*<SelectItem value="service-turnaround">Service Turnaround</SelectItem> */}
                     {/* <SelectItem value="revenue">Revenue</SelectItem> */}
                     {/*<SelectItem value="parts-usage">Parts Usage</SelectItem> */}
