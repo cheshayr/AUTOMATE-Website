@@ -31,7 +31,7 @@ const AppointmentDetailsPage = () => {
   const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/appointments/${id}`)
+    fetch(`${import.meta.env.VITE_API_URL}/appointments/${id}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch appointment");
         return res.json();
