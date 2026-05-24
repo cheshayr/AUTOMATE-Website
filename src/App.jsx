@@ -15,6 +15,7 @@ import ActivityLogs from './activity/ActivityLogs.jsx';
 import UserManagement from './features/user/UserManagement.jsx';
 import EditServicePage from './pages/services/EditServicePage.jsx';
 import LoginPage from './pages/auth/Login.jsx';
+import ResetPasswordPage from './pages/auth/ResetPassword.jsx';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAlert } from './hooks/useAlert.jsx';
 import DashboardLayout from './features/DashboardLayout.jsx';
@@ -48,6 +49,7 @@ function App() {
         <AuthProvider>
           <Routes>
             <Route path="/" element={<LoginPage />} />
+            <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
             <Route
               path="/dashboard"
               element={
